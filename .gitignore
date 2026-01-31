@@ -1,0 +1,32 @@
+# Gradle
+.gradle/
+build/
+out/
+bin/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+*.code-workspace
+
+# Fabric
+run/
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~

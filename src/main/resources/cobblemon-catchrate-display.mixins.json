@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "com.catchrate.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [],
+  "client": [
+    "ItemStackMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
