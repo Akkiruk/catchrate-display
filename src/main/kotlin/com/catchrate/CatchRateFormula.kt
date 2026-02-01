@@ -152,11 +152,11 @@ object CatchRateFormula {
     
     /**
      * Calculate the low-level catch bonus for Pokemon under level 13.
-     * Formula: max((36 - 2*level) / 10, 1)
+     * Cobblemon uses integer division: (36 - 2*level) / 10
      */
     fun getLowLevelBonus(level: Int): Float {
         return if (level < LOW_LEVEL_THRESHOLD) {
-            max((36 - (2 * level)) / 10F, 1F)
+            max((36 - (2 * level)) / 10, 1).toFloat()
         } else {
             1F
         }

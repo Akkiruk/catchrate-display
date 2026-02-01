@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.23] - 2026-02-01
+
+### Fixed
+- Catch rate calculation now matches Cobblemon exactly (used float division instead of integer division for low level bonus)
+
 ## [1.2.22] - 2026-02-01
 
 ### Fixed
