@@ -80,9 +80,9 @@ jobs:
             1.21.1
           
           dependencies: |
-            fabric-api | requires | *
-            fabric-language-kotlin | requires | *
-            cobblemon | requires | *
+            fabric-api(fabric) | requires | *
+            fabric-language-kotlin(fabric) | requires | *
+            cobblemon(fabric) | requires | *
           
           java: |
             21
