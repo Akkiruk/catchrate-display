@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.2.15] - 2026-01-31
+
+### Fixed
+- **Ancient Balls now display correct multiplier in combat!**
+  - Ancient balls (Jet, Gigaton, Wing, Leaden, Ancient Ultra, Ancient Great) were showing 1x in combat
+  - This was because Cobblemon API uses `throwPower` not `catchRateModifier` for ancient balls
+  - Added server-side override to use unified calculator for ancient ball multipliers
+  
+- **Love Ball now correctly checks the ACTIVE BATTLER only!**
+  - Previously was checking if ANY Pokemon in your party had opposite gender (wrong)
+  - Now only checks the Pokemon you actually have in play during battle
+  - Out of combat: Shows 1x with "Need active battler" (not "Only works in battle")
+  - 2.5x if your active battler is opposite gender
+  - 8x if your active battler is same species + opposite gender
+
+- **Timer Ball out-of-combat message improved**
+  - Now shows "Scales with turns" instead of "Only works in battle"
+
+- **Safari Ball fixed** - Now correctly shows 1.5x always (Cobblemon has no safari zone)
+
+### Technical
+- Changed `BallContext.partyPokemon` to `BallContext.activeBattler` - now tracks single active Pokemon
+- Added `getActiveBattler()` helper to extract player's active Pokemon from battle (side1)
+- Server-side now gets active Pokemon from `playerActor.activePokemon.firstOrNull()`
+- Ancient ball override added before Love Ball override in server networking
+- Removed unused `battle` parameter from `CatchRateCalculator.calculateCatchRate()`
+- Removed unused `ClientBattle` import from `CatchRateCalculator.kt`
+- Removed unused `calculateSafariBall()` function
+
 ## [1.2.14] - 2026-01-31
 
 ### Fixed

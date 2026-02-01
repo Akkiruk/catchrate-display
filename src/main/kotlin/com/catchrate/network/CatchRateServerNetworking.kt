@@ -64,15 +64,17 @@ object CatchRateServerNetworking {
             var ballIsValid = modifier.isValid(player, pokemon)
             var ballMultiplier = if (ballIsValid) modifier.value(player, pokemon) else 1F
             
-            // Build context for unified calculator (for condition info and Love Ball override)
+            // Get the player's ACTIVE battler (the one currently in play) for Love Ball
             val playerActor = battle.actors.find { it.isForPlayer(player) }
-            val partyPokemon = playerActor?.pokemonList?.map { bp ->
-                val p = bp.effectedPokemon
-                PartyMember(
-                    speciesId = p.species.resourceIdentifier.toString(),
-                    gender = p.gender
-                )
-            } ?: emptyList()
+            val activeBattler = playerActor?.activePokemon?.firstOrNull()?.let { active ->
+                val p = active.battlePokemon?.effectedPokemon
+                if (p != null) {
+                    PartyMember(
+                        speciesId = p.species.resourceIdentifier.toString(),
+                        gender = p.gender
+                    )
+                } else null
+            }
             
             val world = player.world
             val timeOfDay = world.timeOfDay % 24000
@@ -92,8 +94,16 @@ object CatchRateServerNetworking {
                 isPlayerUnderwater = player.isSubmergedInWater,
                 inBattle = true,
                 turnCount = battle.turn,
-                partyPokemon = partyPokemon
+                activeBattler = activeBattler
             )
+            
+            // Manual Ancient Ball override - Cobblemon uses throwPower not catchRateModifier
+            if (pokeBall.ancient) {
+                val ancientResult = BallMultiplierCalculator.calculate(ballId.path.lowercase(), ctx)
+                ballMultiplier = ancientResult.multiplier
+                ballIsValid = true
+                CatchRateDisplayMod.debug("Ancient Ball: Override applied - ${ballId.path} = ${ballMultiplier}x")
+            }
             
             // Manual Love Ball override using unified calculator
             if (ballId.path.lowercase() == "love_ball") {
@@ -101,9 +111,9 @@ object CatchRateServerNetworking {
                 val unifiedResult = BallMultiplierCalculator.calculate("love_ball", ctx)
                 CatchRateDisplayMod.debug("Love Ball: Unified calc result = ${unifiedResult.conditionMet}, multiplier=${unifiedResult.multiplier}, reason=${unifiedResult.reason}")
                 if (unifiedResult.conditionMet && ballMultiplier < 7F) {
-                    ballMultiplier = 8F
+                    ballMultiplier = unifiedResult.multiplier
                     ballIsValid = true
-                    CatchRateDisplayMod.debug("Love Ball: OVERRIDE APPLIED - setting to 8x")
+                    CatchRateDisplayMod.debug("Love Ball: OVERRIDE APPLIED - setting to ${ballMultiplier}x")
                 } else if (!unifiedResult.conditionMet) {
                     CatchRateDisplayMod.debug("Love Ball: Check FAILED - no override")
                 } else {

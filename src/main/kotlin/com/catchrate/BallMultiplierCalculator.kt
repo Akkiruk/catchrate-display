@@ -35,8 +35,8 @@ object BallMultiplierCalculator {
         val inBattle: Boolean,
         val turnCount: Int,
         
-        // Party info for Love Ball (null if not available)
-        val partyPokemon: List<PartyMember>?,
+        // Active battler for Love Ball - the Pokemon currently in play (not the whole party)
+        val activeBattler: PartyMember?,
         
         // Server-provided API values (for balls we can't calculate client-side)
         val apiMultiplier: Float? = null,
@@ -87,7 +87,7 @@ object BallMultiplierCalculator {
             "great_ball" -> BallResult(1.5F, true, "1.5x always")
             "poke_ball" -> BallResult(1F, true, "1x always")
             "premier_ball" -> BallResult(1F, true, "1x always")
-            "safari_ball" -> calculateSafariBall(ctx)
+            "safari_ball" -> BallResult(1.5F, true, "1.5x always")
             "sport_ball" -> BallResult(1.5F, true, "1.5x always")
             
             // === ENVIRONMENT-BASED BALLS ===
@@ -145,12 +145,11 @@ object BallMultiplierCalculator {
     }
     
     private fun calculateTimerBall(ctx: BallContext): BallResult {
-        if (!ctx.inBattle) {
-            return BallResult(1F, false, "Only works in battle")
-        }
-        val mult = (ctx.turnCount * (1229F / 4096F) + 1F).coerceAtMost(4F)
+        // Timer Ball scales with turns - out of combat defaults to turn 0 = 1x
+        val mult = if (ctx.inBattle) (ctx.turnCount * (1229F / 4096F) + 1F).coerceAtMost(4F) else 1F
         val effective = mult > 1.01f
-        return BallResult(mult, effective, "Turn ${ctx.turnCount}: ${String.format("%.1f", mult)}x")
+        val reason = if (ctx.inBattle) "Turn ${ctx.turnCount}: ${String.format("%.1f", mult)}x" else "Scales with turns"
+        return BallResult(mult, effective, reason)
     }
     
     // === ENVIRONMENT BALLS ===
@@ -183,14 +182,6 @@ object BallMultiplierCalculator {
         }
         val effective = mult > 1F
         return BallResult(mult, effective, "Night (phase ${ctx.moonPhase}): ${mult}x")
-    }
-    
-    private fun calculateSafariBall(ctx: BallContext): BallResult {
-        return if (ctx.inBattle) {
-            BallResult(1F, true, "1x in battle")
-        } else {
-            BallResult(1.5F, true, "1.5x outside battle")
-        }
     }
     
     // === POKEMON STAT BALLS ===
@@ -240,9 +231,10 @@ object BallMultiplierCalculator {
     
     // === PARTY-DEPENDENT BALLS ===
     private fun calculateLoveBall(ctx: BallContext): BallResult {
-        val party = ctx.partyPokemon
-        if (party == null) {
-            return BallResult(1F, false, "Requires party info", requiresServer = true)
+        // Love Ball checks the ACTIVE battler - out of combat = no battler = 1x
+        val activeBattler = ctx.activeBattler
+        if (activeBattler == null) {
+            return BallResult(1F, false, if (ctx.inBattle) "No battler info" else "Need active battler")
         }
         
         val wildGender = ctx.gender
@@ -250,36 +242,26 @@ object BallMultiplierCalculator {
             return BallResult(1F, false, "Wild is genderless")
         }
         
-        var hasOppositeGender = false
-        var hasSameSpeciesOppositeGender = false
-        
-        for (member in party) {
-            val partyGender = member.gender
-            if (partyGender == null || partyGender == Gender.GENDERLESS) continue
-            
-            val oppositeGender = (wildGender == Gender.MALE && partyGender == Gender.FEMALE) ||
-                                 (wildGender == Gender.FEMALE && partyGender == Gender.MALE)
-            
-            if (oppositeGender) {
-                hasOppositeGender = true
-                val sameSpecies = ctx.speciesId == member.speciesId
-                if (sameSpecies) {
-                    hasSameSpeciesOppositeGender = true
-                    break // Found best case, stop searching
-                }
-            }
+        val battlerGender = activeBattler.gender
+        if (battlerGender == null || battlerGender == Gender.GENDERLESS) {
+            return BallResult(1F, false, "Your battler is genderless")
         }
         
-        return when {
-            hasSameSpeciesOppositeGender -> {
-                val genderDesc = if (wildGender == Gender.MALE) "♂" else "♀"
-                BallResult(8F, true, "Same species + opposite gender $genderDesc")
-            }
-            hasOppositeGender -> {
-                val genderDesc = if (wildGender == Gender.MALE) "♂" else "♀"
-                BallResult(2.5F, true, "Opposite gender $genderDesc")
-            }
-            else -> BallResult(1F, false, "No opposite gender in party")
+        val oppositeGender = (wildGender == Gender.MALE && battlerGender == Gender.FEMALE) ||
+                             (wildGender == Gender.FEMALE && battlerGender == Gender.MALE)
+        
+        if (!oppositeGender) {
+            return BallResult(1F, false, "Need opposite gender battler")
+        }
+        
+        // Check if same species AND opposite gender
+        val sameSpecies = ctx.speciesId == activeBattler.speciesId
+        val genderDesc = if (wildGender == Gender.MALE) "♂" else "♀"
+        
+        return if (sameSpecies) {
+            BallResult(8F, true, "Same species + opposite $genderDesc")
+        } else {
+            BallResult(2.5F, true, "Opposite gender $genderDesc")
         }
     }
     

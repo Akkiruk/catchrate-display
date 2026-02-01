@@ -1,7 +1,6 @@
 package com.catchrate
 
 import com.cobblemon.mod.common.api.pokeball.PokeBalls
-import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
 import com.cobblemon.mod.common.item.PokeBallItem
 import com.cobblemon.mod.common.pokeball.PokeBall
@@ -22,8 +21,7 @@ object CatchRateCalculator {
         itemStack: ItemStack,
         turnCount: Int = 1,
         playerHighestLevel: Int? = null,
-        inBattle: Boolean = true,
-        battle: ClientBattle? = null
+        inBattle: Boolean = true
     ): CatchRateResult {
         val pokeBall = getPokeBallFromItem(itemStack)
         val ballName = pokeBall?.name?.path ?: itemStack.item.toString().substringAfter(":").substringBefore("}")

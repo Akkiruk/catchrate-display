@@ -5,6 +5,7 @@ import com.catchrate.BallMultiplierCalculator.BallContext
 import com.catchrate.BallMultiplierCalculator.PartyMember
 import com.catchrate.CatchRateDisplayMod
 import com.cobblemon.mod.common.client.CobblemonClient
+import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Gender
@@ -45,13 +46,16 @@ object BallComparisonCalculator {
     /**
      * Calculate catch rates for all balls during battle.
      * Uses the unified BallMultiplierCalculator for ball-specific multipliers.
+     * @param pokemon The wild Pokemon being targeted
+     * @param turnCount Current battle turn
+     * @param battle The client battle (needed for Love Ball to check active battler)
      */
-    fun calculateAllBalls(pokemon: ClientBattlePokemon, turnCount: Int): List<BallCatchRate> {
+    fun calculateAllBalls(pokemon: ClientBattlePokemon, turnCount: Int, battle: ClientBattle?): List<BallCatchRate> {
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return emptyList()
         val world = client.world ?: return emptyList()
         
-        val ctx = buildBattleContext(pokemon, turnCount, player, world)
+        val ctx = buildBattleContext(pokemon, turnCount, player, world, battle)
         
         val (currentHp, maxHp) = if (pokemon.isHpFlat) {
             pokemon.hpValue to (if (pokemon.maxHp > 0) pokemon.maxHp else 1F)
@@ -187,19 +191,20 @@ object BallComparisonCalculator {
     
     /**
      * Build a BallContext from a ClientBattlePokemon (in-battle scenario).
-     * Attempts to get party info from CobblemonClient.storage for Love Ball checks.
+     * Gets the player's active battler for Love Ball checks.
      */
     private fun buildBattleContext(
         pokemon: ClientBattlePokemon,
         turnCount: Int,
         player: net.minecraft.entity.player.PlayerEntity,
-        world: net.minecraft.world.World
+        world: net.minecraft.world.World,
+        battle: ClientBattle?
     ): BallContext {
         val species = pokemon.species
         val timeOfDay = world.timeOfDay % 24000
         
-        // Try to get player's party from client storage
-        val partyPokemon = getClientPartyMembers()
+        // Get the player's ACTIVE battler (the one currently in play)
+        val activeBattler = getActiveBattler(battle)
         
         return BallContext(
             speciesId = species.resourceIdentifier.toString(),
@@ -217,13 +222,13 @@ object BallComparisonCalculator {
             isPlayerUnderwater = player.isSubmergedInWater,
             inBattle = true,
             turnCount = turnCount,
-            partyPokemon = partyPokemon
+            activeBattler = activeBattler
         )
     }
     
     /**
      * Build a BallContext from a Pokemon entity (out-of-combat scenario).
-     * Attempts to get party info from CobblemonClient.storage for Love Ball checks.
+     * Love Ball won't work out of battle (no active battler).
      */
     private fun buildWorldContext(
         pokemon: com.cobblemon.mod.common.pokemon.Pokemon,
@@ -233,9 +238,7 @@ object BallComparisonCalculator {
         val species = pokemon.species
         val timeOfDay = world.timeOfDay % 24000
         
-        // Try to get player's party from client storage
-        val partyPokemon = getClientPartyMembers()
-        
+        // Out of battle - no active battler for Love Ball
         return BallContext(
             speciesId = species.resourceIdentifier.toString(),
             level = pokemon.level,
@@ -252,26 +255,27 @@ object BallComparisonCalculator {
             isPlayerUnderwater = player.isSubmergedInWater,
             inBattle = false,
             turnCount = 0,
-            partyPokemon = partyPokemon
+            activeBattler = null  // No active battler out of combat
         )
     }
     
     /**
-     * Get the player's party from CobblemonClient storage.
-     * Returns null if party cannot be accessed (server-only mod scenarios).
+     * Get the player's active battler from the battle (side1).
+     * Returns the species and gender of the Pokemon currently in play.
      */
-    private fun getClientPartyMembers(): List<PartyMember>? {
+    private fun getActiveBattler(battle: ClientBattle?): PartyMember? {
+        if (battle == null) return null
         return try {
-            val party = CobblemonClient.storage.party
-            val members = party.slots.filterNotNull().map { pokemon ->
+            // side1 is the player, get their active Pokemon
+            val activePokemon = battle.side1.activeClientBattlePokemon.firstOrNull()?.battlePokemon
+            if (activePokemon != null) {
                 PartyMember(
-                    speciesId = pokemon.species.resourceIdentifier.toString(),
-                    gender = pokemon.gender
+                    speciesId = activePokemon.species.resourceIdentifier.toString(),
+                    gender = try { Gender.valueOf(activePokemon.gender.name) } catch (e: Exception) { null }
                 )
-            }
-            members.takeIf { it.isNotEmpty() }
+            } else null
         } catch (e: Exception) {
-            CatchRateDisplayMod.debug("Could not access client party: ${e.message}")
+            CatchRateDisplayMod.debug("Could not access active battler: ${e.message}")
             null
         }
     }

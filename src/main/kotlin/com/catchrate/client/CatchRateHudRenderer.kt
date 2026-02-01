@@ -77,7 +77,7 @@ class CatchRateHudRenderer : HudRenderCallback {
         val serverHasMod = CatchRateClientNetworking.isServerModPresent()
         
         if (config.showBallComparison) {
-            renderBallComparisonPanel(drawContext, client, opponentPokemon)
+            renderBallComparisonPanel(drawContext, client, opponentPokemon, battle)
             return
         }
         
@@ -94,7 +94,7 @@ class CatchRateHudRenderer : HudRenderCallback {
             if (ballName in serverRequiredBalls) {
                 renderUnsupportedBallHud(drawContext, client, ballName)
             } else {
-                val result = getClientCalculation(opponentPokemon, heldItem, battle)
+                val result = getClientCalculation(opponentPokemon, heldItem)
                 renderClientModeHud(drawContext, client, result, ballName)
             }
         }
@@ -149,10 +149,10 @@ class CatchRateHudRenderer : HudRenderCallback {
         CatchRateClientNetworking.clearCache()
     }
     
-    private fun getClientCalculation(pokemon: ClientBattlePokemon, heldItem: ItemStack, battle: ClientBattle): CatchRateResult {
+    private fun getClientCalculation(pokemon: ClientBattlePokemon, heldItem: ItemStack): CatchRateResult {
         val now = System.currentTimeMillis()
         if (cachedClientResult == null || (now - lastClientCalcTime) > CLIENT_CALC_INTERVAL_MS) {
-            cachedClientResult = CatchRateCalculator.calculateCatchRate(pokemon, heldItem, turnCount, null, true, battle)
+            cachedClientResult = CatchRateCalculator.calculateCatchRate(pokemon, heldItem, turnCount, null, true)
             lastClientCalcTime = now
         }
         return cachedClientResult!!
@@ -372,10 +372,10 @@ class CatchRateHudRenderer : HudRenderCallback {
         drawContext.drawTextWithShadow(textRenderer, "⚠ Out of combat: 0.5x", x + 6, penaltyY, 0xFFAA00)
     }
     
-    private fun renderBallComparisonPanel(drawContext: DrawContext, client: MinecraftClient, pokemon: ClientBattlePokemon) {
+    private fun renderBallComparisonPanel(drawContext: DrawContext, client: MinecraftClient, pokemon: ClientBattlePokemon, battle: ClientBattle) {
         val now = System.currentTimeMillis()
         if (cachedComparison == null || (now - lastComparisonTime) > COMPARISON_CALC_INTERVAL_MS) {
-            cachedComparison = BallComparisonCalculator.calculateAllBalls(pokemon, turnCount)
+            cachedComparison = BallComparisonCalculator.calculateAllBalls(pokemon, turnCount, battle)
             lastComparisonTime = now
         }
         
