@@ -12,7 +12,7 @@ class CatchRateDisplayMod : ClientModInitializer {
     companion object {
         const val MOD_ID = "catchrate-display"
         val LOGGER = LoggerFactory.getLogger(MOD_ID)
-        var DEBUG_ENABLED = false
+        var DEBUG_ENABLED = true
         
         fun debug(message: String) {
             if (DEBUG_ENABLED) LOGGER.info("[DEBUG] $message")

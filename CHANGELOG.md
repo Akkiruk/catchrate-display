@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.10] - 2026-01-31
+
+### Changed
+- **Debug logging enabled with throttling**
+  - Detailed catch rate calculations logged for troubleshooting
+  - Throttled to every 2 seconds to prevent log spam
+  - Logs when owned Pokemon are skipped (with owner UUID)
+  - Shows all calculation components: base rate, ball multiplier, HP, status, level bonus
+
 ## [1.2.9] - 2026-01-31
 
 ### Fixed
