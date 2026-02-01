@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.2.12] - 2026-01-31
+
+### Changed
+- **Major refactor: Unified ball calculation system**
+  - Created `BallMultiplierCalculator` as single source of truth for all ball multipliers
+  - Combined 3 duplicate systems (`getBallInfo()`, `getBallInfoForWorld()`, `getBallConditionInfo()`) into one
+  - `BallContext` data class abstracts Pokemon info, environment, battle state, and party info
+  - Consistent ball logic across client-side (battle HUD, world HUD) and server-side calculations
+  - Love Ball check now unified - uses party info from context when available
+  - All special balls (Quick, Timer, Dusk, Net, Nest, Love, Level, Heavy, Fast, Moon, Dream, Beast) handled in one place
+
+### Technical
+- New `BallMultiplierCalculator.kt` with:
+  - `BallContext` - captures all relevant Pokemon/environment state
+  - `PartyMember` - lightweight class for Love Ball party checks
+  - `BallResult` - unified return type with multiplier, conditionMet, reason, isGuaranteed, requiresServer
+  - `calculate(ballId, ctx)` - single entry point for all ball calculations
+- `BallComparisonCalculator` now delegates to unified calculator
+- `CatchRateServerNetworking` uses unified calculator for condition descriptions
+- Removed ~250 lines of duplicate ball logic
+
 ## [1.2.11] - 2026-01-31
 
 ### Changed

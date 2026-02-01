@@ -1,5 +1,8 @@
 package com.catchrate.network
 
+import com.catchrate.BallMultiplierCalculator
+import com.catchrate.BallMultiplierCalculator.BallContext
+import com.catchrate.BallMultiplierCalculator.PartyMember
 import com.catchrate.CatchRateDisplayMod
 import com.cobblemon.mod.common.api.pokeball.PokeBalls
 import com.cobblemon.mod.common.api.pokemon.status.Statuses
@@ -15,6 +18,10 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 
+/**
+ * Server-side catch rate calculation with accurate multipliers via Cobblemon API.
+ * Uses unified BallMultiplierCalculator for condition descriptions and fallback logic.
+ */
 object CatchRateServerNetworking {
     
     fun initialize() {
@@ -40,7 +47,7 @@ object CatchRateServerNetworking {
             
             val ballId = parseBallId(request.ballItemId)
             val pokeBall = PokeBalls.getPokeBall(ballId) ?: return
-            val ballName = formatBallName(ballId.path)
+            val ballName = BallMultiplierCalculator.formatBallName(ballId.path)
             
             if (pokeBall.catchRateModifier.isGuaranteed()) {
                 sendResponse(player, buildGuaranteedResponse(request.pokemonUuid, pokemon, ballName))
@@ -52,31 +59,62 @@ object CatchRateServerNetworking {
             val hpPercent = currentHp / maxHp * 100.0
             val baseCatchRate = pokemon.form.catchRate.toFloat()
             
+            // Get multiplier from Cobblemon API
             val modifier = pokeBall.catchRateModifier
             var ballIsValid = modifier.isValid(player, pokemon)
             var ballMultiplier = if (ballIsValid) modifier.value(player, pokemon) else 1F
             
-            // Manual Love Ball override - Cobblemon API may not work correctly in all cases
+            // Build context for unified calculator (for condition info and Love Ball override)
             val playerActor = battle.actors.find { it.isForPlayer(player) }
+            val partyPokemon = playerActor?.pokemonList?.map { bp ->
+                val p = bp.effectedPokemon
+                PartyMember(
+                    speciesId = p.species.resourceIdentifier.toString(),
+                    gender = p.gender
+                )
+            } ?: emptyList()
+            
+            val world = player.world
+            val timeOfDay = world.timeOfDay % 24000
+            val ctx = BallContext(
+                speciesId = pokemon.species.resourceIdentifier.toString(),
+                level = pokemon.level,
+                gender = pokemon.gender,
+                primaryType = pokemon.primaryType.name,
+                secondaryType = pokemon.secondaryType?.name,
+                weight = pokemon.species.weight,
+                baseSpeed = pokemon.species.baseStats.entries.find { it.key.showdownId.equals("spe", true) }?.value ?: 0,
+                labels = try { pokemon.species.labels.toList() } catch (e: Exception) { emptyList() },
+                statusPath = pokemon.status?.status?.name?.path,
+                lightLevel = world.getLightLevel(player.blockPos),
+                isNight = timeOfDay in 12000..24000,
+                moonPhase = world.moonPhase,
+                isPlayerUnderwater = player.isSubmergedInWater,
+                inBattle = true,
+                turnCount = battle.turn,
+                partyPokemon = partyPokemon
+            )
+            
+            // Manual Love Ball override using unified calculator
             if (ballId.path.lowercase() == "love_ball") {
                 CatchRateDisplayMod.debug("Love Ball: API returned isValid=$ballIsValid, multiplier=$ballMultiplier")
-                val loveBallResult = checkLoveBallConditionInBattle(pokemon, player)
-                CatchRateDisplayMod.debug("Love Ball: Manual check result = ${loveBallResult.first}, reason = ${loveBallResult.second}")
-                if (loveBallResult.first && ballMultiplier < 7F) {
-                    // Manual check passed but API returned wrong value - override
+                val unifiedResult = BallMultiplierCalculator.calculate("love_ball", ctx)
+                CatchRateDisplayMod.debug("Love Ball: Unified calc result = ${unifiedResult.conditionMet}, multiplier=${unifiedResult.multiplier}, reason=${unifiedResult.reason}")
+                if (unifiedResult.conditionMet && ballMultiplier < 7F) {
                     ballMultiplier = 8F
                     ballIsValid = true
                     CatchRateDisplayMod.debug("Love Ball: OVERRIDE APPLIED - setting to 8x")
-                } else if (!loveBallResult.first) {
-                    CatchRateDisplayMod.debug("Love Ball: Manual check FAILED - no override")
+                } else if (!unifiedResult.conditionMet) {
+                    CatchRateDisplayMod.debug("Love Ball: Check FAILED - no override")
                 } else {
                     CatchRateDisplayMod.debug("Love Ball: API already correct (${ballMultiplier}x) - no override needed")
                 }
             }
             
-            val (conditionMet, conditionDesc) = getBallConditionInfo(
-                ballId.path, ballMultiplier, ballIsValid, battle.turn, pokemon, player
-            )
+            // Get condition description from unified calculator
+            val unifiedResult = BallMultiplierCalculator.calculate(ballId.path, ctx)
+            val conditionMet = unifiedResult.conditionMet
+            val conditionDesc = unifiedResult.reason
             
             val status = pokemon.status?.status
             val statusMultiplier = when (status) {
@@ -163,168 +201,6 @@ object CatchRateServerNetworking {
         baseCatchRate = pokemon.form.catchRate
     )
     
-    /**
-     * Check Love Ball condition: requires same species AND opposite gender.
-     * Checks the player's battle party from the given battle.
-     * Returns (conditionMet, description).
-     */
-    private fun checkLoveBallConditionInBattle(
-        wildPokemon: Pokemon,
-        player: ServerPlayerEntity
-    ): Pair<Boolean, String> {
-        CatchRateDisplayMod.debug("=== LOVE BALL CHECK START ===")
-        
-        val battle = BattleRegistry.getBattleByParticipatingPlayer(player)
-        if (battle == null) {
-            CatchRateDisplayMod.debug("Love Ball: Player not in battle")
-            return false to "Not in battle"
-        }
-        
-        val playerActor = battle.actors.find { it.isForPlayer(player) }
-        if (playerActor == null) {
-            CatchRateDisplayMod.debug("Love Ball: Could not find player actor in battle")
-            return false to "No party found"
-        }
-        
-        val wildSpecies = wildPokemon.species.resourceIdentifier.toString()
-        val wildGender = wildPokemon.gender
-        
-        CatchRateDisplayMod.debug("Love Ball: Wild Pokemon = $wildSpecies, Gender = $wildGender")
-        
-        // Genderless Pokemon cannot trigger Love Ball
-        if (wildGender == Gender.GENDERLESS) {
-            CatchRateDisplayMod.debug("Love Ball: Wild Pokemon is genderless - FAIL")
-            return false to "Wild Pokémon is genderless"
-        }
-        
-        // Check each Pokemon in the player's party
-        val partySize = playerActor.pokemonList.count()
-        CatchRateDisplayMod.debug("Love Ball: Checking $partySize party members...")
-        
-        for ((index, battlePokemon) in playerActor.pokemonList.withIndex()) {
-            val partyPokemon = battlePokemon.effectedPokemon
-            val partySpecies = partyPokemon.species.resourceIdentifier.toString()
-            val partyGender = partyPokemon.gender
-            
-            CatchRateDisplayMod.debug("Love Ball: Party[$index] = $partySpecies, Gender = $partyGender")
-            
-            // Skip genderless party Pokemon
-            if (partyGender == Gender.GENDERLESS) {
-                CatchRateDisplayMod.debug("Love Ball: Party[$index] is genderless - skip")
-                continue
-            }
-            
-            // Check same species AND opposite gender
-            val sameSpecies = wildSpecies == partySpecies
-            val oppositeGender = (wildGender == Gender.MALE && partyGender == Gender.FEMALE) ||
-                                 (wildGender == Gender.FEMALE && partyGender == Gender.MALE)
-            
-            CatchRateDisplayMod.debug("Love Ball: Party[$index] sameSpecies=$sameSpecies, oppositeGender=$oppositeGender")
-            
-            if (sameSpecies && oppositeGender) {
-                val genderDesc = if (wildGender == Gender.MALE) "♂" else "♀"
-                val partyGenderDesc = if (partyGender == Gender.MALE) "♂" else "♀"
-                CatchRateDisplayMod.debug("Love Ball: MATCH FOUND! Wild $genderDesc + Party $partyGenderDesc (${partyPokemon.species.name})")
-                return true to "Wild $genderDesc + Party $partyGenderDesc (${partyPokemon.species.name})"
-            }
-        }
-        
-        CatchRateDisplayMod.debug("Love Ball: No match found in party - FAIL")
-        return false to "No matching species with opposite gender in party"
-    }
-    
-    private fun getBallConditionInfo(
-        ballName: String,
-        multiplier: Float,
-        isValid: Boolean,
-        turn: Int,
-        pokemon: Pokemon,
-        player: ServerPlayerEntity
-    ): Pair<Boolean, String> {
-        val lower = ballName.lowercase()
-        
-        return when {
-            lower.contains("master") -> true to "Guaranteed capture!"
-            lower == "great_ball" -> true to "1.5x catch rate"
-            lower == "ultra_ball" -> true to "2x catch rate"
-            lower == "timer_ball" -> {
-                val effective = multiplier > 1.01f
-                effective to "Turn $turn: ${String.format("%.1f", multiplier)}x (increases each turn, max 4x)"
-            }
-            lower == "quick_ball" -> {
-                val effective = turn == 1
-                effective to if (effective) "5x on first turn!" else "Only effective on turn 1"
-            }
-            lower == "dusk_ball" -> {
-                val effective = multiplier > 1.01f
-                effective to if (effective) "${String.format("%.1f", multiplier)}x in darkness" else "Only effective in dark areas"
-            }
-            lower == "dive_ball" -> {
-                val effective = multiplier > 1.01f
-                effective to if (effective) "3.5x while underwater!" else "Only effective underwater"
-            }
-            lower == "net_ball" -> {
-                val types = listOf(pokemon.primaryType.name, pokemon.secondaryType?.name).filterNotNull()
-                val effective = types.any { it.equals("water", true) || it.equals("bug", true) }
-                effective to if (effective) "3x for Bug/Water types!" else "Only effective on Bug/Water"
-            }
-            lower == "nest_ball" -> {
-                val effective = pokemon.level < 30
-                val mult = if (effective) ((41 - pokemon.level) / 10F).coerceAtLeast(1F) else 1F
-                effective to if (effective) "${String.format("%.1f", mult)}x for Lv${pokemon.level}" else "Only effective below Lv30"
-            }
-            lower == "repeat_ball" -> {
-                val effective = multiplier > 1.01f
-                effective to if (effective) "3.5x - Already caught this species!" else "Only effective if you've caught this species"
-            }
-            lower == "love_ball" -> {
-                // Use manual check result for more accurate information
-                val (effective, detail) = checkLoveBallConditionInBattle(pokemon, player)
-                if (effective) {
-                    true to "8x - $detail"
-                } else {
-                    false to detail
-                }
-            }
-            lower == "level_ball" -> {
-                val effective = multiplier > 1.01f
-                effective to if (effective) "${String.format("%.0f", multiplier)}x - Your Pokémon is higher level!" else "Your Pokémon needs higher level"
-            }
-            lower == "heavy_ball" -> {
-                val weight = pokemon.species.weight / 10f  // Convert to kg
-                val effective = multiplier > 1.01f
-                effective to if (effective) "${String.format("%.1f", multiplier)}x for ${weight}kg Pokémon" else "Only effective on heavy Pokémon (100kg+)"
-            }
-            lower == "fast_ball" -> {
-                val speed = pokemon.species.baseStats.entries.find { it.key.showdownId.equals("spe", true) }?.value ?: 0
-                val effective = speed >= 100
-                effective to if (effective) "4x for Speed $speed!" else "Only effective if base Speed ≥100"
-            }
-            lower == "moon_ball" -> {
-                val effective = multiplier > 1.01f
-                effective to if (effective) "${String.format("%.1f", multiplier)}x during night!" else "Only effective at night"
-            }
-            lower == "dream_ball" -> {
-                val effective = pokemon.status?.status == Statuses.SLEEP
-                effective to if (effective) "4x while asleep!" else "Only effective on sleeping Pokémon"
-            }
-            lower == "lure_ball" -> {
-                val effective = multiplier > 1.01f
-                effective to if (effective) "4x for fishing encounter!" else "Only effective on fished Pokémon"
-            }
-            lower == "beast_ball" -> {
-                val effective = multiplier > 1.01f
-                effective to if (effective) "5x for Ultra Beast!" else "0.1x penalty (not an Ultra Beast)"
-            }
-            lower == "safari_ball" -> true to "1.5x outside battle (1x in battle)"
-            lower == "sport_ball" -> true to "1.5x catch rate"
-            lower == "friend_ball" || lower == "luxury_ball" || lower == "heal_ball" -> {
-                true to "1x catch rate (special effect on capture)"
-            }
-            else -> (multiplier >= 1f) to "1x catch rate"
-        }
-    }
-    
     private fun getStatusName(status: PersistentStatus?): String {
         return when (status) {
             Statuses.SLEEP -> "Asleep"
@@ -334,12 +210,6 @@ object CatchRateServerNetworking {
             Statuses.POISON -> "Poisoned"
             Statuses.POISON_BADLY -> "Badly Poisoned"
             else -> "None"
-        }
-    }
-    
-    private fun formatBallName(path: String): String {
-        return path.split("_").joinToString(" ") { word ->
-            word.replaceFirstChar { it.uppercaseChar() }
         }
     }
 }
