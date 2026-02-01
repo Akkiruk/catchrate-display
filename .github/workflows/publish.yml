@@ -1,0 +1,88 @@
+name: Publish to CurseForge
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.2.3)'
+        required: true
+        type: string
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        
+      - name: Build with Gradle
+        run: ./gradlew build
+        
+      - name: Get version from gradle.properties
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=$(grep "^mod_version=" gradle.properties | cut -d'=' -f2)
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
+          
+      - name: Get changelog for this version
+        id: changelog
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          # Extract changelog section for this version
+          sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | sed '$d' | tail -n +2 > current_changelog.txt
+          echo "Changelog:"
+          cat current_changelog.txt
+          
+      - name: Upload to CurseForge
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          curseforge-id: ${{ secrets.CURSEFORGE_PROJECT_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          
+          files: |
+            build/libs/!(*-@(dev|sources|javadoc)).jar
+            build/libs/*-sources.jar
+          
+          name: "v${{ steps.get_version.outputs.VERSION }}"
+          version: ${{ steps.get_version.outputs.VERSION }}
+          version-type: release
+          
+          changelog-file: current_changelog.txt
+          
+          loaders: |
+            fabric
+          
+          game-versions: |
+            1.21
+            1.21.1
+          
+          dependencies: |
+            fabric-api | requires | *
+            fabric-language-kotlin | requires | *
+            cobblemon | requires | *
+          
+          java: |
+            21
+          
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: catchrate-display-${{ steps.get_version.outputs.VERSION }}
+          path: build/libs/*.jar
