@@ -197,6 +197,11 @@ object BallComparisonCalculator {
         return closestPokemon
     }
     
+    /**
+     * Get ball multiplier info using Cobblemon API.
+     * Ancient balls that are just throwPower variants (Feather/Wing/Jet/Heavy/Leaden/Gigaton) return 1x.
+     * Only ancient_great_ball (1.5x), ancient_ultra_ball (2x), and ancient_origin_ball (guaranteed) have modifiers.
+     */
     private fun getBallInfo(
         ballId: String,
         pokemon: ClientBattlePokemon,
@@ -206,26 +211,40 @@ object BallComparisonCalculator {
     ): Triple<Float, Boolean, String> {
         val lower = ballId.lowercase()
         
-        // Normalize ancient ball names to their regular variants
-        val normalized = lower
-            .replace("ancient_", "")
-            .replace("_ball", "")
+        // Try to get ball from Cobblemon API
+        val pokeBall = try {
+            PokeBalls.getPokeBall(Identifier.of("cobblemon", ballId))
+        } catch (e: Exception) { null }
+        
+        // Guaranteed catch balls
+        if (pokeBall?.catchRateModifier?.isGuaranteed() == true || lower.contains("master")) {
+            return Triple(255F, true, "Guaranteed catch!")
+        }
+        
+        // Ancient balls - wiki-documented multipliers:
+        // Feather/Heavy = 1x, Wing/Leaden = 1.5x, Jet/Gigaton = 2x
+        if (pokeBall?.ancient == true) {
+            return when {
+                lower.contains("jet") || lower.contains("gigaton") -> Triple(2F, true, "Ancient T3: 2x")
+                lower.contains("wing") || lower.contains("leaden") -> Triple(1.5F, true, "Ancient T2: 1.5x")
+                lower.contains("ultra") -> Triple(2F, true, "Ancient Ultra: 2x")
+                lower.contains("great") -> Triple(1.5F, true, "Ancient Great: 1.5x")
+                else -> Triple(1F, true, "Ancient T1: 1x")
+            }
+        }
         
         return when {
-            normalized == "quick" -> {
+            lower == "quick_ball" -> {
                 val mult = if (turnCount == 1) 5F else 1F
                 Triple(mult, turnCount == 1, if (turnCount == 1) "First turn!" else "Only effective turn 1")
             }
-            lower == "timer_ball" || lower == "ancient_timer_ball" -> {
+            lower == "timer_ball" -> {
                 val mult = (turnCount * (1229F / 4096F) + 1F).coerceAtMost(4F)
                 Triple(mult, mult > 1.01f, "Turn $turnCount")
             }
-            // Ancient ball tiers: Jet/Gigaton=2x, Ultra=2x
-            normalized in listOf("ultra", "jet", "gigaton") -> Triple(2F, true, "2x always")
-            // Ancient ball tiers: Wing/Leaden=1.5x, Great=1.5x
-            normalized in listOf("great", "wing", "leaden") -> Triple(1.5F, true, "1.5x always")
-            // Ancient ball tiers: Feather/Heavy=1x, Poke=1x
-            normalized == "poke" || normalized == "feather" || normalized == "heavy" -> Triple(1F, true, "1x always")
+            lower == "ultra_ball" -> Triple(2F, true, "2x always")
+            lower == "great_ball" -> Triple(1.5F, true, "1.5x always")
+            lower == "poke_ball" -> Triple(1F, true, "1x always")
             lower == "dusk_ball" -> {
                 val light = world.getLightLevel(player.blockPos)
                 val mult = if (light <= 7) 3F else 1F
@@ -291,6 +310,10 @@ object BallComparisonCalculator {
         }
     }
     
+    /**
+     * Get ball multiplier info for world Pokemon using Cobblemon API.
+     * Ancient balls that are just throwPower variants return 1x.
+     */
     private fun getBallInfoForWorld(
         ballId: String,
         pokemon: com.cobblemon.mod.common.pokemon.Pokemon,
@@ -299,42 +322,89 @@ object BallComparisonCalculator {
     ): Triple<Float, Boolean, String> {
         val lower = ballId.lowercase()
         
-        // Normalize ancient ball names to their regular variants
-        val normalized = lower
-            .replace("ancient_", "")
-            .replace("_ball", "")
+        // Try to get ball from Cobblemon API
+        val pokeBall = try {
+            PokeBalls.getPokeBall(Identifier.of("cobblemon", ballId))
+        } catch (e: Exception) { null }
+        
+        // Guaranteed catch balls (Master Ball, Ancient Origin Ball)
+        if (pokeBall?.catchRateModifier?.isGuaranteed() == true || lower.contains("master")) {
+            return Triple(255F, true, "Guaranteed catch!")
+        }
+        
+        // Ancient balls - wiki-documented multipliers:
+        // Feather/Heavy = 1x, Wing/Leaden = 1.5x, Jet/Gigaton = 2x
+        if (pokeBall?.ancient == true) {
+            return when {
+                lower.contains("jet") || lower.contains("gigaton") -> Triple(2F, true, "Ancient T3: 2x")
+                lower.contains("wing") || lower.contains("leaden") -> Triple(1.5F, true, "Ancient T2: 1.5x")
+                lower.contains("ultra") -> Triple(2F, true, "Ancient Ultra: 2x")
+                lower.contains("great") -> Triple(1.5F, true, "Ancient Great: 1.5x")
+                else -> Triple(1F, true, "Ancient T1: 1x")
+            }
+        }
         
         return when {
-            normalized == "quick" -> Triple(5F, true, "First turn!")
-            lower == "timer_ball" || lower == "ancient_timer_ball" -> Triple(1F, false, "Increases each turn")
-            // Ancient ball tiers: Jet/Gigaton=2x, Ultra=2x
-            normalized in listOf("ultra", "jet", "gigaton") -> Triple(2F, true, "2x always")
-            // Ancient ball tiers: Wing/Leaden=1.5x, Great=1.5x
-            normalized in listOf("great", "wing", "leaden") -> Triple(1.5F, true, "1.5x always")
-            // Ancient ball tiers: Feather/Heavy=1x, Poke=1x
-            normalized == "poke" || normalized == "feather" || normalized == "heavy" -> Triple(1F, true, "1x always")
+            // Always 5x for first turn (out of combat counts as turn 1)
+            lower == "quick_ball" -> Triple(5F, true, "First turn!")
+            lower == "timer_ball" -> Triple(1F, false, "Increases each turn")
+            lower == "ultra_ball" -> Triple(2F, true, "2x always")
+            lower == "great_ball" -> Triple(1.5F, true, "1.5x always")
+            lower == "sport_ball" -> Triple(1.5F, true, "1.5x always")
+            lower == "safari_ball" -> Triple(1.5F, true, "Out of battle: 1.5x")
+            lower == "poke_ball" -> Triple(1F, true, "1x always")
+            
             lower == "dusk_ball" -> {
                 val light = world.getLightLevel(player.blockPos)
-                val mult = if (light <= 7) 3F else 1F
-                Triple(mult, light <= 7, if (light <= 7) "Dark area" else "Need darkness")
+                val mult = when (light) {
+                    0 -> 3.5F
+                    in 1..7 -> 3F
+                    else -> 1F
+                }
+                Triple(mult, light <= 7, if (light <= 7) "Dark area (L$light)" else "Need darkness")
             }
+            
+            lower == "dive_ball" -> {
+                val inWater = player.isSubmergedInWater
+                Triple(if (inWater) 3.5F else 1F, inWater, if (inWater) "Underwater!" else "Need underwater")
+            }
+            
             lower == "net_ball" -> {
                 val types = listOf(pokemon.primaryType.name, pokemon.secondaryType?.name)
                     .filterNotNull().map { it.lowercase() }
                 val isBugWater = types.any { it == "bug" || it == "water" }
                 Triple(if (isBugWater) 3F else 1F, isBugWater, if (isBugWater) "Bug/Water!" else "Not Bug/Water")
             }
+            
             lower == "nest_ball" -> {
                 val effective = pokemon.level < 30
                 val mult = if (effective) ((41 - pokemon.level) / 10F).coerceAtLeast(1F) else 1F
-                Triple(mult, effective, if (effective) "Low level" else "Only <Lv30")
+                Triple(mult, effective, if (effective) "Lv${pokemon.level} bonus" else "Only <Lv30")
             }
+            
+            lower == "moon_ball" -> {
+                val timeOfDay = world.timeOfDay % 24000
+                val isNight = timeOfDay in 12000..24000
+                val mult = if (isNight) {
+                    when (world.moonPhase) {
+                        0 -> 4F; 1, 7 -> 2.5F; 2, 6 -> 1.5F; else -> 1F
+                    }
+                } else 1F
+                Triple(mult, isNight && mult > 1, if (isNight) "Night (phase ${world.moonPhase})" else "Only at night")
+            }
+            
+            lower == "dream_ball" -> {
+                val asleep = pokemon.status?.status?.name?.path == "sleep"
+                Triple(if (asleep) 4F else 1F, asleep, if (asleep) "Sleeping!" else "Need sleep")
+            }
+            
             lower == "fast_ball" -> {
                 val speed = pokemon.species.baseStats.entries
                     .find { it.key.showdownId.equals("spe", true) }?.value ?: 0
                 val fast = speed >= 100
-                Triple(if (fast) 4F else 1F, fast, if (fast) "Speed ≥100" else "Speed <100")
+                Triple(if (fast) 4F else 1F, fast, if (fast) "Speed $speed" else "Speed <100")
             }
+            
             lower == "heavy_ball" -> {
                 val weight = pokemon.species.weight
                 val mult = when {
@@ -343,8 +413,15 @@ object BallComparisonCalculator {
                     weight >= 1000 -> 1.5F
                     else -> 1F
                 }
-                Triple(mult, mult > 1, "Weight: ${weight/10f}kg")
+                Triple(mult, mult > 1, "${weight/10f}kg")
             }
+            
+            lower == "beast_ball" -> {
+                val labels = try { pokemon.species.labels.map { it.lowercase() } } catch (e: Exception) { emptyList() }
+                val isUB = labels.contains("ultra_beast")
+                Triple(if (isUB) 5F else 0.1F, isUB, if (isUB) "Ultra Beast!" else "0.1x non-UB")
+            }
+            
             else -> Triple(1F, true, "")
         }
     }

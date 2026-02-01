@@ -4,12 +4,17 @@ import com.cobblemon.mod.common.api.pokeball.PokeBalls
 import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
 import com.cobblemon.mod.common.item.PokeBallItem
+import com.cobblemon.mod.common.pokeball.PokeBall
 import net.minecraft.client.MinecraftClient
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Identifier
 import kotlin.math.max
 import kotlin.math.pow
 
+/**
+ * Calculates catch rates using Cobblemon's native PokeBall API.
+ * Uses pokeBall.catchRateModifier and pokeBall.ancient for accurate multipliers.
+ */
 object CatchRateCalculator {
     
     fun calculateCatchRate(
@@ -23,6 +28,7 @@ object CatchRateCalculator {
         val pokeBall = getPokeBallFromItem(itemStack)
         val ballName = pokeBall?.name?.path ?: itemStack.item.toString().substringAfter(":").substringBefore("}")
         
+        // Check for guaranteed catch via API
         if (pokeBall?.catchRateModifier?.isGuaranteed() == true) {
             return CatchRateResult(
                 percentage = 100.0,
@@ -43,7 +49,7 @@ object CatchRateCalculator {
         
         val bonusStatus = getStatusMultiplier(pokemon)
         val bonusLevel = if (level < 13) max((36 - (2 * level)) / 10F, 1F) else 1F
-        val ballBonus = getBallMultiplier(ballName, pokemon, turnCount)
+        val ballBonus = getBallMultiplier(pokeBall, ballName, pokemon, turnCount)
         val inBattleModifier = if (inBattle) 1F else 0.5F
         
         val hpComponent = (3F * maxHp - 2F * currentHp) * catchRate * inBattleModifier
@@ -77,7 +83,10 @@ object CatchRateCalculator {
         )
     }
     
-    private fun getPokeBallFromItem(itemStack: ItemStack): com.cobblemon.mod.common.pokeball.PokeBall? {
+    /**
+     * Get the PokeBall object from an ItemStack using Cobblemon's API.
+     */
+    fun getPokeBallFromItem(itemStack: ItemStack): PokeBall? {
         val item = itemStack.item
         if (item is PokeBallItem) return item.pokeBall
         
@@ -85,6 +94,94 @@ object CatchRateCalculator {
         return try {
             PokeBalls.getPokeBall(Identifier.of("cobblemon", ballName))
         } catch (e: Exception) { null }
+    }
+    
+    /**
+     * Get ball multiplier - uses pokeBall.ancient to handle ancient variants elegantly.
+     * Ancient balls that are just throwPower variants (not catch rate variants) return 1x.
+     */
+    private fun getBallMultiplier(pokeBall: PokeBall?, ballName: String, pokemon: ClientBattlePokemon, turnCount: Int): Float {
+        val client = MinecraftClient.getInstance()
+        val player = client.player
+        val world = client.world
+        val name = ballName.lowercase()
+        
+        // Use API if available
+        if (pokeBall != null) {
+            // Guaranteed catch (Master Ball, Ancient Origin Ball)
+            if (pokeBall.catchRateModifier.isGuaranteed()) return 255F
+            
+            // Ancient balls - wiki-documented multipliers:
+            // Feather/Heavy = 1x, Wing/Leaden = 1.5x, Jet/Gigaton = 2x, Great = 1.5x, Ultra = 2x
+            if (pokeBall.ancient) {
+                return when {
+                    name.contains("jet") || name.contains("gigaton") -> 2F
+                    name.contains("wing") || name.contains("leaden") -> 1.5F
+                    name.contains("ultra") -> 2F
+                    name.contains("great") -> 1.5F
+                    else -> 1F // Feather, Heavy, basic ancient balls
+                }
+            }
+        }
+        
+        // Guaranteed catch balls (fallback if API didn't catch it)
+        if (name.contains("master")) return 255F
+        
+        // Standard ball logic
+        return when (name) {
+            "great_ball" -> 1.5F
+            "ultra_ball" -> 2F
+            "sport_ball" -> 1.5F
+            
+            "timer_ball" -> (turnCount * (1229F / 4096F)).coerceAtMost(4F)
+            "quick_ball" -> if (turnCount == 1) 5F else 1F
+            
+            "net_ball" -> {
+                val types = listOf(pokemon.species.primaryType.name, pokemon.species.secondaryType?.name)
+                    .filterNotNull().map { it.lowercase() }
+                if (types.any { it == "bug" || it == "water" }) 3F else 1F
+            }
+            
+            "nest_ball" -> if (pokemon.level < 30) ((41 - pokemon.level) / 10F).coerceAtLeast(1F) else 1F
+            
+            "dusk_ball" -> {
+                if (player != null && world != null) {
+                    when (world.getLightLevel(player.blockPos)) {
+                        0 -> 3.5F
+                        in 1..7 -> 3F
+                        else -> 1F
+                    }
+                } else 1F
+            }
+            
+            "dive_ball" -> if (player?.isSubmergedInWater == true) 3.5F else 1F
+            
+            "moon_ball" -> world?.let {
+                val isNight = (it.timeOfDay % 24000) in 12000..24000
+                if (isNight) when (it.moonPhase) { 0 -> 4F; 1, 7 -> 2.5F; 2, 6 -> 1.5F; else -> 1F } else 1F
+            } ?: 1F
+            
+            "dream_ball" -> if (pokemon.status?.name?.path == "sleep") 4F else 1F
+            
+            "fast_ball" -> {
+                val speed = pokemon.species.baseStats.entries.find { it.key.showdownId.equals("spe", true) }?.value ?: 0
+                if (speed >= 100) 4F else 1F
+            }
+            
+            "heavy_ball" -> when {
+                pokemon.species.weight >= 3000 -> 4F
+                pokemon.species.weight >= 2000 -> 2.5F
+                pokemon.species.weight >= 1000 -> 1.5F
+                else -> 1F
+            }
+            
+            "beast_ball" -> {
+                val labels = try { pokemon.species.labels.map { it.lowercase() } } catch (e: Exception) { emptyList() }
+                if (labels.contains("ultra_beast")) 5F else 0.1F
+            }
+            
+            else -> 1F
+        }
     }
     
     private fun calculateHp(pokemon: ClientBattlePokemon): Triple<Float, Float, Double> {
@@ -110,76 +207,6 @@ object CatchRateCalculator {
     } else {
         pokemon.hpValue * 100.0
     }.coerceIn(0.0, 100.0)
-    
-    private fun getBallMultiplier(ballName: String, pokemon: ClientBattlePokemon, turnCount: Int): Float {
-        val lower = ballName.lowercase()
-        val client = MinecraftClient.getInstance()
-        val player = client.player
-        val world = client.world
-        
-        // Normalize ancient ball names to their regular variants
-        val normalized = lower
-            .replace("ancient_", "")
-            .replace("_ball", "")
-        
-        return when {
-            lower.contains("master") || lower == "ancient_origin_ball" -> 255F
-            // Ancient ball tiers: Feather/Heavy=1x, Wing/Leaden=1.5x, Jet/Gigaton=2x
-            normalized == "great" || normalized == "wing" || normalized == "leaden" -> 1.5F
-            normalized == "ultra" || normalized == "jet" || normalized == "gigaton" -> 2F
-            normalized == "feather" || normalized == "heavy" -> 1F
-            normalized == "poke" -> 1F
-            lower == "sport_ball" -> 1.5F
-            lower == "timer_ball" -> (turnCount * (1229F / 4096F)).coerceAtMost(4F)
-            lower == "quick_ball" -> if (turnCount == 1) 5F else 1F
-            
-            lower == "net_ball" -> {
-                val types = listOf(pokemon.species.primaryType.name, pokemon.species.secondaryType?.name)
-                    .filterNotNull().map { it.lowercase() }
-                if (types.any { it == "bug" || it == "water" }) 3F else 1F
-            }
-            
-            lower == "nest_ball" -> if (pokemon.level < 30) ((41 - pokemon.level) / 10F).coerceAtLeast(1F) else 1F
-            
-            lower == "dusk_ball" -> {
-                if (player != null && world != null) {
-                    when (world.getLightLevel(player.blockPos)) {
-                        0 -> 3.5F
-                        in 1..7 -> 3F
-                        else -> 1F
-                    }
-                } else 1F
-            }
-            
-            lower == "dive_ball" -> if (player?.isSubmergedInWater == true) 3.5F else 1F
-            
-            lower == "moon_ball" -> world?.let {
-                val isNight = (it.timeOfDay % 24000) in 12000..24000
-                if (isNight) when (it.moonPhase) { 0 -> 4F; 1, 7 -> 2.5F; 2, 6 -> 1.5F; else -> 1F } else 1F
-            } ?: 1F
-            
-            lower == "dream_ball" -> if (pokemon.status?.name?.path == "sleep") 4F else 1F
-            
-            lower == "fast_ball" -> {
-                val speed = pokemon.species.baseStats.entries.find { it.key.showdownId.equals("spe", true) }?.value ?: 0
-                if (speed >= 100) 4F else 1F
-            }
-            
-            lower == "heavy_ball" -> when {
-                pokemon.species.weight >= 3000 -> 4F
-                pokemon.species.weight >= 2000 -> 2.5F
-                pokemon.species.weight >= 1000 -> 1.5F
-                else -> 1F
-            }
-            
-            lower == "beast_ball" -> {
-                val labels = try { pokemon.species.labels.map { it.lowercase() } } catch (e: Exception) { emptyList() }
-                if (labels.contains("ultra_beast")) 5F else 0.1F
-            }
-            
-            else -> 1F
-        }
-    }
     
     private fun getStatusName(pokemon: ClientBattlePokemon) = when (pokemon.status?.name?.path) {
         "sleep" -> "Asleep"

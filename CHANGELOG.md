@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.2.7] - 2026-01-31
+
+### Fixed
+- **Out-of-combat catch rate display now works for ALL balls**
+  - Master Ball now shows 100% guaranteed catch (was showing 1x)
+  - Safari Ball: 1.5x when used outside of battle
+  - Sport Ball: 1.5x always
+  - Moon Ball: Night-time bonus with moon phase
+  - Dive Ball: 3.5x when underwater
+  - Dream Ball: 4x on sleeping Pokémon
+  - Beast Ball: 5x on Ultra Beasts, 0.1x otherwise
+  - Dusk Ball: Now properly shows 3.5x at light level 0, 3x at levels 1-7
+
+- **Ancient ball multipliers corrected to match Cobblemon Wiki:**
+  - Ancient Jet Ball: **2x** (was 1x)
+  - Ancient Gigaton Ball: **2x** (was 1x)
+  - Ancient Wing Ball: **1.5x** (was 1x)
+  - Ancient Leaden Ball: **1.5x** (was 1x)
+  - Ancient Feather Ball: 1x (throwPower only)
+  - Ancient Heavy Ball: 1x (throwPower only)
+  - Ancient Great Ball: 1.5x
+  - Ancient Ultra Ball: 2x
+  - Ancient Origin Ball: Guaranteed catch
+
+## [1.2.6] - 2026-01-31
+
+### Changed
+- **Refactored ball multiplier calculation to use Cobblemon's native PokeBall API**
+  - Uses `PokeBalls.getPokeBall()` and `pokeBall.ancient` flag instead of string matching
+  - Uses `pokeBall.catchRateModifier.isGuaranteed()` for Master/Origin balls
+  - More reliable and maintainable approach
+
+### Fixed
+- Ancient balls now correctly show multipliers based on Cobblemon's actual data:
+  - Ancient Great Ball: 1.5x
+  - Ancient Ultra Ball: 2x
+  - Ancient Origin Ball: Guaranteed catch
+  - All other ancient balls (Feather, Wing, Jet, Heavy, Leaden, Gigaton): 1x (throwPower only, no catch rate bonus)
+
 ## [1.2.5] - 2026-01-31
 
 ### Added
