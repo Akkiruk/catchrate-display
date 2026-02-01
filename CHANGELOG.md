@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.2.11] - 2026-01-31
+
+### Changed
+- **Comprehensive Love Ball debug logging**
+  - Logs every step of the Love Ball check process
+  - Shows wild Pokemon species and gender
+  - Shows each party member's species and gender
+  - Reports exact comparison results (sameSpecies, oppositeGender)
+  - Logs API returned values vs manual check results
+  - Clear indication when override is applied or why it fails
+
+### Technical Debt Identified
+- Found 3 duplicate ball calculation systems that should be unified:
+  - `getBallInfo()` - client-side for in-battle
+  - `getBallInfoForWorld()` - client-side for out-of-combat
+  - `getBallConditionInfo()` - server-side
+- Future refactor planned to consolidate these
+
 ## [1.2.10] - 2026-01-31
 
 ### Changed

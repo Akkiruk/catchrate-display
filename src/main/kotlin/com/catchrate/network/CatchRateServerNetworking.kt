@@ -59,12 +59,18 @@ object CatchRateServerNetworking {
             // Manual Love Ball override - Cobblemon API may not work correctly in all cases
             val playerActor = battle.actors.find { it.isForPlayer(player) }
             if (ballId.path.lowercase() == "love_ball") {
+                CatchRateDisplayMod.debug("Love Ball: API returned isValid=$ballIsValid, multiplier=$ballMultiplier")
                 val loveBallResult = checkLoveBallConditionInBattle(pokemon, player)
+                CatchRateDisplayMod.debug("Love Ball: Manual check result = ${loveBallResult.first}, reason = ${loveBallResult.second}")
                 if (loveBallResult.first && ballMultiplier < 7F) {
                     // Manual check passed but API returned wrong value - override
                     ballMultiplier = 8F
                     ballIsValid = true
-                    CatchRateDisplayMod.debug("Love Ball: Manual override applied - ${loveBallResult.second}")
+                    CatchRateDisplayMod.debug("Love Ball: OVERRIDE APPLIED - setting to 8x")
+                } else if (!loveBallResult.first) {
+                    CatchRateDisplayMod.debug("Love Ball: Manual check FAILED - no override")
+                } else {
+                    CatchRateDisplayMod.debug("Love Ball: API already correct (${ballMultiplier}x) - no override needed")
                 }
             }
             
@@ -166,41 +172,64 @@ object CatchRateServerNetworking {
         wildPokemon: Pokemon,
         player: ServerPlayerEntity
     ): Pair<Boolean, String> {
+        CatchRateDisplayMod.debug("=== LOVE BALL CHECK START ===")
+        
         val battle = BattleRegistry.getBattleByParticipatingPlayer(player)
-        if (battle == null) return false to "Not in battle"
+        if (battle == null) {
+            CatchRateDisplayMod.debug("Love Ball: Player not in battle")
+            return false to "Not in battle"
+        }
         
         val playerActor = battle.actors.find { it.isForPlayer(player) }
-        if (playerActor == null) return false to "No party found"
+        if (playerActor == null) {
+            CatchRateDisplayMod.debug("Love Ball: Could not find player actor in battle")
+            return false to "No party found"
+        }
         
         val wildSpecies = wildPokemon.species.resourceIdentifier.toString()
         val wildGender = wildPokemon.gender
         
+        CatchRateDisplayMod.debug("Love Ball: Wild Pokemon = $wildSpecies, Gender = $wildGender")
+        
         // Genderless Pokemon cannot trigger Love Ball
         if (wildGender == Gender.GENDERLESS) {
+            CatchRateDisplayMod.debug("Love Ball: Wild Pokemon is genderless - FAIL")
             return false to "Wild Pokémon is genderless"
         }
         
         // Check each Pokemon in the player's party
-        for (battlePokemon in playerActor.pokemonList) {
+        val partySize = playerActor.pokemonList.count()
+        CatchRateDisplayMod.debug("Love Ball: Checking $partySize party members...")
+        
+        for ((index, battlePokemon) in playerActor.pokemonList.withIndex()) {
             val partyPokemon = battlePokemon.effectedPokemon
             val partySpecies = partyPokemon.species.resourceIdentifier.toString()
             val partyGender = partyPokemon.gender
             
+            CatchRateDisplayMod.debug("Love Ball: Party[$index] = $partySpecies, Gender = $partyGender")
+            
             // Skip genderless party Pokemon
-            if (partyGender == Gender.GENDERLESS) continue
+            if (partyGender == Gender.GENDERLESS) {
+                CatchRateDisplayMod.debug("Love Ball: Party[$index] is genderless - skip")
+                continue
+            }
             
             // Check same species AND opposite gender
             val sameSpecies = wildSpecies == partySpecies
             val oppositeGender = (wildGender == Gender.MALE && partyGender == Gender.FEMALE) ||
                                  (wildGender == Gender.FEMALE && partyGender == Gender.MALE)
             
+            CatchRateDisplayMod.debug("Love Ball: Party[$index] sameSpecies=$sameSpecies, oppositeGender=$oppositeGender")
+            
             if (sameSpecies && oppositeGender) {
                 val genderDesc = if (wildGender == Gender.MALE) "♂" else "♀"
                 val partyGenderDesc = if (partyGender == Gender.MALE) "♂" else "♀"
+                CatchRateDisplayMod.debug("Love Ball: MATCH FOUND! Wild $genderDesc + Party $partyGenderDesc (${partyPokemon.species.name})")
                 return true to "Wild $genderDesc + Party $partyGenderDesc (${partyPokemon.species.name})"
             }
         }
         
+        CatchRateDisplayMod.debug("Love Ball: No match found in party - FAIL")
         return false to "No matching species with opposite gender in party"
     }
     
