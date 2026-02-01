@@ -4,6 +4,7 @@ import com.catchrate.CatchRateDisplayMod
 import com.cobblemon.mod.common.api.pokeball.PokeBalls
 import com.cobblemon.mod.common.api.pokemon.status.Statuses
 import com.cobblemon.mod.common.battles.BattleRegistry
+import com.cobblemon.mod.common.pokemon.Gender
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.cobblemon.mod.common.pokemon.status.PersistentStatus
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
@@ -52,8 +53,20 @@ object CatchRateServerNetworking {
             val baseCatchRate = pokemon.form.catchRate.toFloat()
             
             val modifier = pokeBall.catchRateModifier
-            val ballIsValid = modifier.isValid(player, pokemon)
-            val ballMultiplier = if (ballIsValid) modifier.value(player, pokemon) else 1F
+            var ballIsValid = modifier.isValid(player, pokemon)
+            var ballMultiplier = if (ballIsValid) modifier.value(player, pokemon) else 1F
+            
+            // Manual Love Ball override - Cobblemon API may not work correctly in all cases
+            val playerActor = battle.actors.find { it.isForPlayer(player) }
+            if (ballId.path.lowercase() == "love_ball") {
+                val loveBallResult = checkLoveBallConditionInBattle(pokemon, player)
+                if (loveBallResult.first && ballMultiplier < 7F) {
+                    // Manual check passed but API returned wrong value - override
+                    ballMultiplier = 8F
+                    ballIsValid = true
+                    CatchRateDisplayMod.debug("Love Ball: Manual override applied - ${loveBallResult.second}")
+                }
+            }
             
             val (conditionMet, conditionDesc) = getBallConditionInfo(
                 ballId.path, ballMultiplier, ballIsValid, battle.turn, pokemon, player
@@ -74,7 +87,6 @@ object CatchRateServerNetworking {
             var modifiedCatchRate = modifier.behavior(player, pokemon).mutator(hpComponent, ballMultiplier) / (3F * maxHp)
             modifiedCatchRate *= statusMultiplier * lowLevelBonus
             
-            val playerActor = battle.actors.find { it.isForPlayer(player) }
             val playerHighestLevel = playerActor?.pokemonList?.maxOfOrNull { it.effectedPokemon.level } ?: pokemon.level
             
             if (playerHighestLevel < pokemon.level) {
@@ -145,6 +157,53 @@ object CatchRateServerNetworking {
         baseCatchRate = pokemon.form.catchRate
     )
     
+    /**
+     * Check Love Ball condition: requires same species AND opposite gender.
+     * Checks the player's battle party from the given battle.
+     * Returns (conditionMet, description).
+     */
+    private fun checkLoveBallConditionInBattle(
+        wildPokemon: Pokemon,
+        player: ServerPlayerEntity
+    ): Pair<Boolean, String> {
+        val battle = BattleRegistry.getBattleByParticipatingPlayer(player)
+        if (battle == null) return false to "Not in battle"
+        
+        val playerActor = battle.actors.find { it.isForPlayer(player) }
+        if (playerActor == null) return false to "No party found"
+        
+        val wildSpecies = wildPokemon.species.resourceIdentifier.toString()
+        val wildGender = wildPokemon.gender
+        
+        // Genderless Pokemon cannot trigger Love Ball
+        if (wildGender == Gender.GENDERLESS) {
+            return false to "Wild Pokémon is genderless"
+        }
+        
+        // Check each Pokemon in the player's party
+        for (battlePokemon in playerActor.pokemonList) {
+            val partyPokemon = battlePokemon.effectedPokemon
+            val partySpecies = partyPokemon.species.resourceIdentifier.toString()
+            val partyGender = partyPokemon.gender
+            
+            // Skip genderless party Pokemon
+            if (partyGender == Gender.GENDERLESS) continue
+            
+            // Check same species AND opposite gender
+            val sameSpecies = wildSpecies == partySpecies
+            val oppositeGender = (wildGender == Gender.MALE && partyGender == Gender.FEMALE) ||
+                                 (wildGender == Gender.FEMALE && partyGender == Gender.MALE)
+            
+            if (sameSpecies && oppositeGender) {
+                val genderDesc = if (wildGender == Gender.MALE) "♂" else "♀"
+                val partyGenderDesc = if (partyGender == Gender.MALE) "♂" else "♀"
+                return true to "Wild $genderDesc + Party $partyGenderDesc (${partyPokemon.species.name})"
+            }
+        }
+        
+        return false to "No matching species with opposite gender in party"
+    }
+    
     private fun getBallConditionInfo(
         ballName: String,
         multiplier: Float,
@@ -190,8 +249,13 @@ object CatchRateServerNetworking {
                 effective to if (effective) "3.5x - Already caught this species!" else "Only effective if you've caught this species"
             }
             lower == "love_ball" -> {
-                val effective = multiplier > 1.01f
-                effective to if (effective) "8x - Same species, opposite gender!" else "Requires: Same species + opposite gender"
+                // Use manual check result for more accurate information
+                val (effective, detail) = checkLoveBallConditionInBattle(pokemon, player)
+                if (effective) {
+                    true to "8x - $detail"
+                } else {
+                    false to detail
+                }
             }
             lower == "level_ball" -> {
                 val effective = multiplier > 1.01f

@@ -334,7 +334,7 @@ class CatchRateHudRenderer : HudRenderCallback {
         val screenHeight = client.window.scaledHeight
         
         val boxWidth = 130
-        val boxHeight = 62
+        val boxHeight = 74  // Extra space for 0.5x penalty indicator
         val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
         
         // Draw styled panel with wild indicator
@@ -369,6 +369,10 @@ class CatchRateHudRenderer : HudRenderCallback {
         val ballColor = getBallMultiplierColor(result.multiplier.toFloat())
         val conditionIcon = if (result.conditionMet) "●" else "○"
         drawContext.drawTextWithShadow(textRenderer, "$conditionIcon ${formatBallName(result.ballName)} ${String.format("%.1f", result.multiplier)}x", x + 6, ballY, ballColor)
+        
+        // Out of combat penalty indicator
+        val penaltyY = ballY + 10
+        drawContext.drawTextWithShadow(textRenderer, "⚠ Out of combat: 0.5x", x + 6, penaltyY, 0xFFAA00)
     }
     
     private fun renderBallComparisonPanel(drawContext: DrawContext, client: MinecraftClient, pokemon: ClientBattlePokemon) {

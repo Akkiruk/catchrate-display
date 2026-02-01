@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.2.8] - 2026-01-31
+
+### Fixed
+- **Love Ball now works correctly!**
+  - Implemented manual check that verifies same species + opposite gender against player's party
+  - Overrides Cobblemon API result if the manual check passes but API returns wrong value
+  - Shows detailed feedback: which party Pokémon matches and gender symbols (♂/♀)
+  - Properly handles genderless Pokémon (cannot trigger Love Ball)
+
+- **Quick Ball no longer shows 5x bonus outside of combat**
+  - Quick Ball's 5x multiplier only applies on turn 1 of BATTLE
+  - Out of combat throws correctly show 1x multiplier
+  - Timer Ball also shows "Only works in battle" message
+
+### Added
+- **0.5x out-of-combat penalty indicator**
+  - Wild Pokémon HUD now shows "⚠ Out of combat: 0.5x" warning
+  - Makes it clear that direct throws have reduced catch rate
+  - Box height increased to fit the new indicator
+
 ## [1.2.7] - 2026-01-31
 
 ### Fixed

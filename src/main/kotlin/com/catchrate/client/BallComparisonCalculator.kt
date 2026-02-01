@@ -345,9 +345,9 @@ object BallComparisonCalculator {
         }
         
         return when {
-            // Always 5x for first turn (out of combat counts as turn 1)
-            lower == "quick_ball" -> Triple(5F, true, "First turn!")
-            lower == "timer_ball" -> Triple(1F, false, "Increases each turn")
+            // Quick Ball only works turn 1 IN BATTLE - no bonus outside combat
+            lower == "quick_ball" -> Triple(1F, false, "Only works turn 1 in battle")
+            lower == "timer_ball" -> Triple(1F, false, "Only works in battle")
             lower == "ultra_ball" -> Triple(2F, true, "2x always")
             lower == "great_ball" -> Triple(1.5F, true, "1.5x always")
             lower == "sport_ball" -> Triple(1.5F, true, "1.5x always")
