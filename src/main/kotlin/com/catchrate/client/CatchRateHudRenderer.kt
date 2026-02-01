@@ -12,10 +12,12 @@ import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.render.RenderTickCounter
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import kotlin.math.roundToInt
 
 class CatchRateHudRenderer : HudRenderCallback {
     
@@ -47,8 +49,14 @@ class CatchRateHudRenderer : HudRenderCallback {
         
         if (!config.hudEnabled) return
         
-        val battle = CobblemonClient.battle ?: run {
+        val battle = CobblemonClient.battle
+        
+        // Handle out-of-combat display
+        if (battle == null) {
             resetState()
+            if (config.showOutOfCombat) {
+                renderOutOfCombatHud(drawContext, client, player)
+            }
             return
         }
         
@@ -151,99 +159,216 @@ class CatchRateHudRenderer : HudRenderCallback {
     }
     
     private fun renderServerModeHud(drawContext: DrawContext, client: MinecraftClient, data: CatchRateResponsePayload) {
-        val lines = mutableListOf<Text>()
+        val config = CatchRateConfig.get()
+        val textRenderer = client.textRenderer
+        val screenWidth = client.window.scaledWidth
+        val screenHeight = client.window.scaledHeight
         
-        lines.add(Text.literal("${data.pokemonName} Lv${data.pokemonLevel}").formatted(Formatting.WHITE, Formatting.BOLD))
+        val boxWidth = 130
+        val boxHeight = 72
+        val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
         
+        // Draw styled panel
+        drawStyledPanel(drawContext, x, y, boxWidth, boxHeight, data.catchChance)
+        
+        // Pokemon name and level header
+        val nameText = "${data.pokemonName} Lv${data.pokemonLevel}"
+        drawContext.drawTextWithShadow(textRenderer, nameText, x + 6, y + 4, 0xFFFFFF)
+        
+        // Catch rate display with progress bar
+        val barY = y + 16
         if (data.isGuaranteed) {
-            lines.add(Text.literal("GUARANTEED CATCH!").formatted(Formatting.GREEN, Formatting.BOLD))
+            drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, 100.0, true)
+            drawContext.drawTextWithShadow(textRenderer, "✓ GUARANTEED", x + 6, barY + 12, 0x55FF55)
         } else {
-            val color = getChanceFormatting(data.catchChance)
-            lines.add(Text.literal("${String.format("%.1f", data.catchChance)}% Catch Chance").formatted(color, Formatting.BOLD))
+            drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, data.catchChance, false)
+            val percentText = "${String.format("%.1f", data.catchChance)}%"
+            val percentColor = getChanceColorInt(data.catchChance)
+            drawContext.drawTextWithShadow(textRenderer, percentText, x + 6, barY + 12, percentColor)
         }
         
-        lines.add(Text.literal("-------------------").formatted(Formatting.DARK_GRAY))
+        // HP bar
+        val hpY = barY + 24
+        drawContext.drawTextWithShadow(textRenderer, "HP", x + 6, hpY, 0xAAAAAA)
+        drawHealthBar(drawContext, x + 22, hpY + 1, 60, data.hpPercent.toFloat() / 100f)
         
-        val hpFormatting = when { data.hpPercent <= 20 -> Formatting.GREEN; data.hpPercent <= 50 -> Formatting.YELLOW; else -> Formatting.RED }
-        lines.add(Text.literal("HP: ${String.format("%.0f", data.hpPercent)}%").formatted(hpFormatting))
-        
+        // Status effect (if any)
+        val infoY = hpY + 12
         if (data.statusMultiplier > 1.0) {
-            lines.add(Text.literal("${data.statusEffect}: ${String.format("%.1f", data.statusMultiplier)}x").formatted(Formatting.LIGHT_PURPLE))
+            val statusIcon = getStatusIcon(data.statusEffect)
+            drawContext.drawTextWithShadow(textRenderer, "$statusIcon ${data.statusEffect}", x + 6, infoY, 0xAA55FF)
         }
         
-        val ballFormatting = when { data.ballMultiplier >= 3.0 -> Formatting.GREEN; data.ballMultiplier >= 1.5 -> Formatting.AQUA; data.ballMultiplier < 1.0 -> Formatting.RED; else -> Formatting.GRAY }
-        lines.add(Text.literal("${data.ballName}: ${String.format("%.1f", data.ballMultiplier)}x").formatted(ballFormatting))
-        
-        val descFormatting = if (data.ballConditionMet) Formatting.GREEN else Formatting.RED
-        lines.add(Text.literal("  ${data.ballConditionDesc}").formatted(descFormatting))
-        
-        renderBox(drawContext, client, lines, data.catchChance)
+        // Ball multiplier
+        val ballY = if (data.statusMultiplier > 1.0) infoY + 10 else infoY
+        val ballColor = getBallMultiplierColor(data.ballMultiplier)
+        val ballIcon = if (data.ballConditionMet) "●" else "○"
+        drawContext.drawTextWithShadow(textRenderer, "$ballIcon ${formatBallName(data.ballName)} ${String.format("%.1f", data.ballMultiplier)}x", x + 6, ballY, ballColor)
     }
     
     private fun renderClientModeHud(drawContext: DrawContext, client: MinecraftClient, result: CatchRateResult, ballName: String) {
-        val lines = mutableListOf<Text>()
+        val config = CatchRateConfig.get()
+        val textRenderer = client.textRenderer
+        val screenWidth = client.window.scaledWidth
+        val screenHeight = client.window.scaledHeight
         
-        lines.add(Text.literal("Catch Rate").formatted(Formatting.WHITE, Formatting.BOLD))
+        val boxWidth = 130
+        val boxHeight = 68
+        val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
         
+        // Draw styled panel
+        drawStyledPanel(drawContext, x, y, boxWidth, boxHeight, result.percentage)
+        
+        // Header
+        drawContext.drawTextWithShadow(textRenderer, "Catch Rate", x + 6, y + 4, 0xFFFFFF)
+        
+        // Catch rate display with progress bar
+        val barY = y + 16
         if (result.isGuaranteed) {
-            lines.add(Text.literal("GUARANTEED CATCH!").formatted(Formatting.GREEN, Formatting.BOLD))
+            drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, 100.0, true)
+            drawContext.drawTextWithShadow(textRenderer, "✓ GUARANTEED", x + 6, barY + 12, 0x55FF55)
         } else {
-            val color = getChanceFormatting(result.percentage)
-            lines.add(Text.literal("${String.format("%.1f", result.percentage)}%").formatted(color, Formatting.BOLD))
+            drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, result.percentage, false)
+            val percentText = "${String.format("%.1f", result.percentage)}%"
+            val percentColor = getChanceColorInt(result.percentage)
+            drawContext.drawTextWithShadow(textRenderer, percentText, x + 6, barY + 12, percentColor)
         }
         
-        lines.add(Text.literal("-------------------").formatted(Formatting.DARK_GRAY))
+        // HP bar
+        val hpY = barY + 24
+        drawContext.drawTextWithShadow(textRenderer, "HP", x + 6, hpY, 0xAAAAAA)
+        drawHealthBar(drawContext, x + 22, hpY + 1, 60, (result.hpPercentage / 100.0).toFloat())
         
-        val hpFormatting = when { result.hpPercentage <= 20 -> Formatting.GREEN; result.hpPercentage <= 50 -> Formatting.YELLOW; else -> Formatting.RED }
-        lines.add(Text.literal("HP: ${String.format("%.0f", result.hpPercentage)}%").formatted(hpFormatting))
-        
+        // Status effect (if any)
+        val infoY = hpY + 12
+        var currentY = infoY
         if (result.statusMultiplier > 1.0) {
-            lines.add(Text.literal("${result.statusName}: ${String.format("%.1f", result.statusMultiplier)}x").formatted(Formatting.LIGHT_PURPLE))
+            val statusIcon = getStatusIcon(result.statusName)
+            drawContext.drawTextWithShadow(textRenderer, "$statusIcon ${result.statusName}", x + 6, currentY, 0xAA55FF)
+            currentY += 10
         }
         
+        // Ball multiplier
+        val ballColor = getBallMultiplierColor(result.ballMultiplier)
         val ballDisplay = formatBallName(result.ballName)
-        val ballFormatting = when { result.ballMultiplier >= 3.0 -> Formatting.GREEN; result.ballMultiplier >= 1.5 -> Formatting.AQUA; result.ballMultiplier < 1.0 -> Formatting.RED; else -> Formatting.GRAY }
-        lines.add(Text.literal("$ballDisplay: ${String.format("%.1f", result.ballMultiplier)}x").formatted(ballFormatting))
-        
-        if (ballName == "timer_ball" || ballName == "quick_ball") {
-            lines.add(Text.literal("  Turn $turnCount").formatted(Formatting.GOLD))
-        }
-        
-        if (result.levelBonus > 1.0) {
-            lines.add(Text.literal("Low Lv Bonus: ${String.format("%.1f", result.levelBonus)}x").formatted(Formatting.AQUA))
-        }
-        
-        lines.add(Text.literal("(Client estimate)").formatted(Formatting.DARK_GRAY))
-        
-        renderBox(drawContext, client, lines, result.percentage)
+        val turnInfo = if (ballName == "timer_ball" || ballName == "quick_ball") " T$turnCount" else ""
+        drawContext.drawTextWithShadow(textRenderer, "● $ballDisplay ${String.format("%.1f", result.ballMultiplier)}x$turnInfo", x + 6, currentY, ballColor)
     }
     
     private fun renderUnsupportedBallHud(drawContext: DrawContext, client: MinecraftClient, ballName: String) {
-        val lines = mutableListOf<Text>()
+        val config = CatchRateConfig.get()
+        val textRenderer = client.textRenderer
+        val screenWidth = client.window.scaledWidth
+        val screenHeight = client.window.scaledHeight
         
-        lines.add(Text.literal("Catch Rate").formatted(Formatting.WHITE, Formatting.BOLD))
-        lines.add(Text.literal("??%").formatted(Formatting.YELLOW, Formatting.BOLD))
-        lines.add(Text.literal("-------------------").formatted(Formatting.DARK_GRAY))
-        lines.add(Text.literal(formatBallName(ballName)).formatted(Formatting.RED))
-        lines.add(Text.literal("Server mod required").formatted(Formatting.RED))
+        val boxWidth = 130
+        val boxHeight = 52
+        val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
+        
+        // Draw styled panel
+        drawStyledPanel(drawContext, x, y, boxWidth, boxHeight, 0.0)
+        
+        // Header
+        drawContext.drawTextWithShadow(textRenderer, "Catch Rate", x + 6, y + 4, 0xFFFFFF)
+        
+        // Unknown percentage with bar
+        val barY = y + 16
+        drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, 0.0, false)
+        drawContext.drawTextWithShadow(textRenderer, "??%", x + 6, barY + 12, 0xFFFF55)
+        
+        // Ball name and server requirement
+        val infoY = barY + 24
+        drawContext.drawTextWithShadow(textRenderer, formatBallName(ballName), x + 6, infoY, 0xFF5555)
         
         val requirement = when (ballName) {
-            "love_ball" -> "(Checks your Pokemon)"
-            "level_ball" -> "(Checks your levels)"
-            "repeat_ball" -> "(Checks Pokedex)"
-            "lure_ball" -> "(Checks spawn type)"
-            else -> "(Server data needed)"
+            "love_ball" -> "Server required"
+            "level_ball" -> "Server required"
+            "repeat_ball" -> "Server required"
+            "lure_ball" -> "Server required"
+            else -> "Server required"
         }
-        lines.add(Text.literal(requirement).formatted(Formatting.DARK_GRAY))
-        
-        renderBox(drawContext, client, lines, 0.0)
+        drawContext.drawTextWithShadow(textRenderer, requirement, x + 6, infoY + 10, 0x888888)
     }
     
     private fun renderLoadingHud(drawContext: DrawContext, client: MinecraftClient) {
-        val lines = mutableListOf<Text>()
-        lines.add(Text.literal("Catch Rate").formatted(Formatting.WHITE, Formatting.BOLD))
-        lines.add(Text.literal("Calculating...").formatted(Formatting.GRAY))
-        renderBox(drawContext, client, lines, 50.0)
+        val config = CatchRateConfig.get()
+        val textRenderer = client.textRenderer
+        val screenWidth = client.window.scaledWidth
+        val screenHeight = client.window.scaledHeight
+        
+        val boxWidth = 130
+        val boxHeight = 40
+        val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
+        
+        // Draw styled panel
+        drawStyledPanel(drawContext, x, y, boxWidth, boxHeight, 50.0)
+        
+        // Header
+        drawContext.drawTextWithShadow(textRenderer, "Catch Rate", x + 6, y + 4, 0xFFFFFF)
+        
+        // Loading indicator
+        val dots = ".".repeat((System.currentTimeMillis() / 500 % 4).toInt())
+        drawContext.drawTextWithShadow(textRenderer, "Calculating$dots", x + 6, y + 18, 0xAAAAAA)
+    }
+    
+    private fun renderOutOfCombatHud(drawContext: DrawContext, client: MinecraftClient, player: ClientPlayerEntity) {
+        val heldItem = player.mainHandStack
+        if (!isPokeball(heldItem)) return
+        
+        // Get the Pokemon the player is looking at
+        val pokemonEntity = BallComparisonCalculator.getLookedAtPokemon() ?: return
+        
+        // Only show for wild Pokemon (not owned)
+        val pokemon = pokemonEntity.pokemon
+        if (pokemon.getOwnerUUID() != null) return
+        
+        val ballItemId = getBallId(heldItem)
+        val ballName = ballItemId.substringAfter(":").lowercase()
+        
+        // Calculate the catch rate for the wild Pokemon
+        val result = BallComparisonCalculator.calculateForWorldPokemon(pokemonEntity, ballName) ?: return
+        
+        val config = CatchRateConfig.get()
+        val textRenderer = client.textRenderer
+        val screenWidth = client.window.scaledWidth
+        val screenHeight = client.window.scaledHeight
+        
+        val boxWidth = 130
+        val boxHeight = 62
+        val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
+        
+        // Draw styled panel with wild indicator
+        drawStyledPanel(drawContext, x, y, boxWidth, boxHeight, result.catchRate, isWild = true)
+        
+        // Pokemon name and level header
+        val nameText = "${pokemon.species.name} Lv${pokemon.level}"
+        drawContext.drawTextWithShadow(textRenderer, nameText, x + 6, y + 4, 0xFFFFFF)
+        
+        // Wild indicator
+        drawContext.drawTextWithShadow(textRenderer, "WILD", x + boxWidth - 28, y + 4, 0xE43838)
+        
+        // Catch rate display with progress bar
+        val barY = y + 16
+        if (result.isGuaranteed) {
+            drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, 100.0, true)
+            drawContext.drawTextWithShadow(textRenderer, "✓ GUARANTEED", x + 6, barY + 12, 0x55FF55)
+        } else {
+            drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, result.catchRate, false)
+            val percentText = "${String.format("%.1f", result.catchRate)}%"
+            val percentColor = getChanceColorInt(result.catchRate)
+            drawContext.drawTextWithShadow(textRenderer, percentText, x + 6, barY + 12, percentColor)
+        }
+        
+        // HP (always full for wild)
+        val hpY = barY + 24
+        drawContext.drawTextWithShadow(textRenderer, "HP", x + 6, hpY, 0xAAAAAA)
+        drawHealthBar(drawContext, x + 22, hpY + 1, 60, 1.0f)
+        
+        // Ball multiplier with condition
+        val ballY = hpY + 12
+        val ballColor = getBallMultiplierColor(result.multiplier.toFloat())
+        val conditionIcon = if (result.conditionMet) "●" else "○"
+        drawContext.drawTextWithShadow(textRenderer, "$conditionIcon ${formatBallName(result.ballName)} ${String.format("%.1f", result.multiplier)}x", x + 6, ballY, ballColor)
     }
     
     private fun renderBallComparisonPanel(drawContext: DrawContext, client: MinecraftClient, pokemon: ClientBattlePokemon) {
@@ -297,60 +422,172 @@ class CatchRateHudRenderer : HudRenderCallback {
         val x = (screenWidth - boxWidth) / 2
         val y = (screenHeight - boxHeight) / 2
         
-        drawContext.fill(x, y, x + boxWidth, y + boxHeight, 0xEE000000.toInt())
+        // Styled background
+        drawContext.fill(x + 1, y + 1, x + boxWidth - 1, y + boxHeight - 1, 0xE5101820.toInt())
+        drawContext.fill(x + 2, y + 2, x + boxWidth - 2, y + headerHeight, 0x40000000)
         
+        // Gold border with rounded corners (Cobblemon style)
         val borderColor = 0xFFFFAA00.toInt()
-        drawContext.drawHorizontalLine(x, x + boxWidth - 1, y, borderColor)
-        drawContext.drawHorizontalLine(x, x + boxWidth - 1, y + boxHeight - 1, borderColor)
-        drawContext.drawVerticalLine(x, y, y + boxHeight - 1, borderColor)
-        drawContext.drawVerticalLine(x + boxWidth - 1, y, y + boxHeight - 1, borderColor)
+        drawContext.drawHorizontalLine(x + 2, x + boxWidth - 3, y, borderColor)
+        drawContext.drawHorizontalLine(x + 2, x + boxWidth - 3, y + boxHeight - 1, borderColor)
+        drawContext.drawVerticalLine(x, y + 2, y + boxHeight - 3, borderColor)
+        drawContext.drawVerticalLine(x + boxWidth - 1, y + 2, y + boxHeight - 3, borderColor)
         
-        val header = Text.literal("Ball Comparison (Turn $turnCount)").formatted(Formatting.GOLD, Formatting.BOLD)
+        // Corner pixels
+        drawContext.fill(x + 1, y + 1, x + 2, y + 2, borderColor)
+        drawContext.fill(x + boxWidth - 2, y + 1, x + boxWidth - 1, y + 2, borderColor)
+        drawContext.fill(x + 1, y + boxHeight - 2, x + 2, y + boxHeight - 1, borderColor)
+        drawContext.fill(x + boxWidth - 2, y + boxHeight - 2, x + boxWidth - 1, y + boxHeight - 1, borderColor)
+        
+        // Inner highlight
+        drawContext.drawHorizontalLine(x + 3, x + boxWidth - 4, y + 1, 0x30FFFFFF)
+        
+        val header = Text.literal("⚔ Ball Comparison (Turn $turnCount)").formatted(Formatting.GOLD, Formatting.BOLD)
         drawContext.drawTextWithShadow(textRenderer, header, x + padding, y + padding, 0xFFFFFF)
         
-        drawContext.drawHorizontalLine(x + padding, x + boxWidth - padding, y + headerHeight, 0xFF555555.toInt())
+        drawContext.drawHorizontalLine(x + padding, x + boxWidth - padding, y + headerHeight, 0xFF444455.toInt())
         
         var lineY = y + headerHeight + padding
-        for ((ballText, rateText, multText) in lines) {
+        for ((index, triple) in lines.withIndex()) {
+            val (ballText, rateText, multText) = triple
+            
+            // Alternating row background for readability
+            if (index % 2 == 0) {
+                drawContext.fill(x + 2, lineY - 1, x + boxWidth - 2, lineY + 9, 0x15FFFFFF)
+            }
+            
             drawContext.drawTextWithShadow(textRenderer, ballText, x + padding, lineY, 0xFFFFFF)
             drawContext.drawTextWithShadow(textRenderer, rateText, x + col1Width + padding * 2, lineY, 0xFFFFFF)
             drawContext.drawTextWithShadow(textRenderer, multText, x + col1Width + col2Width + padding * 3, lineY, 0xFFFFFF)
             lineY += lineHeight
         }
         
-        val footer = Text.literal("Release G to close").formatted(Formatting.DARK_GRAY)
+        // Footer separator and text
         val footerY = y + boxHeight - padding - 9
-        drawContext.drawTextWithShadow(textRenderer, footer, x + padding, footerY, 0xFFFFFF)
+        drawContext.drawHorizontalLine(x + padding, x + boxWidth - padding, footerY - 4, 0xFF333344.toInt())
+        drawContext.drawTextWithShadow(textRenderer, "Release G to close", x + padding, footerY, 0x888888)
     }
     
-    private fun renderBox(drawContext: DrawContext, client: MinecraftClient, lines: List<Text>, catchChance: Double) {
-        val config = CatchRateConfig.get()
-        val textRenderer = client.textRenderer
-        val screenWidth = client.window.scaledWidth
-        val screenHeight = client.window.scaledHeight
+    // ==================== POKEMON-STYLE UI RENDERING ====================
+    
+    private fun drawStyledPanel(drawContext: DrawContext, x: Int, y: Int, width: Int, height: Int, catchChance: Double, isWild: Boolean = false) {
+        // Background with gradient effect (darker at edges)
+        drawContext.fill(x + 1, y + 1, x + width - 1, y + height - 1, 0xE5101820.toInt())
         
-        val lineHeight = 9
-        val padding = 4
-        val maxWidth = lines.maxOfOrNull { textRenderer.getWidth(it) } ?: 100
-        val boxWidth = maxWidth + padding * 2
-        val boxHeight = lines.size * lineHeight + padding * 2
+        // Inner gradient panels for depth
+        drawContext.fill(x + 2, y + 2, x + width - 2, y + 14, 0x40000000)
         
-        val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
+        // Outer border - main color based on catch chance
+        val borderColor = getChanceColorInt(catchChance) or 0xFF000000.toInt()
+        drawContext.drawHorizontalLine(x + 2, x + width - 3, y, borderColor)
+        drawContext.drawHorizontalLine(x + 2, x + width - 3, y + height - 1, borderColor)
+        drawContext.drawVerticalLine(x, y + 2, y + height - 3, borderColor)
+        drawContext.drawVerticalLine(x + width - 1, y + 2, y + height - 3, borderColor)
         
-        drawContext.fill(x, y, x + boxWidth, y + boxHeight, 0xDD000000.toInt())
+        // Corner pixels for rounded effect
+        drawContext.fill(x + 1, y + 1, x + 2, y + 2, borderColor)
+        drawContext.fill(x + width - 2, y + 1, x + width - 1, y + 2, borderColor)
+        drawContext.fill(x + 1, y + height - 2, x + 2, y + height - 1, borderColor)
+        drawContext.fill(x + width - 2, y + height - 2, x + width - 1, y + height - 1, borderColor)
         
-        val borderColor = getChanceColor(catchChance) or 0xFF000000.toInt()
-        drawContext.drawHorizontalLine(x, x + boxWidth - 1, y, borderColor)
-        drawContext.drawHorizontalLine(x, x + boxWidth - 1, y + boxHeight - 1, borderColor)
-        drawContext.drawVerticalLine(x, y, y + boxHeight - 1, borderColor)
-        drawContext.drawVerticalLine(x + boxWidth - 1, y, y + boxHeight - 1, borderColor)
+        // Inner highlight line at top
+        drawContext.drawHorizontalLine(x + 3, x + width - 4, y + 1, 0x30FFFFFF)
         
-        var lineY = y + padding
-        for (text in lines) {
-            drawContext.drawTextWithShadow(textRenderer, text, x + padding, lineY, 0xFFFFFF)
-            lineY += lineHeight
+        // Wild Pokemon gets red accent
+        if (isWild) {
+            drawContext.drawHorizontalLine(x + 3, x + width - 4, y + height - 2, 0xFFE43838.toInt())
         }
     }
+    
+    private fun drawCatchBar(drawContext: DrawContext, x: Int, y: Int, width: Int, percentage: Double, isGuaranteed: Boolean) {
+        val barHeight = 8
+        
+        // Bar background
+        drawContext.fill(x, y, x + width, y + barHeight, 0xFF1A1A2E.toInt())
+        
+        // Border
+        drawContext.drawHorizontalLine(x, x + width - 1, y, 0xFF333344.toInt())
+        drawContext.drawHorizontalLine(x, x + width - 1, y + barHeight - 1, 0xFF333344.toInt())
+        drawContext.drawVerticalLine(x, y, y + barHeight - 1, 0xFF333344.toInt())
+        drawContext.drawVerticalLine(x + width - 1, y, y + barHeight - 1, 0xFF333344.toInt())
+        
+        // Fill bar
+        val fillWidth = ((width - 2) * (percentage / 100.0)).roundToInt().coerceAtLeast(0)
+        if (fillWidth > 0) {
+            val fillColor = if (isGuaranteed) 0xFF55FF55.toInt() else getChanceColorInt(percentage) or 0xFF000000.toInt()
+            drawContext.fill(x + 1, y + 1, x + 1 + fillWidth, y + barHeight - 1, fillColor)
+            
+            // Highlight on bar
+            val highlightColor = if (isGuaranteed) 0x5055FF55 else (getChanceColorInt(percentage) and 0x50FFFFFF)
+            drawContext.fill(x + 1, y + 1, x + 1 + fillWidth, y + 3, highlightColor)
+        }
+        
+        // Tick marks at 25%, 50%, 75%
+        for (tick in listOf(0.25, 0.5, 0.75)) {
+            val tickX = x + ((width - 2) * tick).roundToInt()
+            drawContext.drawVerticalLine(tickX, y + 1, y + barHeight - 2, 0x40FFFFFF)
+        }
+    }
+    
+    private fun drawHealthBar(drawContext: DrawContext, x: Int, y: Int, width: Int, ratio: Float) {
+        val barHeight = 6
+        
+        // Bar background
+        drawContext.fill(x, y, x + width, y + barHeight, 0xFF1A1A2E.toInt())
+        
+        // Calculate health colors (Cobblemon style)
+        val (red, green) = getHealthBarColors(ratio)
+        val healthColor = ((255).shl(24)) or ((red * 255).toInt().shl(16)) or ((green * 255).toInt().shl(8)) or (70)
+        
+        // Fill bar
+        val fillWidth = ((width - 2) * ratio).roundToInt().coerceAtLeast(0)
+        if (fillWidth > 0) {
+            drawContext.fill(x + 1, y + 1, x + 1 + fillWidth, y + barHeight - 1, healthColor)
+        }
+        
+        // Border
+        drawContext.drawHorizontalLine(x, x + width - 1, y, 0xFF333344.toInt())
+        drawContext.drawHorizontalLine(x, x + width - 1, y + barHeight - 1, 0xFF333344.toInt())
+    }
+    
+    private fun getHealthBarColors(ratio: Float): Pair<Float, Float> {
+        val redRatio = 0.2f
+        val yellowRatio = 0.5f
+        
+        val r = if (ratio > redRatio) (-2 * ratio + 2).coerceIn(0f, 1f) else 1.0f
+        val g = when {
+            ratio > yellowRatio -> 1.0f
+            ratio > redRatio -> (ratio / yellowRatio).coerceIn(0f, 1f)
+            else -> 0.0f
+        }
+        return r to g
+    }
+    
+    private fun getStatusIcon(status: String): String = when (status.lowercase()) {
+        "asleep", "sleep" -> "💤"
+        "frozen" -> "❄"
+        "paralyzed", "paralysis" -> "⚡"
+        "burned", "burn" -> "🔥"
+        "poisoned", "poison", "badly poisoned", "poisonbadly" -> "☠"
+        else -> "●"
+    }
+    
+    private fun getBallMultiplierColor(multiplier: Number): Int = when {
+        multiplier.toDouble() >= 3.0 -> 0x55FF55  // Excellent - Green
+        multiplier.toDouble() >= 2.0 -> 0x55FFFF  // Great - Cyan
+        multiplier.toDouble() >= 1.5 -> 0xFFFF55  // Good - Yellow
+        multiplier.toDouble() < 1.0 -> 0xFF5555   // Poor - Red
+        else -> 0xAAAAAA                           // Normal - Gray
+    }
+    
+    private fun getChanceColorInt(percentage: Double): Int = when {
+        percentage >= 75.0 -> 0x55FF55   // High - Green
+        percentage >= 50.0 -> 0xFFFF55   // Medium - Yellow
+        percentage >= 25.0 -> 0xFFAA00   // Low - Orange
+        else -> 0xFF5555                  // Very Low - Red
+    }
+    
+    // ==================== BALL COMPARISON PANEL (KEPT FOR REFERENCE) ====================
     
     private fun getOpponentPokemon(battle: ClientBattle): ClientBattlePokemon? {
         return try { battle.side2.activeClientBattlePokemon.firstOrNull()?.battlePokemon } catch (e: Exception) { null }
@@ -364,9 +601,18 @@ class CatchRateHudRenderer : HudRenderCallback {
     
     private fun getBallId(itemStack: ItemStack): String = itemStack.item.toString().substringAfter("{").substringBefore("}").trim()
     
-    private fun formatBallName(name: String): String = name.replace("_", " ").replace("cobblemon:", "").split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercaseChar() } }
+    private fun formatBallName(name: String): String {
+        val cleaned = name.replace("_", " ").replace("cobblemon:", "")
+        // Shorten common ball names
+        return cleaned.split(" ").joinToString(" ") { 
+            it.replaceFirstChar { c -> c.uppercaseChar() } 
+        }.replace(" Ball", "")
+    }
     
-    private fun getChanceFormatting(percentage: Double): Formatting = when { percentage >= 75.0 -> Formatting.GREEN; percentage >= 50.0 -> Formatting.YELLOW; percentage >= 25.0 -> Formatting.GOLD; else -> Formatting.RED }
-    
-    private fun getChanceColor(percentage: Double): Int = when { percentage >= 75.0 -> 0x55FF55; percentage >= 50.0 -> 0xFFFF55; percentage >= 25.0 -> 0xFFAA00; else -> 0xFF5555 }
+    private fun getChanceFormatting(percentage: Double): Formatting = when {
+        percentage >= 75.0 -> Formatting.GREEN
+        percentage >= 50.0 -> Formatting.YELLOW
+        percentage >= 25.0 -> Formatting.GOLD
+        else -> Formatting.RED
+    }
 }

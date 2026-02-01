@@ -124,9 +124,10 @@ object CatchRateCalculator {
         
         return when {
             lower.contains("master") || lower == "ancient_origin_ball" -> 255F
-            normalized == "great" -> 1.5F
-            normalized == "ultra" || normalized in listOf("jet", "wing", "heavy", "leaden", "gigaton") -> 2F
-            normalized == "feather" -> 1F
+            // Ancient ball tiers: Feather/Heavy=1x, Wing/Leaden=1.5x, Jet/Gigaton=2x
+            normalized == "great" || normalized == "wing" || normalized == "leaden" -> 1.5F
+            normalized == "ultra" || normalized == "jet" || normalized == "gigaton" -> 2F
+            normalized == "feather" || normalized == "heavy" -> 1F
             normalized == "poke" -> 1F
             lower == "sport_ball" -> 1.5F
             lower == "timer_ball" -> (turnCount * (1229F / 4096F)).coerceAtMost(4F)

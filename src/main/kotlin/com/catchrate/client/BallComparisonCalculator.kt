@@ -146,19 +146,55 @@ object BallComparisonCalculator {
     
     /**
      * Get the Pokemon entity the player is looking at.
+     * Uses both crosshair target and extended raycast for better detection.
      */
     fun getLookedAtPokemon(): PokemonEntity? {
         val client = MinecraftClient.getInstance()
-        val hitResult = client.crosshairTarget ?: return null
+        val player = client.player ?: return null
+        val world = client.world ?: return null
         
-        if (hitResult.type == HitResult.Type.ENTITY) {
+        // First try the crosshair target
+        val hitResult = client.crosshairTarget
+        if (hitResult != null && hitResult.type == HitResult.Type.ENTITY) {
             val entityHit = hitResult as EntityHitResult
             val entity = entityHit.entity
             if (entity is PokemonEntity) {
                 return entity
             }
         }
-        return null
+        
+        // Fallback: Check nearby Pokemon entities that the player is looking at
+        val lookVec = player.rotationVector
+        val eyePos = player.eyePos
+        val maxDistance = 8.0
+        
+        // Get all Pokemon entities within range
+        val nearbyPokemon = world.getEntitiesByClass(
+            PokemonEntity::class.java,
+            player.boundingBox.expand(maxDistance)
+        ) { true }
+        
+        var closestPokemon: PokemonEntity? = null
+        var closestDistance = maxDistance
+        
+        for (pokemon in nearbyPokemon) {
+            // Check if player is looking at this Pokemon
+            val toEntity = pokemon.pos.add(0.0, pokemon.height / 2.0, 0.0).subtract(eyePos)
+            val distance = toEntity.length()
+            
+            if (distance > maxDistance) continue
+            
+            val normalizedToEntity = toEntity.normalize()
+            val dot = lookVec.dotProduct(normalizedToEntity)
+            
+            // Check if looking roughly at the entity (dot product > 0.95 means within ~18 degrees)
+            if (dot > 0.95 && distance < closestDistance) {
+                closestPokemon = pokemon
+                closestDistance = distance
+            }
+        }
+        
+        return closestPokemon
     }
     
     private fun getBallInfo(
@@ -180,13 +216,16 @@ object BallComparisonCalculator {
                 val mult = if (turnCount == 1) 5F else 1F
                 Triple(mult, turnCount == 1, if (turnCount == 1) "First turn!" else "Only effective turn 1")
             }
-            lower == "timer_ball" -> {
+            lower == "timer_ball" || lower == "ancient_timer_ball" -> {
                 val mult = (turnCount * (1229F / 4096F) + 1F).coerceAtMost(4F)
                 Triple(mult, mult > 1.01f, "Turn $turnCount")
             }
-            normalized in listOf("ultra", "jet", "wing", "heavy", "leaden", "gigaton") -> Triple(2F, true, "2x always")
-            normalized == "great" -> Triple(1.5F, true, "1.5x always")
-            normalized == "poke" || normalized == "feather" -> Triple(1F, true, "1x always")
+            // Ancient ball tiers: Jet/Gigaton=2x, Ultra=2x
+            normalized in listOf("ultra", "jet", "gigaton") -> Triple(2F, true, "2x always")
+            // Ancient ball tiers: Wing/Leaden=1.5x, Great=1.5x
+            normalized in listOf("great", "wing", "leaden") -> Triple(1.5F, true, "1.5x always")
+            // Ancient ball tiers: Feather/Heavy=1x, Poke=1x
+            normalized == "poke" || normalized == "feather" || normalized == "heavy" -> Triple(1F, true, "1x always")
             lower == "dusk_ball" -> {
                 val light = world.getLightLevel(player.blockPos)
                 val mult = if (light <= 7) 3F else 1F
@@ -267,10 +306,13 @@ object BallComparisonCalculator {
         
         return when {
             normalized == "quick" -> Triple(5F, true, "First turn!")
-            lower == "timer_ball" -> Triple(1F, false, "Increases each turn")
-            normalized in listOf("ultra", "jet", "wing", "heavy", "leaden", "gigaton") -> Triple(2F, true, "2x always")
-            normalized == "great" -> Triple(1.5F, true, "1.5x always")
-            normalized == "poke" || normalized == "feather" -> Triple(1F, true, "1x always")
+            lower == "timer_ball" || lower == "ancient_timer_ball" -> Triple(1F, false, "Increases each turn")
+            // Ancient ball tiers: Jet/Gigaton=2x, Ultra=2x
+            normalized in listOf("ultra", "jet", "gigaton") -> Triple(2F, true, "2x always")
+            // Ancient ball tiers: Wing/Leaden=1.5x, Great=1.5x
+            normalized in listOf("great", "wing", "leaden") -> Triple(1.5F, true, "1.5x always")
+            // Ancient ball tiers: Feather/Heavy=1x, Poke=1x
+            normalized == "poke" || normalized == "feather" || normalized == "heavy" -> Triple(1F, true, "1x always")
             lower == "dusk_ball" -> {
                 val light = world.getLightLevel(player.blockPos)
                 val mult = if (light <= 7) 3F else 1F
