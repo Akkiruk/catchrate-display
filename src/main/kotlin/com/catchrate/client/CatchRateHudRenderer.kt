@@ -291,7 +291,8 @@ class CatchRateHudRenderer : HudRenderCallback {
         val col2Width = 45
         val col3Width = 35
         val boxWidth = col1Width + col2Width + col3Width + padding * 4
-        val boxHeight = headerHeight + lines.size * lineHeight + padding * 2
+        val footerHeight = 18
+        val boxHeight = headerHeight + lines.size * lineHeight + footerHeight + padding * 2
         
         val x = (screenWidth - boxWidth) / 2
         val y = (screenHeight - boxHeight) / 2
@@ -318,7 +319,8 @@ class CatchRateHudRenderer : HudRenderCallback {
         }
         
         val footer = Text.literal("Release G to close").formatted(Formatting.DARK_GRAY)
-        drawContext.drawTextWithShadow(textRenderer, footer, x + padding, y + boxHeight - padding - 8, 0xFFFFFF)
+        val footerY = y + boxHeight - padding - 9
+        drawContext.drawTextWithShadow(textRenderer, footer, x + padding, footerY, 0xFFFFFF)
     }
     
     private fun renderBox(drawContext: DrawContext, client: MinecraftClient, lines: List<Text>, catchChance: Double) {
