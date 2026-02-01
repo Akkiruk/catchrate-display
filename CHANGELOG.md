@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.27] - 2026-02-01
+
+### Added
+- Automated Modrinth publishing alongside CurseForge
+
 ## [1.2.26] - 2026-02-01
 
 ### Improved
