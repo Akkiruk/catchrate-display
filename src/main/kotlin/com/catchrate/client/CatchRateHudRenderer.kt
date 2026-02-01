@@ -164,7 +164,24 @@ class CatchRateHudRenderer : HudRenderCallback {
         val screenWidth = client.window.scaledWidth
         val screenHeight = client.window.scaledHeight
         
-        val boxWidth = 140
+        // Calculate dynamic width based on text content
+        val nameText = "${data.pokemonName} Lv${data.pokemonLevel}"
+        val hpMultiplier = (3.0 - 2.0 * data.hpPercent / 100.0) / 3.0
+        val hpText = "HP ${String.format("%.2f", hpMultiplier)}x"
+        val statusIcon = HudDrawing.getStatusIcon(data.statusEffect)
+        val statusText = "$statusIcon ${data.statusEffect} ${String.format("%.1f", data.statusMultiplier)}x"
+        val ballIcon = if (data.ballConditionMet) "●" else "○"
+        val ballText = "$ballIcon ${CatchRateFormula.formatBallNameCompact(data.ballName)} ${String.format("%.1f", data.ballMultiplier)}x"
+        
+        val textWidths = mutableListOf(
+            textRenderer.getWidth(nameText),
+            textRenderer.getWidth(hpText),
+            textRenderer.getWidth(ballText),
+            textRenderer.getWidth(data.ballConditionDesc)
+        )
+        if (data.statusMultiplier > 1.0) textWidths.add(textRenderer.getWidth(statusText))
+        
+        val boxWidth = (textWidths.maxOrNull() ?: 100) + 16
         val hasStatus = data.statusMultiplier > 1.0
         val boxHeight = if (hasStatus) 82 else 72
         val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
@@ -173,7 +190,6 @@ class CatchRateHudRenderer : HudRenderCallback {
         HudDrawing.drawStyledPanel(drawContext, x, y, boxWidth, boxHeight, data.catchChance)
         
         // Pokemon name and level header
-        val nameText = "${data.pokemonName} Lv${data.pokemonLevel}"
         drawContext.drawTextWithShadow(textRenderer, nameText, x + 6, y + 4, Colors.TEXT_WHITE)
         
         // Catch rate display with progress bar
@@ -190,21 +206,18 @@ class CatchRateHudRenderer : HudRenderCallback {
         
         // HP multiplier row
         var currentY = barY + 26
-        val hpMultiplier = (3.0 - 2.0 * data.hpPercent / 100.0) / 3.0
-        drawContext.drawTextWithShadow(textRenderer, "HP ${String.format("%.2f", hpMultiplier)}x", x + 6, currentY, Colors.TEXT_GRAY)
+        drawContext.drawTextWithShadow(textRenderer, hpText, x + 6, currentY, Colors.TEXT_GRAY)
         
         // Status effect row (if any)
         if (hasStatus) {
             currentY += 10
-            val statusIcon = HudDrawing.getStatusIcon(data.statusEffect)
-            drawContext.drawTextWithShadow(textRenderer, "$statusIcon ${data.statusEffect} ${String.format("%.1f", data.statusMultiplier)}x", x + 6, currentY, Colors.TEXT_PURPLE)
+            drawContext.drawTextWithShadow(textRenderer, statusText, x + 6, currentY, Colors.TEXT_PURPLE)
         }
         
         // Ball multiplier row
         currentY += 10
         val ballColor = HudDrawing.getBallMultiplierColor(data.ballMultiplier)
-        val ballIcon = if (data.ballConditionMet) "●" else "○"
-        drawContext.drawTextWithShadow(textRenderer, "$ballIcon ${CatchRateFormula.formatBallNameCompact(data.ballName)} ${String.format("%.1f", data.ballMultiplier)}x", x + 6, currentY, ballColor)
+        drawContext.drawTextWithShadow(textRenderer, ballText, x + 6, currentY, ballColor)
         
         // Ball condition description row
         currentY += 10

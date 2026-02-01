@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.21] - 2026-02-01
+
+### Changed
+- HUD now positioned lower by default (closer to hotbar)
+- HUD width dynamically adjusts to fit text content
+
 ## [1.2.20] - 2026-01-31
 
 ### Changed

@@ -9,7 +9,7 @@ import java.io.File
 data class CatchRateConfig(
     var hudAnchor: HudAnchor = HudAnchor.BOTTOM_CENTER,
     var hudOffsetX: Int = 0,
-    var hudOffsetY: Int = -95,
+    var hudOffsetY: Int = -50,
     var hudEnabled: Boolean = true,
     var showOutOfCombat: Boolean = true,
     var compactMode: Boolean = false,
@@ -95,7 +95,7 @@ data class CatchRateConfig(
     fun resetPosition() {
         hudAnchor = HudAnchor.BOTTOM_CENTER
         hudOffsetX = 0
-        hudOffsetY = -95
+        hudOffsetY = -50
         save()
     }
 }
