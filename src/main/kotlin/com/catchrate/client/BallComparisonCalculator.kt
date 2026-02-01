@@ -2,7 +2,9 @@ package com.catchrate.client
 
 import com.catchrate.BallMultiplierCalculator
 import com.catchrate.BallMultiplierCalculator.BallContext
+import com.catchrate.BallMultiplierCalculator.PartyMember
 import com.catchrate.CatchRateDisplayMod
+import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Gender
@@ -185,6 +187,7 @@ object BallComparisonCalculator {
     
     /**
      * Build a BallContext from a ClientBattlePokemon (in-battle scenario).
+     * Attempts to get party info from CobblemonClient.storage for Love Ball checks.
      */
     private fun buildBattleContext(
         pokemon: ClientBattlePokemon,
@@ -194,6 +197,9 @@ object BallComparisonCalculator {
     ): BallContext {
         val species = pokemon.species
         val timeOfDay = world.timeOfDay % 24000
+        
+        // Try to get player's party from client storage
+        val partyPokemon = getClientPartyMembers()
         
         return BallContext(
             speciesId = species.resourceIdentifier.toString(),
@@ -211,12 +217,13 @@ object BallComparisonCalculator {
             isPlayerUnderwater = player.isSubmergedInWater,
             inBattle = true,
             turnCount = turnCount,
-            partyPokemon = null // Client doesn't have reliable party info in battle
+            partyPokemon = partyPokemon
         )
     }
     
     /**
      * Build a BallContext from a Pokemon entity (out-of-combat scenario).
+     * Attempts to get party info from CobblemonClient.storage for Love Ball checks.
      */
     private fun buildWorldContext(
         pokemon: com.cobblemon.mod.common.pokemon.Pokemon,
@@ -225,6 +232,9 @@ object BallComparisonCalculator {
     ): BallContext {
         val species = pokemon.species
         val timeOfDay = world.timeOfDay % 24000
+        
+        // Try to get player's party from client storage
+        val partyPokemon = getClientPartyMembers()
         
         return BallContext(
             speciesId = species.resourceIdentifier.toString(),
@@ -242,8 +252,28 @@ object BallComparisonCalculator {
             isPlayerUnderwater = player.isSubmergedInWater,
             inBattle = false,
             turnCount = 0,
-            partyPokemon = null // Out of combat, no party context needed
+            partyPokemon = partyPokemon
         )
+    }
+    
+    /**
+     * Get the player's party from CobblemonClient storage.
+     * Returns null if party cannot be accessed (server-only mod scenarios).
+     */
+    private fun getClientPartyMembers(): List<PartyMember>? {
+        return try {
+            val party = CobblemonClient.storage.party
+            val members = party.slots.filterNotNull().map { pokemon ->
+                PartyMember(
+                    speciesId = pokemon.species.resourceIdentifier.toString(),
+                    gender = pokemon.gender
+                )
+            }
+            members.takeIf { it.isNotEmpty() }
+        } catch (e: Exception) {
+            CatchRateDisplayMod.debug("Could not access client party: ${e.message}")
+            null
+        }
     }
     
     // === UTILITY ===

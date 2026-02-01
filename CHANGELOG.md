@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.13] - 2026-01-31
+
+### Fixed
+- **Love Ball now works in client-only mode!**
+  - Client-side calculator now accesses player's party from `CobblemonClient.storage`
+  - Love Ball correctly checks same species + opposite gender even without server mod
+  - Out-of-combat Love Ball display now shows accurate multiplier and reason
+
+### Technical
+- `BallComparisonCalculator` now builds `BallContext` with party info from client storage
+- New `getClientPartyMembers()` helper method extracts party for unified calculator
+- Graceful fallback if party access fails (shows "Requires party info")
+
 ## [1.2.12] - 2026-01-31
 
 ### Changed
