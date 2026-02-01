@@ -179,7 +179,7 @@ class CatchRateHudRenderer : HudRenderCallback {
         val barY = y + 16
         if (data.isGuaranteed) {
             HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, 100.0, true)
-            drawContext.drawTextWithShadow(textRenderer, "✓ GUARANTEED", x + 6, barY + 12, Colors.TEXT_GREEN)
+            drawContext.drawTextWithShadow(textRenderer, "★ 100% CATCH ★", x + 6, barY + 12, Colors.TEXT_GREEN)
         } else {
             HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, data.catchChance, false)
             val percentText = "${String.format("%.1f", data.catchChance)}%"

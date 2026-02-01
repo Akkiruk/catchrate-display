@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.17] - 2026-01-31
+
+### Changed
+- Updated guaranteed catch display text to "★ 100% CATCH ★"
+
 ## [1.2.16] - 2026-01-31
 
 ### Changed
