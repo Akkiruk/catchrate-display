@@ -117,10 +117,17 @@ object CatchRateCalculator {
         val player = client.player
         val world = client.world
         
+        // Normalize ancient ball names to their regular variants
+        val normalized = lower
+            .replace("ancient_", "")
+            .replace("_ball", "")
+        
         return when {
             lower.contains("master") || lower == "ancient_origin_ball" -> 255F
-            lower == "great_ball" || lower == "ancient_great_ball" -> 1.5F
-            lower == "ultra_ball" || lower == "ancient_ultra_ball" -> 2F
+            normalized == "great" -> 1.5F
+            normalized == "ultra" || normalized in listOf("jet", "wing", "heavy", "leaden", "gigaton") -> 2F
+            normalized == "feather" -> 1F
+            normalized == "poke" -> 1F
             lower == "sport_ball" -> 1.5F
             lower == "timer_ball" -> (turnCount * (1229F / 4096F)).coerceAtMost(4F)
             lower == "quick_ball" -> if (turnCount == 1) 5F else 1F

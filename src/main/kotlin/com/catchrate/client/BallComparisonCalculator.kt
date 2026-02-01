@@ -170,42 +170,48 @@ object BallComparisonCalculator {
     ): Triple<Float, Boolean, String> {
         val lower = ballId.lowercase()
         
-        return when (lower) {
-            "quick_ball" -> {
+        // Normalize ancient ball names to their regular variants
+        val normalized = lower
+            .replace("ancient_", "")
+            .replace("_ball", "")
+        
+        return when {
+            normalized == "quick" -> {
                 val mult = if (turnCount == 1) 5F else 1F
                 Triple(mult, turnCount == 1, if (turnCount == 1) "First turn!" else "Only effective turn 1")
             }
-            "timer_ball" -> {
+            lower == "timer_ball" -> {
                 val mult = (turnCount * (1229F / 4096F) + 1F).coerceAtMost(4F)
                 Triple(mult, mult > 1.01f, "Turn $turnCount")
             }
-            "ultra_ball" -> Triple(2F, true, "2x always")
-            "great_ball" -> Triple(1.5F, true, "1.5x always")
-            "dusk_ball" -> {
+            normalized in listOf("ultra", "jet", "wing", "heavy", "leaden", "gigaton") -> Triple(2F, true, "2x always")
+            normalized == "great" -> Triple(1.5F, true, "1.5x always")
+            normalized == "poke" || normalized == "feather" -> Triple(1F, true, "1x always")
+            lower == "dusk_ball" -> {
                 val light = world.getLightLevel(player.blockPos)
                 val mult = if (light <= 7) 3F else 1F
                 Triple(mult, light <= 7, if (light <= 7) "Dark area" else "Need darkness")
             }
-            "net_ball" -> {
+            lower == "net_ball" -> {
                 val types = listOf(pokemon.species.primaryType.name, pokemon.species.secondaryType?.name)
                     .filterNotNull().map { it.lowercase() }
                 val isBugWater = types.any { it == "bug" || it == "water" }
                 Triple(if (isBugWater) 3F else 1F, isBugWater, if (isBugWater) "Bug/Water type!" else "Not Bug/Water")
             }
-            "dive_ball" -> {
+            lower == "dive_ball" -> {
                 val inWater = player.isSubmergedInWater
                 Triple(if (inWater) 3.5F else 1F, inWater, if (inWater) "Underwater!" else "Need to be underwater")
             }
-            "nest_ball" -> {
+            lower == "nest_ball" -> {
                 val effective = pokemon.level < 30
                 val mult = if (effective) ((41 - pokemon.level) / 10F).coerceAtLeast(1F) else 1F
                 Triple(mult, effective, if (effective) "Low level (${pokemon.level})" else "Only <Lv30")
             }
-            "dream_ball" -> {
+            lower == "dream_ball" -> {
                 val asleep = pokemon.status?.name?.path == "sleep"
                 Triple(if (asleep) 4F else 1F, asleep, if (asleep) "Sleeping!" else "Need sleep status")
             }
-            "moon_ball" -> {
+            lower == "moon_ball" -> {
                 val timeOfDay = world.timeOfDay % 24000
                 val isNight = timeOfDay in 12000..24000
                 val mult = if (isNight) {
@@ -215,13 +221,13 @@ object BallComparisonCalculator {
                 } else 1F
                 Triple(mult, isNight && mult > 1, if (isNight) "Nighttime" else "Only at night")
             }
-            "fast_ball" -> {
+            lower == "fast_ball" -> {
                 val speed = pokemon.species.baseStats.entries
                     .find { it.key.showdownId.equals("spe", true) }?.value ?: 0
                 val fast = speed >= 100
                 Triple(if (fast) 4F else 1F, fast, if (fast) "Speed ≥100" else "Speed <100")
             }
-            "heavy_ball" -> {
+            lower == "heavy_ball" -> {
                 val weight = pokemon.species.weight
                 val mult = when {
                     weight >= 3000 -> 4F
@@ -231,16 +237,16 @@ object BallComparisonCalculator {
                 }
                 Triple(mult, mult > 1, "Weight: ${weight/10f}kg")
             }
-            "beast_ball" -> {
+            lower == "beast_ball" -> {
                 val labels = try { pokemon.species.labels.map { it.lowercase() } } catch (e: Exception) { emptyList() }
                 val isUB = labels.contains("ultra_beast")
                 Triple(if (isUB) 5F else 0.1F, isUB, if (isUB) "Ultra Beast!" else "Not Ultra Beast")
             }
             // Server-required balls - show estimate
-            "love_ball" -> Triple(1F, false, "Needs same species")
-            "level_ball" -> Triple(1F, false, "Needs level check")
-            "repeat_ball" -> Triple(1F, false, "Needs Pokédex")
-            "lure_ball" -> Triple(1F, false, "Needs fishing")
+            lower == "love_ball" -> Triple(1F, false, "Needs same species")
+            lower == "level_ball" -> Triple(1F, false, "Needs level check")
+            lower == "repeat_ball" -> Triple(1F, false, "Needs Pokédex")
+            lower == "lure_ball" -> Triple(1F, false, "Needs fishing")
             // No bonus balls
             else -> Triple(1F, true, "No bonus")
         }
@@ -252,37 +258,42 @@ object BallComparisonCalculator {
         player: net.minecraft.entity.player.PlayerEntity,
         world: net.minecraft.world.World
     ): Triple<Float, Boolean, String> {
-        // Similar to battle version but using full Pokemon data
         val lower = ballId.lowercase()
         
-        return when (lower) {
-            "quick_ball" -> Triple(5F, true, "First turn!")
-            "timer_ball" -> Triple(1F, false, "Increases each turn")
-            "ultra_ball" -> Triple(2F, true, "2x always")
-            "great_ball" -> Triple(1.5F, true, "1.5x always")
-            "dusk_ball" -> {
+        // Normalize ancient ball names to their regular variants
+        val normalized = lower
+            .replace("ancient_", "")
+            .replace("_ball", "")
+        
+        return when {
+            normalized == "quick" -> Triple(5F, true, "First turn!")
+            lower == "timer_ball" -> Triple(1F, false, "Increases each turn")
+            normalized in listOf("ultra", "jet", "wing", "heavy", "leaden", "gigaton") -> Triple(2F, true, "2x always")
+            normalized == "great" -> Triple(1.5F, true, "1.5x always")
+            normalized == "poke" || normalized == "feather" -> Triple(1F, true, "1x always")
+            lower == "dusk_ball" -> {
                 val light = world.getLightLevel(player.blockPos)
                 val mult = if (light <= 7) 3F else 1F
                 Triple(mult, light <= 7, if (light <= 7) "Dark area" else "Need darkness")
             }
-            "net_ball" -> {
+            lower == "net_ball" -> {
                 val types = listOf(pokemon.primaryType.name, pokemon.secondaryType?.name)
                     .filterNotNull().map { it.lowercase() }
                 val isBugWater = types.any { it == "bug" || it == "water" }
                 Triple(if (isBugWater) 3F else 1F, isBugWater, if (isBugWater) "Bug/Water!" else "Not Bug/Water")
             }
-            "nest_ball" -> {
+            lower == "nest_ball" -> {
                 val effective = pokemon.level < 30
                 val mult = if (effective) ((41 - pokemon.level) / 10F).coerceAtLeast(1F) else 1F
                 Triple(mult, effective, if (effective) "Low level" else "Only <Lv30")
             }
-            "fast_ball" -> {
+            lower == "fast_ball" -> {
                 val speed = pokemon.species.baseStats.entries
                     .find { it.key.showdownId.equals("spe", true) }?.value ?: 0
                 val fast = speed >= 100
                 Triple(if (fast) 4F else 1F, fast, if (fast) "Speed ≥100" else "Speed <100")
             }
-            "heavy_ball" -> {
+            lower == "heavy_ball" -> {
                 val weight = pokemon.species.weight
                 val mult = when {
                     weight >= 3000 -> 4F

@@ -12,6 +12,9 @@ bin/
 *.iws
 *.code-workspace
 
+# GitHub Copilot (AI development hints - not for public)
+.github/copilot-instructions.md
+
 # Fabric
 run/
 .cache/

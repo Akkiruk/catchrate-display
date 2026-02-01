@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.4] - 2026-01-31
+
+### Fixed
+- Ancient ball catch rate multipliers (Jet, Wing, Heavy, Leaden, Gigaton, Feather)
+
 ## [1.2.3] - 2026-01-31
 
 ### Fixed
