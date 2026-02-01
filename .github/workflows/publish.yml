@@ -1,4 +1,4 @@
-name: Publish to CurseForge
+name: Publish to CurseForge and Modrinth
 
 on:
   release:
@@ -56,11 +56,14 @@ jobs:
           echo "Changelog:"
           cat current_changelog.txt
           
-      - name: Upload to CurseForge
+      - name: Publish to CurseForge and Modrinth
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           curseforge-id: ${{ secrets.CURSEFORGE_PROJECT_ID }}
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          
+          modrinth-id: ${{ secrets.MODRINTH_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           
           files: |
             build/libs/!(*-@(dev|sources|javadoc)).jar
