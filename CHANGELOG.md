@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.20] - 2026-01-31
+
+### Changed
+- Each modifier now has its own row (HP, Status, Ball)
+- Added ball condition description showing why the ball has its current effect
+- Box height dynamically adjusts based on status presence
+
 ## [1.2.19] - 2026-01-31
 
 ### Fixed

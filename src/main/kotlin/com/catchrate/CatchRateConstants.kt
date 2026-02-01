@@ -73,6 +73,7 @@ object CatchRateConstants {
         const val TEXT_WHITE = 0xFFFFFF
         const val TEXT_GRAY = 0xAAAAAA
         const val TEXT_DARK_GRAY = 0x888888
+        const val TEXT_DARK_GREEN = 0x55AA55
         const val TEXT_PURPLE = 0xAA55FF
         const val TEXT_RED = 0xFF5555
         const val TEXT_YELLOW = 0xFFFF55

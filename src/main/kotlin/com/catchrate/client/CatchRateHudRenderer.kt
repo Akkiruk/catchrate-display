@@ -164,8 +164,9 @@ class CatchRateHudRenderer : HudRenderCallback {
         val screenWidth = client.window.scaledWidth
         val screenHeight = client.window.scaledHeight
         
-        val boxWidth = 130
-        val boxHeight = 60
+        val boxWidth = 140
+        val hasStatus = data.statusMultiplier > 1.0
+        val boxHeight = if (hasStatus) 82 else 72
         val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
         
         // Draw styled panel using HudDrawing
@@ -187,23 +188,28 @@ class CatchRateHudRenderer : HudRenderCallback {
             drawContext.drawTextWithShadow(textRenderer, percentText, x + 6, barY + 12, percentColor)
         }
         
-        // HP multiplier (shows how low HP affects catch rate)
-        val infoY = barY + 24
+        // HP multiplier row
+        var currentY = barY + 26
         val hpMultiplier = (3.0 - 2.0 * data.hpPercent / 100.0) / 3.0
-        val hpMultText = "HP ${String.format("%.2f", hpMultiplier)}x"
-        drawContext.drawTextWithShadow(textRenderer, hpMultText, x + 6, infoY, Colors.TEXT_GRAY)
+        drawContext.drawTextWithShadow(textRenderer, "HP ${String.format("%.2f", hpMultiplier)}x", x + 6, currentY, Colors.TEXT_GRAY)
         
-        // Status effect (if any)
-        if (data.statusMultiplier > 1.0) {
+        // Status effect row (if any)
+        if (hasStatus) {
+            currentY += 10
             val statusIcon = HudDrawing.getStatusIcon(data.statusEffect)
-            drawContext.drawTextWithShadow(textRenderer, "$statusIcon ${data.statusEffect} ${String.format("%.1f", data.statusMultiplier)}x", x + 60, infoY, Colors.TEXT_PURPLE)
+            drawContext.drawTextWithShadow(textRenderer, "$statusIcon ${data.statusEffect} ${String.format("%.1f", data.statusMultiplier)}x", x + 6, currentY, Colors.TEXT_PURPLE)
         }
         
-        // Ball multiplier
-        val ballY = infoY + 10
+        // Ball multiplier row
+        currentY += 10
         val ballColor = HudDrawing.getBallMultiplierColor(data.ballMultiplier)
         val ballIcon = if (data.ballConditionMet) "●" else "○"
-        drawContext.drawTextWithShadow(textRenderer, "$ballIcon ${CatchRateFormula.formatBallNameCompact(data.ballName)} ${String.format("%.1f", data.ballMultiplier)}x", x + 6, ballY, ballColor)
+        drawContext.drawTextWithShadow(textRenderer, "$ballIcon ${CatchRateFormula.formatBallNameCompact(data.ballName)} ${String.format("%.1f", data.ballMultiplier)}x", x + 6, currentY, ballColor)
+        
+        // Ball condition description row
+        currentY += 10
+        val conditionColor = if (data.ballConditionMet) Colors.TEXT_DARK_GREEN else Colors.TEXT_DARK_GRAY
+        drawContext.drawTextWithShadow(textRenderer, data.ballConditionDesc, x + 6, currentY, conditionColor)
     }
     
     private fun renderClientModeHud(drawContext: DrawContext, client: MinecraftClient, result: CatchRateResult, ballName: String) {
