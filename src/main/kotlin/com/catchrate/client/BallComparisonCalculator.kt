@@ -145,8 +145,9 @@ object BallComparisonCalculator {
     }
     
     /**
-     * Get the Pokemon entity the player is looking at.
+     * Get a WILD Pokemon entity the player is looking at.
      * Uses both crosshair target and extended raycast for better detection.
+     * Returns null if the Pokemon is owned by any player (trainer Pokemon).
      */
     fun getLookedAtPokemon(): PokemonEntity? {
         val client = MinecraftClient.getInstance()
@@ -159,7 +160,11 @@ object BallComparisonCalculator {
             val entityHit = hitResult as EntityHitResult
             val entity = entityHit.entity
             if (entity is PokemonEntity) {
-                return entity
+                // Only return if wild (not owned by any player)
+                if (entity.pokemon.getOwnerUUID() == null) {
+                    return entity
+                }
+                return null
             }
         }
         
@@ -168,11 +173,11 @@ object BallComparisonCalculator {
         val eyePos = player.eyePos
         val maxDistance = 8.0
         
-        // Get all Pokemon entities within range
+        // Get all WILD Pokemon entities within range (filter out owned Pokemon)
         val nearbyPokemon = world.getEntitiesByClass(
             PokemonEntity::class.java,
             player.boundingBox.expand(maxDistance)
-        ) { true }
+        ) { pokemonEntity -> pokemonEntity.pokemon.getOwnerUUID() == null }
         
         var closestPokemon: PokemonEntity? = null
         var closestDistance = maxDistance

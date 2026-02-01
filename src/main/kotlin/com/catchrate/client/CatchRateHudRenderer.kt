@@ -315,12 +315,9 @@ class CatchRateHudRenderer : HudRenderCallback {
         val heldItem = player.mainHandStack
         if (!isPokeball(heldItem)) return
         
-        // Get the Pokemon the player is looking at
+        // Get the wild Pokemon the player is looking at (returns null for owned Pokemon)
         val pokemonEntity = BallComparisonCalculator.getLookedAtPokemon() ?: return
-        
-        // Only show for wild Pokemon (not owned)
         val pokemon = pokemonEntity.pokemon
-        if (pokemon.getOwnerUUID() != null) return
         
         val ballItemId = getBallId(heldItem)
         val ballName = ballItemId.substringAfter(":").lowercase()

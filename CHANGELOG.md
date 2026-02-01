@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.9] - 2026-01-31
+
+### Fixed
+- **Catch rate HUD no longer shows for owned Pokémon**
+  - Player's own Pokémon no longer trigger the catch rate display
+  - Other players' Pokémon are also filtered out
+  - Only wild Pokémon show catch statistics when looking at them
+
 ## [1.2.8] - 2026-01-31
 
 ### Fixed
