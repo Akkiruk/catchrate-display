@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.25] - 2026-02-01
+
+### Fixed
+- Ancient balls (Jet, Gigaton, Wing, Leaden, etc.) now correctly show 1x catch rate (Cobblemon's throwPower only affects travel distance, not catch rate)
+
 ## [1.2.24] - 2026-02-01
 
 ### Fixed

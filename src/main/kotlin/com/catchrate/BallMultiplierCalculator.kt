@@ -120,18 +120,10 @@ object BallMultiplierCalculator {
     }
     
     // === ANCIENT BALLS ===
+    // Note: In Cobblemon, ancient balls use DUMMY catchRateModifier (always 1x)
+    // Their throwPower only affects ball travel distance, not catch rate
     private fun calculateAncientBall(lower: String): BallResult {
-        return when {
-            lower.contains("jet") || lower.contains("gigaton") -> 
-                BallResult(2F, true, "Ancient T3: 2x")
-            lower.contains("wing") || lower.contains("leaden") -> 
-                BallResult(1.5F, true, "Ancient T2: 1.5x")
-            lower.contains("ultra") -> 
-                BallResult(2F, true, "Ancient Ultra: 2x")
-            lower.contains("great") -> 
-                BallResult(1.5F, true, "Ancient Great: 1.5x")
-            else -> BallResult(1F, true, "Ancient T1: 1x")
-        }
+        return BallResult(1F, true, "Ancient: throwPower only (1x catch rate)")
     }
     
     // === BATTLE-DEPENDENT BALLS ===

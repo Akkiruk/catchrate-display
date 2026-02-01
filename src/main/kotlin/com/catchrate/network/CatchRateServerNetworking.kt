@@ -82,13 +82,8 @@ object CatchRateServerNetworking {
             val world = player.world
             val ctx = BallContextFactory.fromServerPokemon(pokemon, player, world, battle.turn, activeBattler)
             
-            // Manual Ancient Ball override - Cobblemon uses throwPower not catchRateModifier
-            if (pokeBall.ancient) {
-                val ancientResult = BallMultiplierCalculator.calculate(ballId.path.lowercase(), ctx)
-                ballMultiplier = ancientResult.multiplier
-                ballIsValid = true
-                CatchRateDisplayMod.debug("Ancient Ball: Override applied - ${ballId.path} = ${ballMultiplier}x")
-            }
+            // Ancient balls use DUMMY catchRateModifier in Cobblemon (always 1x)
+            // Their throwPower only affects ball travel, not catch rate - no override needed
             
             // Manual Love Ball override using unified calculator
             if (ballId.path.lowercase() == "love_ball") {
