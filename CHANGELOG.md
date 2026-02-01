@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.22] - 2026-02-01
+
+### Fixed
+- Ball comparison panel (G key) now updates with turn count for Timer Ball etc.
+
 ## [1.2.21] - 2026-02-01
 
 ### Changed

@@ -38,6 +38,7 @@ class CatchRateHudRenderer : HudRenderCallback {
     
     private var cachedComparison: List<BallComparisonCalculator.BallCatchRate>? = null
     private var lastComparisonTime = 0L
+    private var lastComparisonTurnCount = 0
     private val COMPARISON_CALC_INTERVAL_MS = 500L
     
     private val serverRequiredBalls = setOf("love_ball", "level_ball", "repeat_ball", "lure_ball")
@@ -366,9 +367,11 @@ class CatchRateHudRenderer : HudRenderCallback {
     
     private fun renderBallComparisonPanel(drawContext: DrawContext, client: MinecraftClient, pokemon: ClientBattlePokemon, battle: ClientBattle) {
         val now = System.currentTimeMillis()
-        if (cachedComparison == null || (now - lastComparisonTime) > COMPARISON_CALC_INTERVAL_MS) {
+        val turnChanged = turnCount != lastComparisonTurnCount
+        if (cachedComparison == null || turnChanged || (now - lastComparisonTime) > COMPARISON_CALC_INTERVAL_MS) {
             cachedComparison = BallComparisonCalculator.calculateAllBalls(pokemon, turnCount, battle)
             lastComparisonTime = now
+            lastComparisonTurnCount = turnCount
         }
         
         val comparison = cachedComparison ?: return
