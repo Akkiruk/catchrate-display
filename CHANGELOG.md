@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.18] - 2026-01-31
+
+### Changed
+- Removed HP bar from catch rate tooltip
+- HP now displays as multiplier (e.g., "HP 0.87x") showing direct catch rate impact
+- Status effects now show multiplier on same line (e.g., "Sleep 2.5x")
+- Reduced tooltip height for cleaner appearance
+
 ## [1.2.17] - 2026-01-31
 
 ### Changed

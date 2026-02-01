@@ -165,7 +165,7 @@ class CatchRateHudRenderer : HudRenderCallback {
         val screenHeight = client.window.scaledHeight
         
         val boxWidth = 130
-        val boxHeight = 72
+        val boxHeight = 60
         val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
         
         // Draw styled panel using HudDrawing
@@ -187,20 +187,20 @@ class CatchRateHudRenderer : HudRenderCallback {
             drawContext.drawTextWithShadow(textRenderer, percentText, x + 6, barY + 12, percentColor)
         }
         
-        // HP bar
-        val hpY = barY + 24
-        drawContext.drawTextWithShadow(textRenderer, "HP", x + 6, hpY, Colors.TEXT_GRAY)
-        HudDrawing.drawHealthBar(drawContext, x + 22, hpY + 1, 60, data.hpPercent.toFloat() / 100f)
+        // HP multiplier (shows how low HP affects catch rate)
+        val infoY = barY + 24
+        val hpMultiplier = (3.0 - 2.0 * data.hpPercent / 100.0) / 3.0
+        val hpMultText = "HP ${String.format("%.2f", hpMultiplier)}x"
+        drawContext.drawTextWithShadow(textRenderer, hpMultText, x + 6, infoY, Colors.TEXT_GRAY)
         
         // Status effect (if any)
-        val infoY = hpY + 12
         if (data.statusMultiplier > 1.0) {
             val statusIcon = HudDrawing.getStatusIcon(data.statusEffect)
-            drawContext.drawTextWithShadow(textRenderer, "$statusIcon ${data.statusEffect}", x + 6, infoY, Colors.TEXT_PURPLE)
+            drawContext.drawTextWithShadow(textRenderer, "$statusIcon ${data.statusEffect} ${String.format("%.1f", data.statusMultiplier)}x", x + 60, infoY, Colors.TEXT_PURPLE)
         }
         
         // Ball multiplier
-        val ballY = if (data.statusMultiplier > 1.0) infoY + 10 else infoY
+        val ballY = infoY + 10
         val ballColor = HudDrawing.getBallMultiplierColor(data.ballMultiplier)
         val ballIcon = if (data.ballConditionMet) "●" else "○"
         drawContext.drawTextWithShadow(textRenderer, "$ballIcon ${CatchRateFormula.formatBallNameCompact(data.ballName)} ${String.format("%.1f", data.ballMultiplier)}x", x + 6, ballY, ballColor)
