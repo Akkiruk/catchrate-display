@@ -69,9 +69,6 @@ jobs:
           
           changelog-file: current_changelog.txt
           
-          # Sync project description from HTML file
-          curseforge-description: .github/curseforge-description.html
-          
           loaders: |
             fabric
           
