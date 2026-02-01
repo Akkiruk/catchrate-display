@@ -295,9 +295,7 @@ object BallMultiplierCalculator {
     }
     
     // === UTILITY ===
-    fun formatBallName(name: String): String {
-        return name.replace("_", " ")
-            .split(" ")
-            .joinToString(" ") { it.replaceFirstChar { c -> c.uppercaseChar() } }
-    }
+    /** @deprecated Use CatchRateFormula.formatBallName() instead */
+    @Deprecated("Use CatchRateFormula.formatBallName()", ReplaceWith("CatchRateFormula.formatBallName(name)"))
+    fun formatBallName(name: String): String = CatchRateFormula.formatBallName(name)
 }

@@ -1,26 +1,28 @@
 package com.catchrate.network
 
+import com.catchrate.BallContextFactory
 import com.catchrate.BallMultiplierCalculator
-import com.catchrate.BallMultiplierCalculator.BallContext
 import com.catchrate.BallMultiplierCalculator.PartyMember
+import com.catchrate.CatchRateConstants
 import com.catchrate.CatchRateDisplayMod
+import com.catchrate.CatchRateFormula
 import com.cobblemon.mod.common.api.pokeball.PokeBalls
 import com.cobblemon.mod.common.api.pokemon.status.Statuses
 import com.cobblemon.mod.common.battles.BattleRegistry
-import com.cobblemon.mod.common.pokemon.Gender
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.cobblemon.mod.common.pokemon.status.PersistentStatus
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Identifier
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.pow
 
 /**
  * Server-side catch rate calculation with accurate multipliers via Cobblemon API.
- * Uses unified BallMultiplierCalculator for condition descriptions and fallback logic.
+ * 
+ * Uses:
+ * - CatchRateFormula for catch rate math (single source of truth)
+ * - BallMultiplierCalculator for condition descriptions and fallback logic
+ * - BallContextFactory for building context objects
  */
 object CatchRateServerNetworking {
     
@@ -47,7 +49,7 @@ object CatchRateServerNetworking {
             
             val ballId = parseBallId(request.ballItemId)
             val pokeBall = PokeBalls.getPokeBall(ballId) ?: return
-            val ballName = BallMultiplierCalculator.formatBallName(ballId.path)
+            val ballName = CatchRateFormula.formatBallName(ballId.path)
             
             if (pokeBall.catchRateModifier.isGuaranteed()) {
                 sendResponse(player, buildGuaranteedResponse(request.pokemonUuid, pokemon, ballName))
@@ -76,26 +78,9 @@ object CatchRateServerNetworking {
                 } else null
             }
             
+            // Use BallContextFactory for context building
             val world = player.world
-            val timeOfDay = world.timeOfDay % 24000
-            val ctx = BallContext(
-                speciesId = pokemon.species.resourceIdentifier.toString(),
-                level = pokemon.level,
-                gender = pokemon.gender,
-                primaryType = pokemon.primaryType.name,
-                secondaryType = pokemon.secondaryType?.name,
-                weight = pokemon.species.weight,
-                baseSpeed = pokemon.species.baseStats.entries.find { it.key.showdownId.equals("spe", true) }?.value ?: 0,
-                labels = try { pokemon.species.labels.toList() } catch (e: Exception) { emptyList() },
-                statusPath = pokemon.status?.status?.name?.path,
-                lightLevel = world.getLightLevel(player.blockPos),
-                isNight = timeOfDay in 12000..24000,
-                moonPhase = world.moonPhase,
-                isPlayerUnderwater = player.isSubmergedInWater,
-                inBattle = true,
-                turnCount = battle.turn,
-                activeBattler = activeBattler
-            )
+            val ctx = BallContextFactory.fromServerPokemon(pokemon, player, world, battle.turn, activeBattler)
             
             // Manual Ancient Ball override - Cobblemon uses throwPower not catchRateModifier
             if (pokeBall.ancient) {
@@ -126,34 +111,24 @@ object CatchRateServerNetworking {
             val conditionMet = unifiedResult.conditionMet
             val conditionDesc = unifiedResult.reason
             
+            // Use CatchRateFormula for status multiplier
             val status = pokemon.status?.status
-            val statusMultiplier = when (status) {
-                Statuses.SLEEP, Statuses.FROZEN -> 2.5F
-                Statuses.PARALYSIS, Statuses.BURN, Statuses.POISON, Statuses.POISON_BADLY -> 1.5F
-                else -> 1F
-            }
+            val statusMultiplier = getStatusMultiplierFromStatus(status)
             
-            val lowLevelBonus = if (pokemon.level < 13) {
-                max((36 - (2 * pokemon.level)) / 10F, 1F)
-            } else 1F
+            // Use CatchRateFormula for level bonus
+            val lowLevelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
             
+            // Get player's highest level for level penalty calculation
+            val playerHighestLevel = playerActor?.pokemonList?.maxOfOrNull { it.effectedPokemon.level } ?: pokemon.level
+            val levelPenalty = CatchRateFormula.getLevelPenalty(pokemon.level, playerHighestLevel)
+            
+            // Use Cobblemon's behavior mutator for the HP component, then apply our formula
             val hpComponent = (3F * maxHp - 2F * currentHp) * baseCatchRate
             var modifiedCatchRate = modifier.behavior(player, pokemon).mutator(hpComponent, ballMultiplier) / (3F * maxHp)
-            modifiedCatchRate *= statusMultiplier * lowLevelBonus
+            modifiedCatchRate *= statusMultiplier * lowLevelBonus * levelPenalty
             
-            val playerHighestLevel = playerActor?.pokemonList?.maxOfOrNull { it.effectedPokemon.level } ?: pokemon.level
-            
-            if (playerHighestLevel < pokemon.level) {
-                modifiedCatchRate *= max(0.1F, min(1F, 1F - ((pokemon.level - playerHighestLevel) / 50F)))
-            }
-            
-            val shakeProbability = when {
-                modifiedCatchRate >= 255F -> 65536F
-                modifiedCatchRate <= 0F -> 0F
-                else -> 65536F / (255F / modifiedCatchRate).pow(0.1875F)
-            }
-            
-            val catchChance = (shakeProbability / 65536F).pow(4F) * 100F
+            // Use CatchRateFormula to convert modified rate to percentage
+            val catchChance = CatchRateFormula.modifiedRateToPercentage(modifiedCatchRate)
             
             val response = CatchRateResponsePayload(
                 pokemonUuid = request.pokemonUuid,
@@ -161,7 +136,7 @@ object CatchRateServerNetworking {
                 pokemonName = pokemon.species.name,
                 pokemonLevel = pokemon.level,
                 hpPercent = hpPercent.coerceIn(0.0, 100.0),
-                statusEffect = getStatusName(status),
+                statusEffect = CatchRateFormula.getStatusDisplayName(status?.name?.path),
                 ballName = ballName,
                 ballMultiplier = ballMultiplier.toDouble(),
                 ballConditionMet = conditionMet,
@@ -177,6 +152,18 @@ object CatchRateServerNetworking {
             
         } catch (e: Exception) {
             CatchRateDisplayMod.LOGGER.error("Error calculating catch rate", e)
+        }
+    }
+    
+    /**
+     * Get status multiplier from Cobblemon's PersistentStatus.
+     * This handles the server-side Statuses enum properly.
+     */
+    private fun getStatusMultiplierFromStatus(status: PersistentStatus?): Float {
+        return when (status) {
+            Statuses.SLEEP, Statuses.FROZEN -> CatchRateConstants.STATUS_SLEEP_FROZEN_MULT
+            Statuses.PARALYSIS, Statuses.BURN, Statuses.POISON, Statuses.POISON_BADLY -> CatchRateConstants.STATUS_PARA_BURN_POISON_MULT
+            else -> CatchRateConstants.STATUS_NONE_MULT
         }
     }
     
@@ -200,9 +187,9 @@ object CatchRateServerNetworking {
         pokemonName = pokemon.species.name,
         pokemonLevel = pokemon.level,
         hpPercent = pokemon.currentHealth.toDouble() / pokemon.maxHealth * 100.0,
-        statusEffect = getStatusName(pokemon.status?.status),
+        statusEffect = CatchRateFormula.getStatusDisplayName(pokemon.status?.status?.name?.path),
         ballName = ballName,
-        ballMultiplier = 255.0,
+        ballMultiplier = CatchRateConstants.BALL_GUARANTEED_MULT.toDouble(),
         ballConditionMet = true,
         ballConditionDesc = "Guaranteed capture!",
         statusMultiplier = 1.0,
@@ -210,16 +197,4 @@ object CatchRateServerNetworking {
         isGuaranteed = true,
         baseCatchRate = pokemon.form.catchRate
     )
-    
-    private fun getStatusName(status: PersistentStatus?): String {
-        return when (status) {
-            Statuses.SLEEP -> "Asleep"
-            Statuses.FROZEN -> "Frozen"
-            Statuses.PARALYSIS -> "Paralyzed"
-            Statuses.BURN -> "Burned"
-            Statuses.POISON -> "Poisoned"
-            Statuses.POISON_BADLY -> "Badly Poisoned"
-            else -> "None"
-        }
-    }
 }

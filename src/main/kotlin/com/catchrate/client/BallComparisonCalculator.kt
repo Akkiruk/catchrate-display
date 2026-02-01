@@ -1,22 +1,24 @@
 package com.catchrate.client
 
+import com.catchrate.BallContextFactory
 import com.catchrate.BallMultiplierCalculator
-import com.catchrate.BallMultiplierCalculator.BallContext
-import com.catchrate.BallMultiplierCalculator.PartyMember
 import com.catchrate.CatchRateDisplayMod
-import com.cobblemon.mod.common.client.CobblemonClient
+import com.catchrate.CatchRateFormula
 import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
-import com.cobblemon.mod.common.pokemon.Gender
 import net.minecraft.client.MinecraftClient
 import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.hit.HitResult
-import kotlin.math.max
-import kotlin.math.pow
 
 /**
- * Client-side calculator that computes catch rates for Pokemon using the unified BallMultiplierCalculator.
+ * Client-side calculator that computes catch rates for Pokemon.
+ * 
+ * Uses:
+ * - BallMultiplierCalculator for ball-specific multipliers
+ * - BallContextFactory for building context objects
+ * - CatchRateFormula for catch rate math (single source of truth)
+ * 
  * Handles both in-battle and out-of-battle scenarios.
  */
 object BallComparisonCalculator {
@@ -55,28 +57,37 @@ object BallComparisonCalculator {
         val player = client.player ?: return emptyList()
         val world = client.world ?: return emptyList()
         
-        val ctx = buildBattleContext(pokemon, turnCount, player, world, battle)
+        // Use BallContextFactory for context building
+        val ctx = BallContextFactory.fromBattlePokemon(pokemon, turnCount, player, world, battle)
         
-        val (currentHp, maxHp) = if (pokemon.isHpFlat) {
-            pokemon.hpValue to (if (pokemon.maxHp > 0) pokemon.maxHp else 1F)
-        } else {
-            val mHp = if (pokemon.maxHp > 0) pokemon.maxHp else 100F
-            (pokemon.hpValue * mHp) to mHp
-        }
+        // Use CatchRateFormula for HP calculation
+        val hpInfo = CatchRateFormula.calculateHpInfo(
+            hpValue = pokemon.hpValue,
+            maxHpValue = pokemon.maxHp,
+            isFlat = pokemon.isHpFlat
+        )
         
         val baseCatchRate = pokemon.species.catchRate.toFloat()
-        val statusMult = getStatusMultiplier(pokemon.status?.name?.path)
-        val levelBonus = if (pokemon.level < 13) max((36 - (2 * pokemon.level)) / 10F, 1F) else 1F
+        val statusMult = CatchRateFormula.getStatusMultiplier(pokemon.status?.name?.path)
+        val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
         
         return comparableBalls.map { ballId ->
             val result = BallMultiplierCalculator.calculate(ballId, ctx)
-            val catchChance = calculateCatchChance(
-                baseCatchRate, maxHp, currentHp, result.multiplier, statusMult, levelBonus
+            
+            // Use CatchRateFormula for catch chance calculation
+            val catchChance = CatchRateFormula.calculateCatchPercentage(
+                baseCatchRate = baseCatchRate,
+                maxHp = hpInfo.maxHp,
+                currentHp = hpInfo.currentHp,
+                ballMultiplier = result.multiplier,
+                statusMultiplier = statusMult,
+                levelBonus = levelBonus,
+                inBattle = true
             )
             
             BallCatchRate(
                 ballName = ballId,
-                displayName = BallMultiplierCalculator.formatBallName(ballId),
+                displayName = CatchRateFormula.formatBallName(ballId),
                 catchRate = catchChance.toDouble().coerceIn(0.0, 100.0),
                 multiplier = result.multiplier.toDouble(),
                 conditionMet = result.conditionMet,
@@ -96,20 +107,27 @@ object BallComparisonCalculator {
         val world = client.world ?: return null
         
         val pokemon = entity.pokemon
-        val ctx = buildWorldContext(pokemon, player, world)
+        
+        // Use BallContextFactory for context building
+        val ctx = BallContextFactory.fromWorldPokemon(entity, player, world)
         
         val result = BallMultiplierCalculator.calculate(ballId, ctx)
         
         val baseCatchRate = pokemon.species.catchRate.toFloat()
         val maxHp = pokemon.maxHealth.toFloat()
         val currentHp = pokemon.currentHealth.toFloat()
-        val statusMult = getStatusMultiplier(pokemon.status?.status?.name?.path)
-        val levelBonus = if (pokemon.level < 13) max((36 - (2 * pokemon.level)) / 10F, 1F) else 1F
+        val statusMult = CatchRateFormula.getStatusMultiplier(pokemon.status?.status?.name?.path)
+        val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
         
-        // Out of battle = 0.5x modifier
-        val catchChance = calculateCatchChance(
-            baseCatchRate, maxHp, currentHp, result.multiplier, statusMult, levelBonus, 
-            outOfBattleModifier = 0.5F
+        // Use CatchRateFormula for catch chance (inBattle=false applies 0.5x penalty)
+        val catchChance = CatchRateFormula.calculateCatchPercentage(
+            baseCatchRate = baseCatchRate,
+            maxHp = maxHp,
+            currentHp = currentHp,
+            ballMultiplier = result.multiplier,
+            statusMultiplier = statusMult,
+            levelBonus = levelBonus,
+            inBattle = false  // 0.5x penalty applied automatically
         )
         
         // Throttled debug logging
@@ -127,7 +145,7 @@ object BallComparisonCalculator {
         
         return BallCatchRate(
             ballName = ballId,
-            displayName = BallMultiplierCalculator.formatBallName(ballId),
+            displayName = CatchRateFormula.formatBallName(ballId),
             catchRate = catchChance.toDouble().coerceIn(0.0, 100.0),
             multiplier = result.multiplier.toDouble(),
             conditionMet = result.conditionMet,
@@ -185,130 +203,5 @@ object BallComparisonCalculator {
         }
         
         return closestPokemon
-    }
-    
-    // === CONTEXT BUILDERS ===
-    
-    /**
-     * Build a BallContext from a ClientBattlePokemon (in-battle scenario).
-     * Gets the player's active battler for Love Ball checks.
-     */
-    private fun buildBattleContext(
-        pokemon: ClientBattlePokemon,
-        turnCount: Int,
-        player: net.minecraft.entity.player.PlayerEntity,
-        world: net.minecraft.world.World,
-        battle: ClientBattle?
-    ): BallContext {
-        val species = pokemon.species
-        val timeOfDay = world.timeOfDay % 24000
-        
-        // Get the player's ACTIVE battler (the one currently in play)
-        val activeBattler = getActiveBattler(battle)
-        
-        return BallContext(
-            speciesId = species.resourceIdentifier.toString(),
-            level = pokemon.level,
-            gender = try { Gender.valueOf(pokemon.gender.name) } catch (e: Exception) { null },
-            primaryType = species.primaryType.name,
-            secondaryType = species.secondaryType?.name,
-            weight = species.weight,
-            baseSpeed = species.baseStats.entries.find { it.key.showdownId.equals("spe", true) }?.value ?: 0,
-            labels = try { species.labels.toList() } catch (e: Exception) { emptyList() },
-            statusPath = pokemon.status?.name?.path,
-            lightLevel = world.getLightLevel(player.blockPos),
-            isNight = timeOfDay in 12000..24000,
-            moonPhase = world.moonPhase,
-            isPlayerUnderwater = player.isSubmergedInWater,
-            inBattle = true,
-            turnCount = turnCount,
-            activeBattler = activeBattler
-        )
-    }
-    
-    /**
-     * Build a BallContext from a Pokemon entity (out-of-combat scenario).
-     * Love Ball won't work out of battle (no active battler).
-     */
-    private fun buildWorldContext(
-        pokemon: com.cobblemon.mod.common.pokemon.Pokemon,
-        player: net.minecraft.entity.player.PlayerEntity,
-        world: net.minecraft.world.World
-    ): BallContext {
-        val species = pokemon.species
-        val timeOfDay = world.timeOfDay % 24000
-        
-        // Out of battle - no active battler for Love Ball
-        return BallContext(
-            speciesId = species.resourceIdentifier.toString(),
-            level = pokemon.level,
-            gender = pokemon.gender,
-            primaryType = pokemon.primaryType.name,
-            secondaryType = pokemon.secondaryType?.name,
-            weight = species.weight,
-            baseSpeed = species.baseStats.entries.find { it.key.showdownId.equals("spe", true) }?.value ?: 0,
-            labels = try { species.labels.toList() } catch (e: Exception) { emptyList() },
-            statusPath = pokemon.status?.status?.name?.path,
-            lightLevel = world.getLightLevel(player.blockPos),
-            isNight = timeOfDay in 12000..24000,
-            moonPhase = world.moonPhase,
-            isPlayerUnderwater = player.isSubmergedInWater,
-            inBattle = false,
-            turnCount = 0,
-            activeBattler = null  // No active battler out of combat
-        )
-    }
-    
-    /**
-     * Get the player's active battler from the battle (side1).
-     * Returns the species and gender of the Pokemon currently in play.
-     */
-    private fun getActiveBattler(battle: ClientBattle?): PartyMember? {
-        if (battle == null) return null
-        return try {
-            // side1 is the player, get their active Pokemon
-            val activePokemon = battle.side1.activeClientBattlePokemon.firstOrNull()?.battlePokemon
-            if (activePokemon != null) {
-                PartyMember(
-                    speciesId = activePokemon.species.resourceIdentifier.toString(),
-                    gender = try { Gender.valueOf(activePokemon.gender.name) } catch (e: Exception) { null }
-                )
-            } else null
-        } catch (e: Exception) {
-            CatchRateDisplayMod.debug("Could not access active battler: ${e.message}")
-            null
-        }
-    }
-    
-    // === UTILITY ===
-    
-    private fun getStatusMultiplier(statusPath: String?): Float {
-        return when (statusPath) {
-            "sleep", "frozen" -> 2.5F
-            "paralysis", "burn", "poison", "poisonbadly" -> 1.5F
-            else -> 1F
-        }
-    }
-    
-    private fun calculateCatchChance(
-        baseCatchRate: Float,
-        maxHp: Float,
-        currentHp: Float,
-        ballMultiplier: Float,
-        statusMult: Float,
-        levelBonus: Float,
-        outOfBattleModifier: Float = 1F
-    ): Float {
-        val hpComponent = (3F * maxHp - 2F * currentHp) * baseCatchRate * outOfBattleModifier
-        var modifiedRate = (hpComponent * ballMultiplier) / (3F * maxHp)
-        modifiedRate *= statusMult * levelBonus
-        
-        val shakeProbability = when {
-            modifiedRate >= 255F -> 65536F
-            modifiedRate <= 0F -> 0F
-            else -> 65536F / (255F / modifiedRate).pow(0.1875F)
-        }
-        
-        return (shakeProbability / 65536F).pow(4F) * 100F
     }
 }

@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.2.16] - 2026-01-31
+
+### Changed
+- Consolidated catch rate formula into single source of truth (`CatchRateFormula.kt`)
+- Extracted HUD drawing utilities to `HudDrawing.kt` - removes ~150 lines of duplicate code
+- Ball detection now uses Cobblemon's PokeBallItem API instead of fragile string parsing
+- Ball comparison panel now uses shared drawing utilities
+- Removed ~100 unused ball constant definitions
+- Removed unused `renderLoadingHud()` method
+- Set `DEBUG_ENABLED = false` for production
+
+### Technical
+- New `CatchRateFormula.kt` - single source for catch math, status multipliers, HP calculations
+- New `CatchRateConstants.kt` - centralized constants (trimmed to only used values)
+- New `BallContextFactory.kt` - factory for building ball context from different Pokemon sources
+- New `HudDrawing.kt` - shared panel/bar drawing, color utilities
+- `isPokeball()` and `getBallId()` now delegate to `CatchRateCalculator.getPokeBallFromItem()`
+- Deprecated `BallMultiplierCalculator.formatBallName()` in favor of `CatchRateFormula`
+
 ## [1.2.15] - 2026-01-31
 
 ### Fixed
