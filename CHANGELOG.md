@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.14] - 2026-01-31
+
+### Fixed
+- **Love Ball logic corrected!**
+  - Now gives **2.5x** for opposite gender (any species)
+  - Gives **8x** for same species + opposite gender
+  - Previously only checked for same species + opposite gender (too strict)
+
 ## [1.2.13] - 2026-01-31
 
 ### Fixed

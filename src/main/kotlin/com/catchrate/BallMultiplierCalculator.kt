@@ -250,22 +250,37 @@ object BallMultiplierCalculator {
             return BallResult(1F, false, "Wild is genderless")
         }
         
+        var hasOppositeGender = false
+        var hasSameSpeciesOppositeGender = false
+        
         for (member in party) {
             val partyGender = member.gender
             if (partyGender == null || partyGender == Gender.GENDERLESS) continue
             
-            val sameSpecies = ctx.speciesId == member.speciesId
             val oppositeGender = (wildGender == Gender.MALE && partyGender == Gender.FEMALE) ||
                                  (wildGender == Gender.FEMALE && partyGender == Gender.MALE)
             
-            if (sameSpecies && oppositeGender) {
-                val genderDesc = if (wildGender == Gender.MALE) "♂" else "♀"
-                val partyGenderDesc = if (partyGender == Gender.MALE) "♂" else "♀"
-                return BallResult(8F, true, "Wild $genderDesc + Party $partyGenderDesc")
+            if (oppositeGender) {
+                hasOppositeGender = true
+                val sameSpecies = ctx.speciesId == member.speciesId
+                if (sameSpecies) {
+                    hasSameSpeciesOppositeGender = true
+                    break // Found best case, stop searching
+                }
             }
         }
         
-        return BallResult(1F, false, "No matching species with opposite gender")
+        return when {
+            hasSameSpeciesOppositeGender -> {
+                val genderDesc = if (wildGender == Gender.MALE) "♂" else "♀"
+                BallResult(8F, true, "Same species + opposite gender $genderDesc")
+            }
+            hasOppositeGender -> {
+                val genderDesc = if (wildGender == Gender.MALE) "♂" else "♀"
+                BallResult(2.5F, true, "Opposite gender $genderDesc")
+            }
+            else -> BallResult(1F, false, "No opposite gender in party")
+        }
     }
     
     private fun calculateLevelBall(ctx: BallContext): BallResult {
