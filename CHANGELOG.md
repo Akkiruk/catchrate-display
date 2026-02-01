@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.24] - 2026-02-01
+
+### Fixed
+- Catch percentage display now caps at 99.9% for non-guaranteed catches (prevents misleading "100.0%" from rounding)
+
 ## [1.2.23] - 2026-02-01
 
 ### Fixed

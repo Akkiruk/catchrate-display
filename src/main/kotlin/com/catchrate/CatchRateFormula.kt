@@ -104,6 +104,20 @@ object CatchRateFormula {
         return (shakeProbability / SHAKE_PROBABILITY_DIVISOR).pow(SHAKE_CHECKS) * 100F
     }
     
+    /**
+     * Format catch percentage for display.
+     * Caps at 99.9% unless truly guaranteed to prevent misleading "100%" display.
+     * Due to how the formula works, non-guaranteed catches can calculate to 99.95%+ 
+     * which would round to "100.0%" but still fail sometimes.
+     */
+    fun formatCatchPercentage(percentage: Double, isGuaranteed: Boolean): String {
+        return if (isGuaranteed || percentage >= 100.0) {
+            "100.0"
+        } else {
+            String.format("%.1f", percentage.coerceAtMost(99.9))
+        }
+    }
+    
     // ==================== STATUS MULTIPLIERS ====================
     
     /**

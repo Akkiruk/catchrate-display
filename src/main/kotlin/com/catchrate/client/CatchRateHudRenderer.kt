@@ -200,7 +200,7 @@ class CatchRateHudRenderer : HudRenderCallback {
             drawContext.drawTextWithShadow(textRenderer, "★ 100% CATCH ★", x + 6, barY + 12, Colors.TEXT_GREEN)
         } else {
             HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, data.catchChance, false)
-            val percentText = "${String.format("%.1f", data.catchChance)}%"
+            val percentText = "${CatchRateFormula.formatCatchPercentage(data.catchChance, false)}%"
             val percentColor = HudDrawing.getChanceColorInt(data.catchChance)
             drawContext.drawTextWithShadow(textRenderer, percentText, x + 6, barY + 12, percentColor)
         }
@@ -249,7 +249,7 @@ class CatchRateHudRenderer : HudRenderCallback {
             drawContext.drawTextWithShadow(textRenderer, "✓ GUARANTEED", x + 6, barY + 12, Colors.TEXT_GREEN)
         } else {
             HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, result.percentage, false)
-            val percentText = "${String.format("%.1f", result.percentage)}%"
+            val percentText = "${CatchRateFormula.formatCatchPercentage(result.percentage, result.isGuaranteed)}%"
             val percentColor = HudDrawing.getChanceColorInt(result.percentage)
             drawContext.drawTextWithShadow(textRenderer, percentText, x + 6, barY + 12, percentColor)
         }
@@ -344,7 +344,7 @@ class CatchRateHudRenderer : HudRenderCallback {
             drawContext.drawTextWithShadow(textRenderer, "✓ GUARANTEED", x + 6, barY + 12, Colors.TEXT_GREEN)
         } else {
             HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, result.catchRate, false)
-            val percentText = "${String.format("%.1f", result.catchRate)}%"
+            val percentText = "${CatchRateFormula.formatCatchPercentage(result.catchRate, result.isGuaranteed)}%"
             val percentColor = HudDrawing.getChanceColorInt(result.catchRate)
             drawContext.drawTextWithShadow(textRenderer, percentText, x + 6, barY + 12, percentColor)
         }
@@ -395,7 +395,7 @@ class CatchRateHudRenderer : HudRenderCallback {
             
             val ballText = Text.literal("$medal${ball.displayName}")
             val rateColor = HudDrawing.getChanceFormatting(ball.catchRate)
-            val rateText = Text.literal("${String.format("%.1f", ball.catchRate)}%").formatted(rateColor)
+            val rateText = Text.literal("${CatchRateFormula.formatCatchPercentage(ball.catchRate, ball.isGuaranteed)}%").formatted(rateColor)
             
             val multColor = HudDrawing.getBallMultiplierFormatting(ball.multiplier)
             val multText = Text.literal("${String.format("%.1f", ball.multiplier)}x").formatted(multColor)
