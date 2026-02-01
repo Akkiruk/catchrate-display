@@ -12,8 +12,10 @@ bin/
 *.iws
 *.code-workspace
 
-# GitHub Copilot (AI development hints - not for public)
+# AI development files (keep private)
 .github/copilot-instructions.md
+**/copilot-instructions.md
+copilot-instructions.md
 
 # Fabric
 run/
