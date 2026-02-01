@@ -35,6 +35,12 @@ object BallComparisonCalculator {
     private var lastDebugPokemon = ""
     private const val DEBUG_LOG_COOLDOWN_MS = 2000L
     
+    // Pokemon lookup cache to avoid expensive entity queries every frame
+    private var cachedLookedAtPokemon: PokemonEntity? = null
+    private var lastPokemonLookupTick = 0L
+    private const val POKEMON_LOOKUP_INTERVAL_TICKS = 3L
+    private var lookupTickCounter = 0L
+    
     data class BallCatchRate(
         val ballName: String,
         val displayName: String,
@@ -158,8 +164,24 @@ object BallComparisonCalculator {
      * Get a WILD Pokemon entity the player is looking at.
      * Uses both crosshair target and extended raycast for better detection.
      * Returns null if the Pokemon is owned by any player (trainer Pokemon).
+     * Cached to avoid expensive entity queries every frame.
      */
     fun getLookedAtPokemon(): PokemonEntity? {
+        lookupTickCounter++
+        
+        // Return cached result if recent enough
+        if ((lookupTickCounter - lastPokemonLookupTick) < POKEMON_LOOKUP_INTERVAL_TICKS) {
+            // Validate cached Pokemon is still valid
+            val cached = cachedLookedAtPokemon
+            if (cached != null && cached.isAlive) return cached
+        }
+        
+        lastPokemonLookupTick = lookupTickCounter
+        cachedLookedAtPokemon = findLookedAtPokemon()
+        return cachedLookedAtPokemon
+    }
+    
+    private fun findLookedAtPokemon(): PokemonEntity? {
         val client = MinecraftClient.getInstance()
         val player = client.player ?: return null
         val world = client.world ?: return null

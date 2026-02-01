@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.26] - 2026-02-01
+
+### Improved
+- Debounced config saving prevents disk I/O spam when adjusting HUD position
+- Replaced System.currentTimeMillis() with tick counter for more efficient throttling
+- Cached HUD text calculations (string formatting, text widths) when data unchanged
+- Cached wild Pokemon entity lookup to reduce expensive queries every frame
+
 ## [1.2.25] - 2026-02-01
 
 ### Fixed

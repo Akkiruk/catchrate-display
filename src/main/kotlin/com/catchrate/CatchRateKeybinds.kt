@@ -66,5 +66,7 @@ object CatchRateKeybinds {
             config.cycleAnchor()
             player?.sendMessage(Text.literal("Anchor: ${config.hudAnchor.name.replace("_", " ")}").formatted(Formatting.GOLD), true)
         }
+        
+        config.flushPendingSave()
     }
 }

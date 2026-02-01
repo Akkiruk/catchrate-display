@@ -15,6 +15,9 @@ data class CatchRateConfig(
     var compactMode: Boolean = false,
     var showBallComparison: Boolean = false
 ) {
+    @Transient private var pendingSave = false
+    @Transient private var lastSaveRequest = 0L
+    
     enum class HudAnchor {
         TOP_LEFT, TOP_CENTER, TOP_RIGHT,
         MIDDLE_LEFT, MIDDLE_CENTER, MIDDLE_RIGHT,
@@ -58,8 +61,20 @@ data class CatchRateConfig(
         try {
             configFile.parentFile?.mkdirs()
             configFile.writeText(gson.toJson(this))
+            pendingSave = false
         } catch (e: Exception) {
             CatchRateDisplayMod.LOGGER.error("Failed to save config: ${e.message}")
+        }
+    }
+    
+    fun requestSave() {
+        pendingSave = true
+        lastSaveRequest = System.currentTimeMillis()
+    }
+    
+    fun flushPendingSave() {
+        if (pendingSave && System.currentTimeMillis() - lastSaveRequest > 500) {
+            save()
         }
     }
     
@@ -80,18 +95,18 @@ data class CatchRateConfig(
     }
     
     fun cycleAnchor() {
-        val anchors = HudAnchor.values()
+        val anchors = HudAnchor.entries.toTypedArray()
         val currentIndex = anchors.indexOf(hudAnchor)
         hudAnchor = anchors[(currentIndex + 1) % anchors.size]
-        save()
+        requestSave()
     }
-    
+
     fun adjustOffset(dx: Int, dy: Int) {
         hudOffsetX += dx
         hudOffsetY += dy
-        save()
+        requestSave()
     }
-    
+
     fun resetPosition() {
         hudAnchor = HudAnchor.BOTTOM_CENTER
         hudOffsetX = 0
