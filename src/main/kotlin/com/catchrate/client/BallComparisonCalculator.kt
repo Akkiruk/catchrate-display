@@ -170,9 +170,11 @@ object BallComparisonCalculator {
             val entityHit = hitResult as EntityHitResult
             val entity = entityHit.entity
             if (entity is PokemonEntity) {
-                val ownerUuid = entity.pokemon.getOwnerUUID()
-                if (ownerUuid == null) return entity
-                CatchRateDisplayMod.debug("Skipping owned Pokemon: ${entity.pokemon.species.name} (owner: $ownerUuid)")
+                // Check both pokemon owner and entity owner for reliability
+                val pokemonOwner = entity.pokemon.getOwnerUUID()
+                val entityOwner = entity.ownerUuid
+                if (pokemonOwner == null && entityOwner == null) return entity
+                CatchRateDisplayMod.debug("Skipping owned Pokemon: ${entity.pokemon.species.name} (pokemonOwner: $pokemonOwner, entityOwner: $entityOwner)")
                 return null
             }
         }
@@ -182,10 +184,11 @@ object BallComparisonCalculator {
         val eyePos = player.eyePos
         val maxDistance = 8.0
         
+        // Filter for truly wild Pokemon (no owner on pokemon OR entity)
         val nearbyPokemon = world.getEntitiesByClass(
             PokemonEntity::class.java,
             player.boundingBox.expand(maxDistance)
-        ) { it.pokemon.getOwnerUUID() == null }
+        ) { it.pokemon.getOwnerUUID() == null && it.ownerUuid == null }
         
         var closestPokemon: PokemonEntity? = null
         var closestDistance = maxDistance

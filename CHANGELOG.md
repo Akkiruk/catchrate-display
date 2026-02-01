@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.19] - 2026-01-31
+
+### Fixed
+- Out-of-combat HUD no longer shows for player-owned Pokemon (shoulder/follower Pokemon)
+
 ## [1.2.18] - 2026-01-31
 
 ### Changed
