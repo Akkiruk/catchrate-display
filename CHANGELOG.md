@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.28] - 2026-02-01
+
+### Changed
+- Out-of-combat HUD now matches in-combat HUD layout
+- HP shown as multiplier text instead of health bar
+- Status effects now displayed for wild Pokemon
+- Ball condition description row added
+- Dynamic box width based on content
+- Guaranteed catches show "★ 100% CATCH ★" consistently
+
 ## [1.2.27] - 2026-02-01
 
 ### Added

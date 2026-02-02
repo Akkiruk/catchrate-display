@@ -354,25 +354,56 @@ class CatchRateHudRenderer : HudRenderCallback {
         val screenWidth = client.window.scaledWidth
         val screenHeight = client.window.scaledHeight
         
-        val boxWidth = 130
-        val boxHeight = 74  // Extra space for 0.5x penalty indicator
+        // Match in-combat format: calculate HP multiplier
+        val hpPercent = if (pokemon.maxHealth > 0) (pokemon.currentHealth.toDouble() / pokemon.maxHealth.toDouble()) * 100.0 else 100.0
+        val hpMultiplier = (3.0 - 2.0 * hpPercent / 100.0) / 3.0
+        val hpText = "HP ${String.format("%.2f", hpMultiplier)}x"
+        
+        // Check for status effect
+        val statusName = pokemon.status?.status?.name?.path ?: ""
+        val statusMult = CatchRateFormula.getStatusMultiplier(statusName)
+        val hasStatus = statusMult > 1.0
+        val statusIcon = HudDrawing.getStatusIcon(statusName)
+        val statusText = "$statusIcon ${statusName.uppercase()} ${String.format("%.1f", statusMult)}x"
+        
+        // Ball text
+        val ballIcon = if (result.conditionMet) "●" else "○"
+        val ballText = "$ballIcon ${CatchRateFormula.formatBallNameCompact(result.ballName)} ${String.format("%.1f", result.multiplier)}x"
+        
+        // Penalty text (out of combat specific)
+        val penaltyText = "⚠ Out of combat: 0.5x"
+        
+        // Pokemon name with WILD indicator
+        val nameText = "${pokemon.species.name} Lv${pokemon.level}"
+        
+        // Calculate dynamic box width like in-combat
+        val textWidths = mutableListOf(
+            textRenderer.getWidth(nameText) + textRenderer.getWidth(" WILD") + 8,
+            textRenderer.getWidth(hpText),
+            textRenderer.getWidth(ballText),
+            textRenderer.getWidth(result.reason),
+            textRenderer.getWidth(penaltyText)
+        )
+        if (hasStatus) textWidths.add(textRenderer.getWidth(statusText))
+        
+        val boxWidth = (textWidths.maxOrNull() ?: 100) + 16
+        val boxHeight = if (hasStatus) 92 else 82  // Extra row for penalty
         val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
         
         // Draw styled panel with wild indicator
         HudDrawing.drawStyledPanel(drawContext, x, y, boxWidth, boxHeight, result.catchRate, isWild = true)
         
         // Pokemon name and level header
-        val nameText = "${pokemon.species.name} Lv${pokemon.level}"
         drawContext.drawTextWithShadow(textRenderer, nameText, x + 6, y + 4, Colors.TEXT_WHITE)
         
-        // Wild indicator
-        drawContext.drawTextWithShadow(textRenderer, "WILD", x + boxWidth - 28, y + 4, Colors.TEXT_WILD_RED)
+        // Wild indicator (right side of header)
+        drawContext.drawTextWithShadow(textRenderer, "WILD", x + boxWidth - textRenderer.getWidth("WILD") - 6, y + 4, Colors.TEXT_WILD_RED)
         
         // Catch rate display with progress bar
         val barY = y + 16
         if (result.isGuaranteed) {
             HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, 100.0, true)
-            drawContext.drawTextWithShadow(textRenderer, "✓ GUARANTEED", x + 6, barY + 12, Colors.TEXT_GREEN)
+            drawContext.drawTextWithShadow(textRenderer, "★ 100% CATCH ★", x + 6, barY + 12, Colors.TEXT_GREEN)
         } else {
             HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, result.catchRate, false)
             val percentText = "${CatchRateFormula.formatCatchPercentage(result.catchRate, result.isGuaranteed)}%"
@@ -380,20 +411,29 @@ class CatchRateHudRenderer : HudRenderCallback {
             drawContext.drawTextWithShadow(textRenderer, percentText, x + 6, barY + 12, percentColor)
         }
         
-        // HP (always full for wild)
-        val hpY = barY + 24
-        drawContext.drawTextWithShadow(textRenderer, "HP", x + 6, hpY, Colors.TEXT_GRAY)
-        HudDrawing.drawHealthBar(drawContext, x + 22, hpY + 1, 60, 1.0f)
+        // HP multiplier row (matches in-combat format)
+        var currentY = barY + 26
+        drawContext.drawTextWithShadow(textRenderer, hpText, x + 6, currentY, Colors.TEXT_GRAY)
         
-        // Ball multiplier with condition
-        val ballY = hpY + 12
+        // Status effect row (if any)
+        if (hasStatus) {
+            currentY += 10
+            drawContext.drawTextWithShadow(textRenderer, statusText, x + 6, currentY, Colors.TEXT_PURPLE)
+        }
+        
+        // Ball multiplier row
+        currentY += 10
         val ballColor = HudDrawing.getBallMultiplierColor(result.multiplier.toFloat())
-        val conditionIcon = if (result.conditionMet) "●" else "○"
-        drawContext.drawTextWithShadow(textRenderer, "$conditionIcon ${CatchRateFormula.formatBallNameCompact(result.ballName)} ${String.format("%.1f", result.multiplier)}x", x + 6, ballY, ballColor)
+        drawContext.drawTextWithShadow(textRenderer, ballText, x + 6, currentY, ballColor)
         
-        // Out of combat penalty indicator
-        val penaltyY = ballY + 10
-        drawContext.drawTextWithShadow(textRenderer, "⚠ Out of combat: 0.5x", x + 6, penaltyY, Colors.TEXT_ORANGE)
+        // Ball condition description row
+        currentY += 10
+        val conditionColor = if (result.conditionMet) Colors.TEXT_DARK_GREEN else Colors.TEXT_DARK_GRAY
+        drawContext.drawTextWithShadow(textRenderer, result.reason, x + 6, currentY, conditionColor)
+        
+        // Out of combat penalty indicator (out-of-combat specific)
+        currentY += 10
+        drawContext.drawTextWithShadow(textRenderer, penaltyText, x + 6, currentY, Colors.TEXT_ORANGE)
     }
     
     private fun renderBallComparisonPanel(drawContext: DrawContext, client: MinecraftClient, pokemon: ClientBattlePokemon, battle: ClientBattle) {
