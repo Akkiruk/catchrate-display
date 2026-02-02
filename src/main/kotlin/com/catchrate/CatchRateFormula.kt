@@ -106,15 +106,16 @@ object CatchRateFormula {
     
     /**
      * Format catch percentage for display.
-     * Caps at 99.9% unless truly guaranteed to prevent misleading "100%" display.
-     * Due to how the formula works, non-guaranteed catches can calculate to 99.95%+ 
-     * which would round to "100.0%" but still fail sometimes.
+     * ALWAYS caps at 99.9% unless isGuaranteed is explicitly true.
+     * This prevents misleading "100%" displays that can still fail.
+     * Only Master Ball and similar guaranteed-catch balls should show 100%.
      */
     fun formatCatchPercentage(percentage: Double, isGuaranteed: Boolean): String {
-        return if (isGuaranteed || percentage >= 100.0) {
+        return if (isGuaranteed) {
             "100.0"
         } else {
-            String.format("%.1f", percentage.coerceAtMost(99.9))
+            // Always cap at 99.9% for non-guaranteed catches, even if formula calculates higher
+            String.format("%.1f", percentage.coerceIn(0.0, 99.9))
         }
     }
     

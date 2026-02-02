@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.29] - 2026-02-01
+
+### Fixed
+- Non-guaranteed catches now always display max 99.9% to prevent misleading "100%" displays
+- Previously, very high catch rates (99.95%+) could round to show 100% but still fail
+- Only Master Ball and truly guaranteed catches now show 100%
+
 ## [1.2.28] - 2026-02-01
 
 ### Changed
