@@ -76,8 +76,9 @@ object CatchRateCalculator {
         // Get ball multiplier using unified calculator
         val ballBonus = getBallMultiplier(pokeBall, ballName, pokemon, turnCount)
         
-        // Get level penalty from shared formula
-        val levelPenalty = CatchRateFormula.getLevelPenalty(level, playerHighestLevel)
+        // NOTE: Cobblemon's findHighestThrowerLevel() always returns null for wild battles
+        // due to a logic issue in their code, so level penalty is never actually applied.
+        // We match Cobblemon's actual behavior by not applying level penalty.
         
         // Calculate catch percentage using shared formula
         val captureChance = CatchRateFormula.calculateCatchPercentage(
@@ -87,8 +88,7 @@ object CatchRateCalculator {
             ballMultiplier = ballBonus,
             statusMultiplier = bonusStatus,
             levelBonus = bonusLevel,
-            inBattle = inBattle,
-            levelPenalty = levelPenalty
+            inBattle = inBattle
         )
         
         // Calculate modified catch rate for debug/display purposes
@@ -99,8 +99,7 @@ object CatchRateCalculator {
             ballMultiplier = ballBonus,
             statusMultiplier = bonusStatus,
             levelBonus = bonusLevel,
-            inBattle = inBattle,
-            levelPenalty = levelPenalty
+            inBattle = inBattle
         )
         
         return CatchRateResult(

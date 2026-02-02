@@ -113,14 +113,14 @@ object CatchRateServerNetworking {
             // Use CatchRateFormula for level bonus
             val lowLevelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
             
-            // Get player's highest level for level penalty calculation
-            val playerHighestLevel = playerActor?.pokemonList?.maxOfOrNull { it.effectedPokemon.level } ?: pokemon.level
-            val levelPenalty = CatchRateFormula.getLevelPenalty(pokemon.level, playerHighestLevel)
+            // NOTE: Cobblemon's findHighestThrowerLevel() always returns null for wild battles
+            // due to a logic issue in their code, so the level penalty is never applied.
+            // We match Cobblemon's actual behavior by not applying level penalty.
             
             // Use Cobblemon's behavior mutator for the HP component, then apply our formula
             val hpComponent = (3F * maxHp - 2F * currentHp) * baseCatchRate
             var modifiedCatchRate = modifier.behavior(player, pokemon).mutator(hpComponent, ballMultiplier) / (3F * maxHp)
-            modifiedCatchRate *= statusMultiplier * lowLevelBonus * levelPenalty
+            modifiedCatchRate *= statusMultiplier * lowLevelBonus
             
             // Use CatchRateFormula to convert modified rate to percentage
             val catchChance = CatchRateFormula.modifiedRateToPercentage(modifiedCatchRate)

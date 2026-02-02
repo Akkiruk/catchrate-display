@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.30] - 2026-02-01
+
+### Fixed
+- **Root cause fix**: Removed phantom "level penalty" that we were applying but Cobblemon doesn't
+- Cobblemon's `findHighestThrowerLevel()` has a bug causing it to always return null for wild battles
+- This means level penalty is never actually applied by Cobblemon, but we were applying it
+- Our catch rates now match Cobblemon's actual mechanics exactly
+- Reverts the bandaid 99.9% cap from v1.2.29 since the root cause is fixed
+
 ## [1.2.29] - 2026-02-01
 
 ### Fixed

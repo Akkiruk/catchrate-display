@@ -106,15 +106,16 @@ object CatchRateFormula {
     
     /**
      * Format catch percentage for display.
-     * ALWAYS caps at 99.9% unless isGuaranteed is explicitly true.
-     * This prevents misleading "100%" displays that can still fail.
+     * Caps at 99.9% unless truly guaranteed to prevent misleading displays.
      * Only Master Ball and similar guaranteed-catch balls should show 100%.
      */
     fun formatCatchPercentage(percentage: Double, isGuaranteed: Boolean): String {
         return if (isGuaranteed) {
             "100.0"
         } else {
-            // Always cap at 99.9% for non-guaranteed catches, even if formula calculates higher
+            // Cap at 99.9% for non-guaranteed catches
+            // With the correct formula (no phantom level penalty), this should rarely 
+            // hit the cap, but it's a safety measure for edge cases
             String.format("%.1f", percentage.coerceIn(0.0, 99.9))
         }
     }
@@ -179,10 +180,21 @@ object CatchRateFormula {
     
     /**
      * Calculate the level penalty when catching Pokemon higher level than your team.
+     * 
+     * NOTE: This function exists for reference but Cobblemon's CobblemonCaptureCalculator
+     * has a bug in findHighestThrowerLevel() - it always returns null for wild Pokemon
+     * battles because the condition checks if the player's active Pokemon matches the
+     * wild Pokemon's UUID (which is never true). As a result, the level penalty is
+     * NEVER APPLIED in actual gameplay.
+     * 
+     * We keep this function for potential future use if Cobblemon fixes this,
+     * but currently it should not be called.
+     * 
      * @param pokemonLevel The wild Pokemon's level
      * @param playerHighestLevel The highest level Pokemon on the player's team
      * @return Multiplier from 0.1 to 1.0
      */
+    @Deprecated("Cobblemon doesn't actually apply level penalty due to a bug in findHighestThrowerLevel")
     fun getLevelPenalty(pokemonLevel: Int, playerHighestLevel: Int?): Float {
         if (playerHighestLevel == null || playerHighestLevel >= pokemonLevel) {
             return 1F
