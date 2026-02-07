@@ -20,6 +20,23 @@ import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
+/**
+ * Translation key helper object for HUD strings.
+ */
+object HudTranslations {
+    fun header() = Text.translatable("catchrate.hud.header").string
+    fun guaranteed() = Text.translatable("catchrate.hud.guaranteed").string
+    fun guaranteedShort() = Text.translatable("catchrate.hud.guaranteed_short").string
+    fun hp() = Text.translatable("catchrate.hud.hp").string
+    fun wild() = Text.translatable("catchrate.hud.wild").string
+    fun unknownPercent() = Text.translatable("catchrate.hud.unknown_percent").string
+    fun serverRequired() = Text.translatable("catchrate.hud.server_required").string
+    fun outOfCombatPenalty() = Text.translatable("catchrate.hud.out_of_combat_penalty").string
+    fun releaseToClose(key: String) = Text.translatable("catchrate.hud.release_to_close", key).string
+    fun ballComparison(turn: Int) = Text.translatable("catchrate.hud.ball_comparison", turn).string
+    fun status(statusPath: String?) = Text.translatable(CatchRateFormula.getStatusTranslationKey(statusPath)).string
+}
+
 class CatchRateHudRenderer : HudRenderCallback {
     
     private var lastBattleId: java.util.UUID? = null
@@ -208,7 +225,7 @@ class CatchRateHudRenderer : HudRenderCallback {
             
             // Calculate percentage text width (must include in box sizing)
             val percentText = if (data.isGuaranteed) {
-                "★ 100% CATCH ★"
+                HudTranslations.guaranteed()
             } else {
                 "${CatchRateFormula.formatCatchPercentage(data.catchChance, false)}%"
             }
@@ -243,7 +260,7 @@ class CatchRateHudRenderer : HudRenderCallback {
         val barY = y + 16
         if (data.isGuaranteed) {
             HudDrawing.drawCatchBar(drawContext, x + 6, barY, hudCache.boxWidth - 12, 100.0, true)
-            drawContext.drawTextWithShadow(textRenderer, "★ 100% CATCH ★", x + 6, barY + 12, Colors.TEXT_GREEN)
+            drawContext.drawTextWithShadow(textRenderer, HudTranslations.guaranteed(), x + 6, barY + 12, Colors.TEXT_GREEN)
         } else {
             HudDrawing.drawCatchBar(drawContext, x + 6, barY, hudCache.boxWidth - 12, data.catchChance, false)
             val percentText = "${CatchRateFormula.formatCatchPercentage(data.catchChance, false)}%"
@@ -279,14 +296,14 @@ class CatchRateHudRenderer : HudRenderCallback {
         val screenHeight = client.window.scaledHeight
         
         // Calculate dynamic box size based on content
-        val headerText = "Catch Rate"
+        val headerText = HudTranslations.header()
         val percentText = if (result.isGuaranteed) {
-            "✓ GUARANTEED"
+            HudTranslations.guaranteedShort()
         } else {
             "${CatchRateFormula.formatCatchPercentage(result.percentage, result.isGuaranteed)}%"
         }
         val statusIcon = HudDrawing.getStatusIcon(result.statusName)
-        val statusText = "$statusIcon ${result.statusName}"
+        val statusText = "$statusIcon ${HudTranslations.status(result.statusName)}"
         val ballDisplay = CatchRateFormula.formatBallNameCompact(result.ballName)
         val turnInfo = if (ballName == "timer_ball" || ballName == "quick_ball") " T$turnCount" else ""
         val ballText = "● $ballDisplay ${String.format("%.1f", result.ballMultiplier)}x$turnInfo"
@@ -310,7 +327,7 @@ class CatchRateHudRenderer : HudRenderCallback {
         HudDrawing.drawStyledPanel(drawContext, x, y, boxWidth, boxHeight, result.percentage)
         
         // Header
-        drawContext.drawTextWithShadow(textRenderer, "Catch Rate", x + 6, y + 4, Colors.TEXT_WHITE)
+        drawContext.drawTextWithShadow(textRenderer, HudTranslations.header(), x + 6, y + 4, Colors.TEXT_WHITE)
         
         // Catch rate display with progress bar
         val barY = y + 16
@@ -325,7 +342,7 @@ class CatchRateHudRenderer : HudRenderCallback {
         
         // HP bar
         val hpY = barY + 24
-        drawContext.drawTextWithShadow(textRenderer, "HP", x + 6, hpY, Colors.TEXT_GRAY)
+        drawContext.drawTextWithShadow(textRenderer, HudTranslations.hp(), x + 6, hpY, Colors.TEXT_GRAY)
         HudDrawing.drawHealthBar(drawContext, x + 22, hpY + 1, 60, (result.hpPercentage / 100.0).toFloat())
         
         // Status effect (if any)
@@ -355,19 +372,19 @@ class CatchRateHudRenderer : HudRenderCallback {
         HudDrawing.drawStyledPanel(drawContext, x, y, boxWidth, boxHeight, 0.0)
         
         // Header
-        drawContext.drawTextWithShadow(textRenderer, "Catch Rate", x + 6, y + 4, Colors.TEXT_WHITE)
+        drawContext.drawTextWithShadow(textRenderer, HudTranslations.header(), x + 6, y + 4, Colors.TEXT_WHITE)
         
         // Unknown percentage with bar
         val barY = y + 16
         HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, 0.0, false)
-        drawContext.drawTextWithShadow(textRenderer, "??%", x + 6, barY + 12, Colors.TEXT_YELLOW)
+        drawContext.drawTextWithShadow(textRenderer, HudTranslations.unknownPercent(), x + 6, barY + 12, Colors.TEXT_YELLOW)
         
         // Ball name and server requirement
         val infoY = barY + 24
         drawContext.drawTextWithShadow(textRenderer, CatchRateFormula.formatBallNameCompact(ballName), x + 6, infoY, Colors.TEXT_RED)
         
         // All server-required balls show the same message
-        drawContext.drawTextWithShadow(textRenderer, "Server required", x + 6, infoY + 10, Colors.TEXT_DARK_GRAY)
+        drawContext.drawTextWithShadow(textRenderer, HudTranslations.serverRequired(), x + 6, infoY + 10, Colors.TEXT_DARK_GRAY)
     }
     
     private fun renderOutOfCombatHud(drawContext: DrawContext, client: MinecraftClient, player: ClientPlayerEntity) {
@@ -392,35 +409,36 @@ class CatchRateHudRenderer : HudRenderCallback {
         // Match in-combat format: calculate HP multiplier
         val hpPercent = if (pokemon.maxHealth > 0) (pokemon.currentHealth.toDouble() / pokemon.maxHealth.toDouble()) * 100.0 else 100.0
         val hpMultiplier = (3.0 - 2.0 * hpPercent / 100.0) / 3.0
-        val hpText = "HP ${String.format("%.2f", hpMultiplier)}x"
+        val hpText = "${HudTranslations.hp()} ${String.format("%.2f", hpMultiplier)}x"
         
         // Check for status effect
         val statusName = pokemon.status?.status?.name?.path ?: ""
         val statusMult = CatchRateFormula.getStatusMultiplier(statusName)
         val hasStatus = statusMult > 1.0
         val statusIcon = HudDrawing.getStatusIcon(statusName)
-        val statusText = "$statusIcon ${statusName.uppercase()} ${String.format("%.1f", statusMult)}x"
+        val statusText = "$statusIcon ${HudTranslations.status(statusName).uppercase()} ${String.format("%.1f", statusMult)}x"
         
         // Ball text
         val ballIcon = if (result.conditionMet) "●" else "○"
         val ballText = "$ballIcon ${CatchRateFormula.formatBallNameCompact(result.ballName)} ${String.format("%.1f", result.multiplier)}x"
         
         // Penalty text (out of combat specific)
-        val penaltyText = "⚠ Out of combat: 0.5x"
+        val penaltyText = HudTranslations.outOfCombatPenalty()
         
         // Pokemon name with WILD indicator
         val nameText = "${pokemon.species.name} Lv${pokemon.level}"
         
         // Calculate percentage text width (must include in box sizing)
         val percentText = if (result.isGuaranteed) {
-            "★ 100% CATCH ★"
+            HudTranslations.guaranteed()
         } else {
             "${CatchRateFormula.formatCatchPercentage(result.catchRate, result.isGuaranteed)}%"
         }
         
         // Calculate dynamic box width like in-combat
+        val wildText = HudTranslations.wild()
         val textWidths = mutableListOf(
-            textRenderer.getWidth(nameText) + textRenderer.getWidth(" WILD") + 8,
+            textRenderer.getWidth(nameText) + textRenderer.getWidth(" $wildText") + 8,
             textRenderer.getWidth(hpText),
             textRenderer.getWidth(ballText),
             textRenderer.getWidth(result.reason),
@@ -440,13 +458,13 @@ class CatchRateHudRenderer : HudRenderCallback {
         drawContext.drawTextWithShadow(textRenderer, nameText, x + 6, y + 4, Colors.TEXT_WHITE)
         
         // Wild indicator (right side of header)
-        drawContext.drawTextWithShadow(textRenderer, "WILD", x + boxWidth - textRenderer.getWidth("WILD") - 6, y + 4, Colors.TEXT_WILD_RED)
+        drawContext.drawTextWithShadow(textRenderer, wildText, x + boxWidth - textRenderer.getWidth(wildText) - 6, y + 4, Colors.TEXT_WILD_RED)
         
         // Catch rate display with progress bar
         val barY = y + 16
         if (result.isGuaranteed) {
             HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, 100.0, true)
-            drawContext.drawTextWithShadow(textRenderer, "★ 100% CATCH ★", x + 6, barY + 12, Colors.TEXT_GREEN)
+            drawContext.drawTextWithShadow(textRenderer, HudTranslations.guaranteed(), x + 6, barY + 12, Colors.TEXT_GREEN)
         } else {
             HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, result.catchRate, false)
             val pctText = "${CatchRateFormula.formatCatchPercentage(result.catchRate, result.isGuaranteed)}%"
@@ -529,7 +547,7 @@ class CatchRateHudRenderer : HudRenderCallback {
         // Use HudDrawing for consistent panel styling
         HudDrawing.drawComparisonPanel(drawContext, x, y, boxWidth, boxHeight, headerHeight)
         
-        val header = Text.literal("⚔ Ball Comparison (Turn $turnCount)").formatted(Formatting.GOLD, Formatting.BOLD)
+        val header = Text.literal(HudTranslations.ballComparison(turnCount)).formatted(Formatting.GOLD, Formatting.BOLD)
         drawContext.drawTextWithShadow(textRenderer, header, x + padding, y + padding, 0xFFFFFF)
         
         drawContext.drawHorizontalLine(x + padding, x + boxWidth - padding, y + headerHeight, 0xFF444455.toInt())
@@ -553,7 +571,7 @@ class CatchRateHudRenderer : HudRenderCallback {
         val footerY = y + boxHeight - padding - 9
         drawContext.drawHorizontalLine(x + padding, x + boxWidth - padding, footerY - 4, Colors.BAR_BORDER)
         val keyName = CatchRateKeybinds.comparisonKeyName
-        drawContext.drawTextWithShadow(textRenderer, "Release $keyName to close", x + padding, footerY, Colors.TEXT_DARK_GRAY)
+        drawContext.drawTextWithShadow(textRenderer, HudTranslations.releaseToClose(keyName), x + padding, footerY, Colors.TEXT_DARK_GRAY)
     }
     
     // ==================== HELPER METHODS ====================

@@ -7,5 +7,87 @@
   "key.catchrate.move_down": "向下移動HUD",
   "key.catchrate.move_left": "向左移動HUD",
   "key.catchrate.move_right": "向右移動HUD",
-  "key.catchrate.cycle_anchor": "切換HUD錨點"
+  "key.catchrate.cycle_anchor": "切換HUD錨點",
+
+  "catchrate.status.asleep": "睡眠",
+  "catchrate.status.frozen": "冰凍",
+  "catchrate.status.paralyzed": "麻痺",
+  "catchrate.status.poisoned": "中毒",
+  "catchrate.status.badly_poisoned": "劇毒",
+  "catchrate.status.burned": "燒傷",
+  "catchrate.status.none": "無",
+
+  "catchrate.hud.header": "捕獲率",
+  "catchrate.hud.guaranteed": "★ 100% 捕獲 ★",
+  "catchrate.hud.guaranteed_short": "✓ 保證",
+  "catchrate.hud.hp": "HP",
+  "catchrate.hud.wild": "野生",
+  "catchrate.hud.unknown_percent": "??%",
+  "catchrate.hud.server_required": "需要伺服器",
+  "catchrate.hud.out_of_combat_penalty": "⚠ 戰鬥外: 0.5x",
+  "catchrate.hud.release_to_close": "釋放%s以關閉",
+  "catchrate.hud.ball_comparison": "⚔ 球類比較 (回合 %d)",
+
+  "catchrate.ball.guaranteed_catch": "保證捕獲！",
+  "catchrate.ball.multiplier_always": "%sx 永遠",
+  "catchrate.ball.special_effect": "捕獲時特殊效果",
+  "catchrate.ball.ancient": "古代: 僅投擲力 (1x率)",
+
+  "catchrate.ball.quick.not_in_battle": "僅在第1回合有效",
+  "catchrate.ball.quick.effective": "第一回合 5x！",
+  "catchrate.ball.quick.ineffective": "僅第1回合有效",
+
+  "catchrate.ball.timer.turn_info": "回合 %d: %.1fx",
+  "catchrate.ball.timer.scales": "隨回合增加",
+
+  "catchrate.ball.dusk.dark_area": "陰暗區域 (L%d)",
+  "catchrate.ball.dusk.need_darkness": "需要黑暗",
+
+  "catchrate.ball.dive.underwater": "水下！",
+  "catchrate.ball.dive.need_underwater": "需要在水下",
+
+  "catchrate.ball.moon.not_night": "僅在夜晚有效",
+  "catchrate.ball.moon.night_phase": "夜晚 (月相 %d): %.0fx",
+
+  "catchrate.ball.net.effective": "蟲系/水系！",
+  "catchrate.ball.net.ineffective": "非蟲系/水系",
+
+  "catchrate.ball.nest.effective": "Lv%d: %.1fx",
+  "catchrate.ball.nest.ineffective": "僅<Lv30",
+
+  "catchrate.ball.fast.effective": "速度 %d！",
+  "catchrate.ball.fast.ineffective": "速度 <100",
+
+  "catchrate.ball.heavy.weight": "%.1f公斤",
+
+  "catchrate.ball.beast.ultra_beast": "究極異獸！",
+  "catchrate.ball.beast.penalty": "0.1x 非究異懲罰",
+
+  "catchrate.ball.dream.sleeping": "睡眠中！",
+  "catchrate.ball.dream.need_sleep": "需要睡眠狀態",
+
+  "catchrate.ball.love.no_battler": "無戰鬥者資訊",
+  "catchrate.ball.love.need_battler": "需要活躍戰鬥者",
+  "catchrate.ball.love.wild_genderless": "野生無性別",
+  "catchrate.ball.love.battler_genderless": "你的戰鬥者無性別",
+  "catchrate.ball.love.need_opposite": "需要相反性別",
+  "catchrate.ball.love.same_species": "同種族 + 相反 %s",
+  "catchrate.ball.love.opposite_gender": "相反性別 %s",
+
+  "catchrate.ball.level.effective": "%.0fx 等級優勢",
+  "catchrate.ball.level.ineffective": "需要更高等級",
+  "catchrate.ball.level.requires_server": "需要等級比較",
+
+  "catchrate.ball.repeat.effective": "3.5x - 已捕獲！",
+  "catchrate.ball.repeat.ineffective": "先捕獲此種族",
+  "catchrate.ball.repeat.requires_server": "需要寶可夢圖鑑",
+
+  "catchrate.ball.lure.effective": "4x 釣魚加成！",
+  "catchrate.ball.lure.ineffective": "僅釣到的寶可夢",
+  "catchrate.ball.lure.requires_server": "需要釣魚環境",
+
+  "catchrate.message.enabled": "捕獲率: §a已啟用",
+  "catchrate.message.disabled": "捕獲率: §c已停用",
+  "catchrate.message.position_reset": "HUD位置已重置",
+  "catchrate.message.anchor": "錨點: %s"
 }

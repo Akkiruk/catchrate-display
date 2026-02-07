@@ -1,66 +1,63 @@
 plugins {
-    id("fabric-loom") version "1.9.2"
-    kotlin("jvm") version "2.2.0"
+    id("architectury-plugin") version "3.4-SNAPSHOT"
+    id("dev.architectury.loom") version "1.9.424" apply false
+    kotlin("jvm") version "2.2.0" apply false
     java
 }
 
-version = project.property("mod_version") as String
-group = project.property("maven_group") as String
+val minecraftVersion = findProperty("minecraft_version")?.toString() ?: "1.21.1"
+val mavenGroup = findProperty("maven_group")?.toString() ?: "com.catchrate"
+val modVersion = findProperty("mod_version")?.toString() ?: "1.2.33"
 
-base {
-    archivesName.set(project.property("archives_base_name") as String)
+architectury {
+    minecraft = minecraftVersion
 }
 
-repositories {
-    mavenCentral()
-    maven("https://maven.impactdev.net/repository/development/")
-    maven("https://oss.sonatype.org/content/repositories/snapshots")
-    maven("https://maven.fabricmc.net/")
+allprojects {
+    group = mavenGroup
+    version = modVersion
 }
 
-loom {
-    // Don't scan mods directory
-    mods {
-        // Only include our mod
-    }
-}
+subprojects {
+    apply(plugin = "dev.architectury.loom")
+    apply(plugin = "org.jetbrains.kotlin.jvm")
 
-dependencies {
-    minecraft("com.mojang:minecraft:${project.property("minecraft_version")}")
-    mappings("net.fabricmc:yarn:${project.property("yarn_mappings")}:v2")
-    modImplementation("net.fabricmc:fabric-loader:${project.property("loader_version")}")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
-    modImplementation("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
-    
-    // Cobblemon from Maven - compileOnly so it gets remapped but not included in jar
-    modCompileOnly("com.cobblemon:fabric:${project.property("cobblemon_version")}")
-}
+    val loom = extensions.getByName<net.fabricmc.loom.api.LoomGradleExtensionAPI>("loom")
 
-tasks {
-    processResources {
-        inputs.property("version", project.version)
-        filesMatching("fabric.mod.json") {
-            expand("version" to project.version)
-        }
+    val minecraftVersion = findProperty("minecraft_version")?.toString() ?: "1.21.1"
+    val parchmentVersion = findProperty("parchment_version")?.toString() ?: "2024.07.28"
+
+    repositories {
+        mavenCentral()
+        maven("https://maven.architectury.dev/")
+        maven("https://maven.fabricmc.net/")
+        maven("https://maven.neoforged.net/releases/")
+        maven("https://maven.impactdev.net/repository/development/")
+        maven("https://oss.sonatype.org/content/repositories/snapshots")
     }
 
-    jar {
-        from("LICENSE")
+    @Suppress("UnstableApiUsage")
+    dependencies {
+        "minecraft"("com.mojang:minecraft:$minecraftVersion")
+        "mappings"(loom.layered {
+            officialMojangMappings()
+            parchment("org.parchmentmc.data:parchment-1.21:$parchmentVersion")
+        })
     }
 
-    withType<JavaCompile> {
+    tasks.withType<JavaCompile> {
         options.release.set(21)
     }
 
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
         }
     }
-}
 
-java {
-    withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    java {
+        withSourcesJar()
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
 }
