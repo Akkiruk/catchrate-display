@@ -56,7 +56,8 @@ jobs:
           echo "Changelog:"
           cat current_changelog.txt
           
-      - name: Publish to CurseForge and Modrinth
+      # Publish Fabric version
+      - name: Publish Fabric to CurseForge and Modrinth
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           curseforge-id: ${{ secrets.CURSEFORGE_PROJECT_ID }}
@@ -66,32 +67,68 @@ jobs:
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           
           files: |
-            build/libs/!(*-@(dev|sources|javadoc)).jar
-            build/libs/*-sources.jar
+            fabric/build/libs/!(*-@(dev|shadow|sources|javadoc)).jar
+            fabric/build/libs/*-sources.jar
           
-          name: "v${{ steps.get_version.outputs.VERSION }}"
-          version: ${{ steps.get_version.outputs.VERSION }}
+          name: "[Fabric] v${{ steps.get_version.outputs.VERSION }}"
+          version: ${{ steps.get_version.outputs.VERSION }}+fabric
           version-type: release
           
           changelog-file: current_changelog.txt
           
-          loaders: |
-            fabric
+          loaders: fabric
           
           game-versions: |
             1.21
             1.21.1
           
           dependencies: |
-            fabric-api(fabric) | requires | *
-            fabric-language-kotlin(fabric) | requires | *
-            cobblemon(fabric) | requires | *
+            fabric-api | requires | *
+            fabric-language-kotlin | requires | *
+            cobblemon | requires | *
           
-          java: |
-            21
+          java: 21
           
-      - name: Upload build artifacts
+      # Publish NeoForge version
+      - name: Publish NeoForge to CurseForge and Modrinth
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          curseforge-id: ${{ secrets.CURSEFORGE_PROJECT_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          
+          modrinth-id: ${{ secrets.MODRINTH_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          
+          files: |
+            neoforge/build/libs/!(*-@(dev|shadow|sources|javadoc)).jar
+            neoforge/build/libs/*-sources.jar
+          
+          name: "[NeoForge] v${{ steps.get_version.outputs.VERSION }}"
+          version: ${{ steps.get_version.outputs.VERSION }}+neoforge
+          version-type: release
+          
+          changelog-file: current_changelog.txt
+          
+          loaders: neoforge
+          
+          game-versions: |
+            1.21
+            1.21.1
+          
+          dependencies: |
+            kotlin-for-forge | requires | *
+            cobblemon | requires | *
+          
+          java: 21
+          
+      - name: Upload Fabric artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: catchrate-display-${{ steps.get_version.outputs.VERSION }}
-          path: build/libs/*.jar
+          name: catchrate-display-fabric-${{ steps.get_version.outputs.VERSION }}
+          path: fabric/build/libs/*.jar
+          
+      - name: Upload NeoForge artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: catchrate-display-neoforge-${{ steps.get_version.outputs.VERSION }}
+          path: neoforge/build/libs/*.jar
