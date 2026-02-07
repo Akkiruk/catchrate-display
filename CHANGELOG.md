@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.2] - 2026-02-07
+
+### Fixed
+- JAR file naming now includes proper prefix (catchrate-display-fabric/neoforge instead of just fabric/neoforge)
+
 ## [1.3.1] - 2026-02-07
 
 ### Performance
