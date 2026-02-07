@@ -132,6 +132,7 @@ class CatchRateHudRenderer : HudRenderCallback {
         lastActionRequestCount = 0
         CatchRateClientNetworking.clearCache()
         cachedClientResult = null
+        cachedComparison = null  // Reset ball comparison on new battle
         lastServerResponse = null
     }
     
@@ -142,6 +143,7 @@ class CatchRateHudRenderer : HudRenderCallback {
                 turnCount++
                 CatchRateClientNetworking.clearCache()
                 cachedClientResult = null
+                cachedComparison = null  // Force ball comparison refresh on turn change
             }
             lastActionRequestCount = currentRequestCount
         }
@@ -160,6 +162,7 @@ class CatchRateHudRenderer : HudRenderCallback {
         if (needsInvalidation) {
             CatchRateClientNetworking.invalidateCache(pokemon.uuid)
             cachedClientResult = null
+            cachedComparison = null  // Force ball comparison refresh on HP/status/target change
         }
     }
     

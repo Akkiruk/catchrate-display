@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.33] - 2026-02-07
+
+### Fixed
+- Ball comparison panel now properly updates when turn count changes (Timer Ball, Quick Ball)
+- Ball comparison cache cleared on battle start, turn increment, and HP/status/target changes
+
 ## [1.2.32] - 2026-02-06
 
 ### Fixed
@@ -235,7 +241,7 @@
   - `getBallConditionInfo()` - server-side
 - Future refactor planned to consolidate these
 
-## [1.2.10] - 2026-01-31
+## [1.2.10] - 2026-01-31and 
 
 ### Changed
 - **Debug logging enabled with throttling**
