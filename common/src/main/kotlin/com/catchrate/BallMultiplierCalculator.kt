@@ -1,6 +1,7 @@
 package com.catchrate
 
 import com.cobblemon.mod.common.api.pokeball.PokeBalls
+import com.cobblemon.mod.common.pokeball.PokeBall
 import com.cobblemon.mod.common.pokemon.Gender
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
@@ -108,12 +109,17 @@ object BallMultiplierCalculator {
         val requiresServer: Boolean = false
     )
 
+    // Cache PokeBall lookups to avoid repeated ResourceLocation creation + registry lookups
+    private val pokeBallCache = HashMap<String, PokeBall?>()
+    
     fun calculate(ballId: String, ctx: BallContext): BallResult {
         val lower = ballId.lowercase()
         
-        val pokeBall = try {
-            PokeBalls.getPokeBall(ResourceLocation.fromNamespaceAndPath("cobblemon", ballId))
-        } catch (e: Exception) { null }
+        val pokeBall = pokeBallCache.getOrPut(lower) {
+            try {
+                PokeBalls.getPokeBall(ResourceLocation.fromNamespaceAndPath("cobblemon", lower))
+            } catch (e: Exception) { null }
+        }
         
         if (pokeBall?.catchRateModifier?.isGuaranteed() == true || lower.contains("master")) {
             return BallResult(255F, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)

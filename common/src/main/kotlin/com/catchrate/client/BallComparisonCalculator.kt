@@ -74,16 +74,7 @@ object BallComparisonCalculator {
         return comparableBalls.map { ballId ->
             val result = BallMultiplierCalculator.calculate(ballId, ctx)
             
-            val catchChance = CatchRateFormula.calculateCatchPercentage(
-                baseCatchRate = baseCatchRate,
-                maxHp = hpInfo.maxHp,
-                currentHp = hpInfo.currentHp,
-                ballMultiplier = result.multiplier,
-                statusMultiplier = statusMult,
-                levelBonus = levelBonus,
-                inBattle = true
-            )
-            
+            // Compute modified rate once per ball, derive percentage (avoids duplicate HP/modifier math x24 balls)
             val modifiedRate = CatchRateFormula.calculateModifiedCatchRate(
                 baseCatchRate = baseCatchRate,
                 maxHp = hpInfo.maxHp,
@@ -94,6 +85,7 @@ object BallComparisonCalculator {
                 inBattle = true
             )
             val isFormulaGuaranteed = result.isGuaranteed || CatchRateFormula.isGuaranteedByFormula(modifiedRate)
+            val catchChance = CatchRateFormula.modifiedRateToPercentage(modifiedRate)
             
             BallCatchRate(
                 ballName = ballId,

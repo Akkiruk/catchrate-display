@@ -26,8 +26,7 @@ object CatchRateClientNetworking {
     private var lastRequestTime = 0L
     private const val REQUEST_COOLDOWN_MS = 250L
     
-    // World (out-of-combat) request tracking
-    private val worldResponseCache = ConcurrentHashMap<UUID, CatchRateResponsePayload>()
+    // World (out-of-combat) request tracking (responses stored in main responseCache via onResponseReceived)
     private data class WorldRequestKey(val entityId: Int, val ballId: String)
     private var lastWorldRequest: WorldRequestKey? = null
     private var lastWorldRequestTime = 0L
@@ -131,7 +130,6 @@ object CatchRateClientNetworking {
     fun getCachedWorldResponse(pokemonUuid: UUID): CatchRateResponsePayload? = responseCache[pokemonUuid]
     
     fun clearWorldCache() {
-        worldResponseCache.clear()
         lastWorldRequest = null
     }
     

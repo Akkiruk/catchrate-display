@@ -173,11 +173,16 @@ object BallContextFactory {
     }
     
     private fun getBaseSpeed(baseStats: Map<out Any, Int>): Int {
+        // Direct lookup via Cobblemon's Stats enum avoids iterating all stats with string matching
+        try {
+            val speedStat = com.cobblemon.mod.common.api.pokemon.stats.Stats.SPEED
+            baseStats[speedStat]?.let { return it }
+        } catch (_: Exception) { /* Fall through to string-based lookup */ }
+        // Fallback for compatibility
         return baseStats.entries.find { entry ->
-            val key = entry.key
-            key.toString().equals("spe", ignoreCase = true) ||
-            key.toString().equals("SPEED", ignoreCase = true) ||
-            key.toString().contains("speed", ignoreCase = true)
+            entry.key.toString().let { k ->
+                k.equals("spe", ignoreCase = true) || k.equals("SPEED", ignoreCase = true)
+            }
         }?.value ?: 0
     }
 }

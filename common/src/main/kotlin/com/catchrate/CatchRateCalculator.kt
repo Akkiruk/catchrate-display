@@ -64,16 +64,7 @@ object CatchRateCalculator {
         val bonusLevel = CatchRateFormula.getLowLevelBonus(level)
         val ballBonus = getBallMultiplier(pokeBall, ballName, pokemon, turnCount)
         
-        val captureChance = CatchRateFormula.calculateCatchPercentage(
-            baseCatchRate = catchRate,
-            maxHp = hpInfo.maxHp,
-            currentHp = hpInfo.currentHp,
-            ballMultiplier = ballBonus,
-            statusMultiplier = bonusStatus,
-            levelBonus = bonusLevel,
-            inBattle = inBattle
-        )
-        
+        // Compute modified rate once, derive percentage from it (avoids duplicate HP/modifier math)
         val modifiedCatchRate = CatchRateFormula.calculateModifiedCatchRate(
             baseCatchRate = catchRate,
             maxHp = hpInfo.maxHp,
@@ -83,8 +74,8 @@ object CatchRateCalculator {
             levelBonus = bonusLevel,
             inBattle = inBattle
         )
-        
         val isFormulaGuaranteed = CatchRateFormula.isGuaranteedByFormula(modifiedCatchRate)
+        val captureChance = CatchRateFormula.modifiedRateToPercentage(modifiedCatchRate)
         
         return CatchRateResult(
             percentage = captureChance.toDouble().coerceIn(0.0, 100.0),
