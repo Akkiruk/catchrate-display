@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.1] - 2026-02-07
+
+### Performance
+- Eliminated duplicate catch rate calculations in both single-ball and comparison displays
+- Added PokeBall registry lookup caching to reduce repeated ResourceLocation allocations
+- Optimized base speed stat lookup using direct enum key access instead of iteration
+- Removed unused world response cache allocation
+- **No gameplay or feature changes** - pure performance improvements
+
 ## [1.3.0] - 2026-02-07
 
 ### Major: Architectury Multiloader Support
