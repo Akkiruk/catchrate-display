@@ -6,6 +6,10 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
+base {
+    archivesName.set("catchrate-display-neoforge")
+}
+
 repositories {
     maven("https://thedarkcolour.github.io/KotlinForForge/")
 }
