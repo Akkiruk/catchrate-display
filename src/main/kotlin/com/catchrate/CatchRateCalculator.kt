@@ -102,6 +102,10 @@ object CatchRateCalculator {
             inBattle = inBattle
         )
         
+        // Check if this is a formula-guaranteed catch (modifiedCatchRate > 255 means
+        // shakeProbability > 65536, so every Random.nextInt(65537) check passes)
+        val isFormulaGuaranteed = CatchRateFormula.isGuaranteedByFormula(modifiedCatchRate)
+        
         return CatchRateResult(
             percentage = captureChance.toDouble().coerceIn(0.0, 100.0),
             hpPercentage = hpInfo.percentage,
@@ -111,7 +115,7 @@ object CatchRateCalculator {
             statusName = CatchRateFormula.getStatusDisplayName(statusPath),
             ballName = ballName,
             turnCount = turnCount,
-            isGuaranteed = false,
+            isGuaranteed = isFormulaGuaranteed,
             levelBonus = bonusLevel.toDouble(),
             modifiedCatchRate = modifiedCatchRate.toDouble()
         )

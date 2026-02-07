@@ -6,11 +6,13 @@ import com.catchrate.CatchRateConstants.OUT_OF_BATTLE_MODIFIER
 import com.catchrate.CatchRateConstants.SHAKE_CHECKS
 import com.catchrate.CatchRateConstants.SHAKE_EXPONENT
 import com.catchrate.CatchRateConstants.SHAKE_PROBABILITY_DIVISOR
+import com.catchrate.CatchRateConstants.SHAKE_RANDOM_BOUND
 import com.catchrate.CatchRateConstants.STATUS_NONE_MULT
 import com.catchrate.CatchRateConstants.STATUS_PARA_BURN_POISON_MULT
 import com.catchrate.CatchRateConstants.STATUS_SLEEP_FROZEN_MULT
 import kotlin.math.max
 import kotlin.math.pow
+import kotlin.math.roundToInt
 
 /**
  * Single source of truth for all catch rate calculations.
@@ -55,23 +57,42 @@ object CatchRateFormula {
         var modifiedRate = (hpComponent * ballMultiplier) / (3F * maxHp)
         modifiedRate *= statusMultiplier * levelBonus * levelPenalty
         
-        // Calculate shake probability
-        val shakeProbability = calculateShakeProbability(modifiedRate)
+        // Calculate shake probability (rounded to int like Cobblemon does)
+        val shakeProbability = calculateShakeProbability(modifiedRate).roundToInt()
         
-        // Final catch chance = (shakeProbability / 65536)^4 * 100
-        return (shakeProbability / SHAKE_PROBABILITY_DIVISOR).pow(SHAKE_CHECKS) * 100F
+        // If shakeProbability >= SHAKE_RANDOM_BOUND, every Random.nextInt(65537) check passes
+        // This is a mathematically guaranteed catch, same as Cobblemon's actual behavior
+        if (shakeProbability >= SHAKE_RANDOM_BOUND.toInt()) {
+            return 100F
+        }
+        
+        // Per-shake probability: shakeProbability / 65537 (Cobblemon uses Random.nextInt(65537))
+        // Catch chance = (shakeProbability / 65537)^4 * 100
+        val perShakeProb = shakeProbability.toFloat() / SHAKE_RANDOM_BOUND
+        return perShakeProb.pow(SHAKE_CHECKS) * 100F
     }
     
     /**
      * Calculate shake probability from modified catch rate.
-     * Used when you need the intermediate value for custom mutators.
+     * Matches Cobblemon's exact formula: (65536 / (255/modifiedCatchRate)^0.1875)
+     * Note: Cobblemon .roundToInt()s this value before comparing against Random.nextInt(65537).
      */
     fun calculateShakeProbability(modifiedCatchRate: Float): Float {
         return when {
-            modifiedCatchRate >= MAX_CATCH_RATE -> SHAKE_PROBABILITY_DIVISOR
             modifiedCatchRate <= 0F -> 0F
             else -> SHAKE_PROBABILITY_DIVISOR / (MAX_CATCH_RATE / modifiedCatchRate).pow(SHAKE_EXPONENT)
         }
+    }
+    
+    /**
+     * Check if a modified catch rate results in a mathematically guaranteed catch.
+     * When modifiedCatchRate > 255, shakeProbability exceeds 65536, meaning every
+     * Random.nextInt(65537) check passes. This is how Cobblemon naturally handles
+     * high catch rate scenarios (e.g., Quick Ball on high-catch-rate Pokemon).
+     */
+    fun isGuaranteedByFormula(modifiedCatchRate: Float): Boolean {
+        val shakeProbability = calculateShakeProbability(modifiedCatchRate).roundToInt()
+        return shakeProbability >= SHAKE_RANDOM_BOUND.toInt()
     }
     
     /**
@@ -98,24 +119,26 @@ object CatchRateFormula {
     /**
      * Convert modified catch rate to final percentage.
      * Use after applying Cobblemon's behavior mutator.
+     * Matches Cobblemon's exact logic with .roundToInt() and 65537 divisor.
      */
     fun modifiedRateToPercentage(modifiedCatchRate: Float): Float {
-        val shakeProbability = calculateShakeProbability(modifiedCatchRate)
-        return (shakeProbability / SHAKE_PROBABILITY_DIVISOR).pow(SHAKE_CHECKS) * 100F
+        val shakeProbability = calculateShakeProbability(modifiedCatchRate).roundToInt()
+        if (shakeProbability >= SHAKE_RANDOM_BOUND.toInt()) return 100F
+        val perShakeProb = shakeProbability.toFloat() / SHAKE_RANDOM_BOUND
+        return perShakeProb.pow(SHAKE_CHECKS) * 100F
     }
     
     /**
      * Format catch percentage for display.
-     * Caps at 99.9% unless truly guaranteed to prevent misleading displays.
-     * Only Master Ball and similar guaranteed-catch balls should show 100%.
+     * Shows 100% when the formula guarantees a catch (shakeProbability >= 65537),
+     * not just for Master Ball. This matches Cobblemon's actual behavior where
+     * high ball multipliers on high-catch-rate Pokemon are genuinely guaranteed.
      */
     fun formatCatchPercentage(percentage: Double, isGuaranteed: Boolean): String {
-        return if (isGuaranteed) {
+        return if (isGuaranteed || percentage >= 100.0) {
             "100.0"
         } else {
-            // Cap at 99.9% for non-guaranteed catches
-            // With the correct formula (no phantom level penalty), this should rarely 
-            // hit the cap, but it's a safety measure for edge cases
+            // Cap at 99.9% only for catches that are NOT mathematically guaranteed
             String.format("%.1f", percentage.coerceIn(0.0, 99.9))
         }
     }

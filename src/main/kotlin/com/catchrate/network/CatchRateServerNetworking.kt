@@ -146,11 +146,22 @@ object CatchRateServerNetworking {
             // Cobblemon's shake probability formula (NOT our abstraction)
             val shakeProbability = (65536F / (255F / modifiedCatchRate).pow(0.1875F)).roundToInt()
             
-            // Convert to catch percentage using Cobblemon's actual logic
-            // Each shake: probability is shakeProbability/65537 (note: 65537, not 65536!)
-            // 4 shakes needed, so: (shakeProbability/65537)^4
-            val perShakeProb = shakeProbability.toFloat() / 65537F
-            val catchChance = (perShakeProb.pow(4) * 100F).coerceIn(0F, 100F)
+            // Check if this is a formula-guaranteed catch:
+            // When shakeProbability >= 65537, every Random.nextInt(65537) check passes.
+            // This happens when modifiedCatchRate > 255 (e.g., Quick Ball 5x on high-catch-rate Pokemon)
+            val isFormulaGuaranteed = shakeProbability >= 65537
+            
+            val catchChance: Float
+            if (isFormulaGuaranteed) {
+                catchChance = 100F
+            } else {
+                // Convert to catch percentage using Cobblemon's actual logic
+                // Each shake: probability is shakeProbability/65537 
+                // (Random.nextInt(65537) gives 0..65536, that's 65537 possible values)
+                // 4 shakes needed, so: (shakeProbability/65537)^4
+                val perShakeProb = shakeProbability.toFloat() / 65537F
+                catchChance = (perShakeProb.pow(4) * 100F).coerceIn(0F, 100F)
+            }
             
             // DETAILED DEBUG LOGGING
             CatchRateDisplayMod.debug("=== CATCH RATE DEBUG (Cobblemon-exact) ===")
@@ -162,8 +173,10 @@ object CatchRateServerNetworking {
             CatchRateDisplayMod.debug("Level bonus: $bonusLevel (level ${pokemon.level} < 13? ${pokemon.level < 13})")
             CatchRateDisplayMod.debug("Level penalty (not applied by Cobblemon): $levelPenaltyWouldBe")
             CatchRateDisplayMod.debug("Modified catch rate: $modifiedCatchRate")
-            CatchRateDisplayMod.debug("Shake probability: $shakeProbability / 65537")
+            CatchRateDisplayMod.debug("Shake probability: $shakeProbability / 65537 (formula-guaranteed: $isFormulaGuaranteed)")
             CatchRateDisplayMod.debug("Catch chance: $catchChance%")
+            CatchRateDisplayMod.debug("NOTE: This uses raw catch rate ${baseCatchRate.toInt()}. Other mods may modify")
+            CatchRateDisplayMod.debug("this via PokemonCatchRateEvent, which we cannot replicate.")
             CatchRateDisplayMod.debug("==========================================")
             
             val response = CatchRateResponsePayload(
@@ -179,7 +192,7 @@ object CatchRateServerNetworking {
                 ballConditionDesc = conditionDesc,
                 statusMultiplier = bonusStatus.toDouble(),
                 lowLevelBonus = bonusLevel.toDouble(),
-                isGuaranteed = false,
+                isGuaranteed = isFormulaGuaranteed,
                 baseCatchRate = baseCatchRate.toInt()
             )
             

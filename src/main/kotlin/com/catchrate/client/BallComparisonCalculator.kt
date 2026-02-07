@@ -91,6 +91,18 @@ object BallComparisonCalculator {
                 inBattle = true
             )
             
+            // Detect formula-guaranteed catches (modifiedCatchRate > 255)
+            val modifiedRate = CatchRateFormula.calculateModifiedCatchRate(
+                baseCatchRate = baseCatchRate,
+                maxHp = hpInfo.maxHp,
+                currentHp = hpInfo.currentHp,
+                ballMultiplier = result.multiplier,
+                statusMultiplier = statusMult,
+                levelBonus = levelBonus,
+                inBattle = true
+            )
+            val isFormulaGuaranteed = result.isGuaranteed || CatchRateFormula.isGuaranteedByFormula(modifiedRate)
+            
             BallCatchRate(
                 ballName = ballId,
                 displayName = CatchRateFormula.formatBallName(ballId),
@@ -98,7 +110,7 @@ object BallComparisonCalculator {
                 multiplier = result.multiplier.toDouble(),
                 conditionMet = result.conditionMet,
                 reason = result.reason,
-                isGuaranteed = result.isGuaranteed
+                isGuaranteed = isFormulaGuaranteed
             )
         }.sortedByDescending { it.catchRate }
     }

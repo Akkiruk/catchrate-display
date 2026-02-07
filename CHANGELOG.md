@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.2.32] - 2026-02-06
+
+### Fixed
+- **Critical formula accuracy fixes** - now matches Cobblemon's exact shake calculation
+- Changed shake probability divisor from 65536 to 65537 (Cobblemon uses `Random.nextInt(65537)`)
+- Added `.roundToInt()` to shake probability calculation to match Cobblemon's integer comparison
+- Formula-guaranteed catches (shakeProbability >= 65537) now correctly display 100% instead of 99.9%
+  - Example: Quick Ball turn 1 on high-catch-rate Pokemon like Sentret is mathematically guaranteed
+- Both client-side and server-side calculations now detect formula guarantees
+- Ball comparison panel properly identifies guaranteed catches
+
+### Technical Details
+- When `modifiedCatchRate > 255`, `shakeProbability` exceeds 65536, making every `Random.nextInt(65537)` check pass
+- This is Cobblemon's natural way of handling high catch rates, not just Master Ball
+- Updated `formatCatchPercentage()` to show 100% when percentage >= 100.0
+- Added `isGuaranteedByFormula()` helper to detect mathematical guarantees
+- Server logging now notes that we cannot replicate `PokemonCatchRateEvent` modifications
+
+### Known Limitations
+- Our calculations use raw catch rates and cannot detect if other mods modify them via `PokemonCatchRateEvent`
+- If you see consistent failures on displayed "guaranteed" catches, another mod may be reducing catch rates
+- CobbleCuisine's 2x catch rate buff (via food) cannot be detected by our display
+
 ## [1.2.31] - 2026-02-02
 
 ### Fixed

@@ -15,6 +15,9 @@ object CatchRateConstants {
     /** Shake probability divisor used in Gen 6+ formula */
     const val SHAKE_PROBABILITY_DIVISOR = 65536F
     
+    /** Number of possible outcomes for Random.nextInt(65537) in Cobblemon's shake check */
+    const val SHAKE_RANDOM_BOUND = 65537F
+    
     /** Exponent used in shake probability calculation: (255/a)^0.1875 */
     const val SHAKE_EXPONENT = 0.1875F
     
