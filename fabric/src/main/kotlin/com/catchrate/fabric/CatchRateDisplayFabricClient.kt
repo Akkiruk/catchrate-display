@@ -6,6 +6,7 @@ import com.catchrate.client.CatchRateHudRenderer
 import com.catchrate.network.CatchRateClientNetworking
 import com.catchrate.network.CatchRateRequestPayload
 import com.catchrate.network.CatchRateResponsePayload
+import com.catchrate.network.WorldCatchRateRequestPayload
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
@@ -43,6 +44,7 @@ class CatchRateDisplayFabricClient : ClientModInitializer {
         try {
             PayloadTypeRegistry.playS2C().register(CatchRateResponsePayload.TYPE, CatchRateResponsePayload.CODEC)
             PayloadTypeRegistry.playC2S().register(CatchRateRequestPayload.TYPE, CatchRateRequestPayload.CODEC)
+            PayloadTypeRegistry.playC2S().register(WorldCatchRateRequestPayload.TYPE, WorldCatchRateRequestPayload.CODEC)
         } catch (e: IllegalArgumentException) {
             // Already registered
         }

@@ -25,17 +25,13 @@ object PlatformHelperImpl {
     
     @JvmStatic
     fun isServerModPresent(): Boolean {
-        // NeoForge uses the connection's hasChannel check
+        // NeoForge negotiates payload channels during handshake.
+        // If the server also has the mod, it registered CatchRateRequestPayload
+        // and NeoForge's channel negotiation will have succeeded.
+        // ICommonPacketListener.hasChannel() checks the negotiated channels.
         return try {
-            val minecraft = net.minecraft.client.Minecraft.getInstance()
-            val connection = minecraft.connection?.connection ?: return false
-            // Check if the server has registered our payload type
-            connection.isConnected
-            // In NeoForge, if we received a response before, the channel is valid.
-            // A simpler approach: try to check if the network channel is registered.
-            // NeoForge automatically rejects unknown payloads, so if we got here
-            // and can construct a packet, the channel is registered.
-            true
+            val connection = net.minecraft.client.Minecraft.getInstance().connection ?: return false
+            connection.hasChannel(CatchRateRequestPayload.TYPE)
         } catch (e: Exception) {
             false
         }

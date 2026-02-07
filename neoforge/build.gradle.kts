@@ -6,12 +6,13 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
-// Architect ury configuration moved to afterEvaluate
-afterEvaluate {
-    extensions.configure<net.architectury.plugin.ArchitectPluginExtension>("architectury") {
-        platformSetupLoomIde()
-        neoForge()
-    }
+repositories {
+    maven("https://thedarkcolour.github.io/KotlinForForge/")
+}
+
+architectury {
+    platformSetupLoomIde()
+    neoForge()
 }
 
 val common: Configuration by configurations.creating {

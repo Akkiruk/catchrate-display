@@ -4,6 +4,7 @@ import com.catchrate.CatchRateMod
 import com.catchrate.network.CatchRateRequestPayload
 import com.catchrate.network.CatchRateResponsePayload
 import com.catchrate.network.CatchRateServerNetworking
+import com.catchrate.network.WorldCatchRateRequestPayload
 import net.neoforged.bus.api.IEventBus
 import net.neoforged.fml.common.Mod
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent
@@ -24,7 +25,7 @@ class CatchRateDisplayNeoForge(modBus: IEventBus) {
     private fun onRegisterPayloadHandlers(event: RegisterPayloadHandlersEvent) {
         val registrar = event.registrar(CatchRateMod.MOD_ID)
         
-        // Register C2S (client → server) request payload
+        // Register C2S (client → server) request payload (in-battle)
         registrar.playToServer(
             CatchRateRequestPayload.TYPE,
             CatchRateRequestPayload.CODEC
@@ -33,6 +34,19 @@ class CatchRateDisplayNeoForge(modBus: IEventBus) {
                 val player = context.player()
                 if (player is net.minecraft.server.level.ServerPlayer) {
                     CatchRateServerNetworking.handleCatchRateRequest(player, payload)
+                }
+            }
+        }
+        
+        // Register C2S (client → server) world request payload (out-of-combat)
+        registrar.playToServer(
+            WorldCatchRateRequestPayload.TYPE,
+            WorldCatchRateRequestPayload.CODEC
+        ) { payload: WorldCatchRateRequestPayload, context: IPayloadContext ->
+            context.enqueueWork {
+                val player = context.player()
+                if (player is net.minecraft.server.level.ServerPlayer) {
+                    CatchRateServerNetworking.handleWorldCatchRateRequest(player, payload)
                 }
             }
         }

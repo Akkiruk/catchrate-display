@@ -1,10 +1,8 @@
 val fabricLoaderVersion = findProperty("fabric_loader_version")?.toString() ?: "0.16.7"
 val cobblemonVersion = findProperty("cobblemon_version")?.toString() ?: "1.7.1+1.21.1"
-val architecturyLoomVersion = findProperty("architectury_loom_version")?.toString() ?: "1.9.424"
-
-// Workaround for architectury extension not being available during script compilation
-project.ext.set("loom.platform", "common")
-project.ext.set("enabled_platforms", "fabric,neoforge")
+architectury {
+    common("fabric", "neoforge")
+}
 
 dependencies {
     modImplementation("net.fabricmc:fabric-loader:$fabricLoaderVersion")
@@ -13,7 +11,7 @@ dependencies {
     modCompileOnly("com.cobblemon:mod:$cobblemonVersion")
 
     // Architectury injectables for @ExpectPlatform
-    compileOnly("dev.architectury:architectury-injectables:$architecturyLoomVersion")
+    compileOnly("dev.architectury:architectury-injectables:1.0.10")
 }
 
 tasks.processResources {

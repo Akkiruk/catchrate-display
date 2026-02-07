@@ -7,12 +7,9 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
-// Architectury configuration moved to afterEvaluate
-afterEvaluate {
-    extensions.configure<net.architectury.plugin.ArchitectPluginExtension>("architectury") {
-        platformSetupLoomIde()
-        fabric()
-    }
+architectury {
+    platformSetupLoomIde()
+    fabric()
 }
 
 val common: Configuration by configurations.creating {

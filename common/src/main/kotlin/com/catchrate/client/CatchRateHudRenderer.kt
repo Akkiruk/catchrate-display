@@ -380,6 +380,39 @@ class CatchRateHudRenderer {
         val ballItemId = getBallId(heldItem)
         val ballName = ballItemId.substringAfter(":").lowercase()
         
+        // Route to server-side calculation when server mod is present (fixes multiplayer accuracy)
+        if (CatchRateClientNetworking.isServerModPresent()) {
+            renderOutOfCombatServerHud(guiGraphics, minecraft, pokemonEntity, ballItemId, ballName)
+        } else {
+            renderOutOfCombatClientHud(guiGraphics, minecraft, pokemonEntity, ballName)
+        }
+    }
+    
+    /**
+     * Render out-of-combat HUD using server-side data (accurate in multiplayer).
+     */
+    private fun renderOutOfCombatServerHud(guiGraphics: GuiGraphics, minecraft: Minecraft, pokemonEntity: com.cobblemon.mod.common.entity.pokemon.PokemonEntity, ballItemId: String, ballName: String) {
+        val pokemon = pokemonEntity.pokemon
+        
+        // Request from server using entity network ID
+        CatchRateClientNetworking.requestWorldCatchRate(pokemonEntity.id, "cobblemon:$ballName")
+        
+        // Try to get cached response
+        val serverResponse = CatchRateClientNetworking.getCachedWorldResponse(pokemon.uuid)
+        if (serverResponse != null) {
+            renderServerModeHud(guiGraphics, minecraft, serverResponse)
+        } else {
+            // Fall back to client calculation while waiting for server response
+            renderOutOfCombatClientHud(guiGraphics, minecraft, pokemonEntity, ballName)
+        }
+    }
+    
+    /**
+     * Render out-of-combat HUD using client-side data (fallback when server mod not installed).
+     */
+    private fun renderOutOfCombatClientHud(guiGraphics: GuiGraphics, minecraft: Minecraft, pokemonEntity: com.cobblemon.mod.common.entity.pokemon.PokemonEntity, ballName: String) {
+        val pokemon = pokemonEntity.pokemon
+        
         val result = BallComparisonCalculator.calculateForWorldPokemon(pokemonEntity, ballName) ?: return
         
         val config = CatchRateConfig.get()

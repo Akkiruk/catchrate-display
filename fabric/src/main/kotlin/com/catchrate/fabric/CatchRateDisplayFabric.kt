@@ -4,6 +4,7 @@ import com.catchrate.CatchRateMod
 import com.catchrate.network.CatchRateRequestPayload
 import com.catchrate.network.CatchRateResponsePayload
 import com.catchrate.network.CatchRateServerNetworking
+import com.catchrate.network.WorldCatchRateRequestPayload
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
@@ -19,14 +20,20 @@ class CatchRateDisplayFabric : ModInitializer {
         // Register payload types (server side)
         try {
             PayloadTypeRegistry.playC2S().register(CatchRateRequestPayload.TYPE, CatchRateRequestPayload.CODEC)
+            PayloadTypeRegistry.playC2S().register(WorldCatchRateRequestPayload.TYPE, WorldCatchRateRequestPayload.CODEC)
             PayloadTypeRegistry.playS2C().register(CatchRateResponsePayload.TYPE, CatchRateResponsePayload.CODEC)
         } catch (e: IllegalArgumentException) {
             // Already registered in single-player (client init ran first)
         }
         
-        // Register server-side request handler
+        // Register server-side request handler (in-battle)
         ServerPlayNetworking.registerGlobalReceiver(CatchRateRequestPayload.TYPE) { payload, context ->
             CatchRateServerNetworking.handleCatchRateRequest(context.player(), payload)
+        }
+        
+        // Register server-side request handler (out-of-combat world Pokemon)
+        ServerPlayNetworking.registerGlobalReceiver(WorldCatchRateRequestPayload.TYPE) { payload, context ->
+            CatchRateServerNetworking.handleWorldCatchRateRequest(context.player(), payload)
         }
     }
 }

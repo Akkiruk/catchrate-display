@@ -26,6 +26,13 @@ object CatchRateClientNetworking {
     private var lastRequestTime = 0L
     private const val REQUEST_COOLDOWN_MS = 250L
     
+    // World (out-of-combat) request tracking
+    private val worldResponseCache = ConcurrentHashMap<UUID, CatchRateResponsePayload>()
+    private data class WorldRequestKey(val entityId: Int, val ballId: String)
+    private var lastWorldRequest: WorldRequestKey? = null
+    private var lastWorldRequestTime = 0L
+    private const val WORLD_REQUEST_COOLDOWN_MS = 300L
+    
     private var hasShownServerWarning = false
     private var hasConnectedToServer = false
     private var serverCheckPerformed = false
@@ -93,6 +100,39 @@ object CatchRateClientNetworking {
     fun clearCache() {
         responseCache.clear()
         lastRequest = null
+    }
+    
+    // ==================== WORLD (OUT-OF-COMBAT) REQUESTS ====================
+    
+    /**
+     * Request catch rate for a world Pokemon (out of combat).
+     * Uses entity network ID instead of UUID since that's always available client-side.
+     */
+    fun requestWorldCatchRate(entityId: Int, ballItemId: String): Boolean {
+        if (!isServerModPresent()) return false
+        
+        val now = System.currentTimeMillis()
+        val requestKey = WorldRequestKey(entityId, ballItemId)
+        
+        if (requestKey == lastWorldRequest && (now - lastWorldRequestTime) < WORLD_REQUEST_COOLDOWN_MS) {
+            return false
+        }
+        
+        lastWorldRequest = requestKey
+        lastWorldRequestTime = now
+        
+        PlatformHelper.sendToServer(WorldCatchRateRequestPayload(entityId, ballItemId))
+        return true
+    }
+    
+    /**
+     * Get cached world response by Pokemon UUID (responses use UUID from server lookup).
+     */
+    fun getCachedWorldResponse(pokemonUuid: UUID): CatchRateResponsePayload? = responseCache[pokemonUuid]
+    
+    fun clearWorldCache() {
+        worldResponseCache.clear()
+        lastWorldRequest = null
     }
     
     private fun showServerWarning() {

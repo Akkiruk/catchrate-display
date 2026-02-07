@@ -19,6 +19,7 @@ allprojects {
 }
 
 subprojects {
+    apply(plugin = "architectury-plugin")
     apply(plugin = "dev.architectury.loom")
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
