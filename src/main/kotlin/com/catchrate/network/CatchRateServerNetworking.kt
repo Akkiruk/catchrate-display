@@ -6,7 +6,6 @@ import com.catchrate.BallMultiplierCalculator.PartyMember
 import com.catchrate.CatchRateConstants
 import com.catchrate.CatchRateDisplayMod
 import com.catchrate.CatchRateFormula
-import com.cobblemon.mod.common.Cobblemon
 import com.cobblemon.mod.common.api.pokeball.PokeBalls
 import com.cobblemon.mod.common.api.pokemon.status.Statuses
 import com.cobblemon.mod.common.battles.BattleRegistry
@@ -133,15 +132,8 @@ object CatchRateServerNetworking {
                 .mutator((3F * maxHp - 2F * currentHp) * darkGrass * baseCatchRate * inBattleModifier, ballMultiplier) / (3F * maxHp)
             modifiedCatchRate *= bonusStatus * bonusLevel
             
-            // Level penalty calculation - mirrors Cobblemon's findHighestThrowerLevel logic
-            // NOTE: Cobblemon's findHighestThrowerLevel has a bug where it checks wrong UUIDs
-            // For accuracy, we should NOT apply level penalty since Cobblemon doesn't actually apply it
-            // But let's log what it would be for debugging
-            val playerHighestLevel = playerActor?.pokemonList?.maxOfOrNull { it.effectedPokemon.level }
-            val levelPenaltyWouldBe = if (playerHighestLevel != null && playerHighestLevel < pokemon.level) {
-                val config = Cobblemon.config
-                max(0.1F, minOf(1F, 1F - ((pokemon.level - playerHighestLevel).toFloat() / (config.maxPokemonLevel / 2F))))
-            } else 1F
+            // NOTE: Cobblemon's findHighestThrowerLevel has a bug where it always returns null
+            // for wild battles, so level penalty is never applied. We match that behavior.
             
             // Cobblemon's shake probability formula (NOT our abstraction)
             val shakeProbability = (65536F / (255F / modifiedCatchRate).pow(0.1875F)).roundToInt()
@@ -165,19 +157,9 @@ object CatchRateServerNetworking {
             
             // DETAILED DEBUG LOGGING
             CatchRateDisplayMod.debug("=== CATCH RATE DEBUG (Cobblemon-exact) ===")
-            CatchRateDisplayMod.debug("Pokemon: ${pokemon.species.name} Lv${pokemon.level}")
-            CatchRateDisplayMod.debug("HP: $currentHp / $maxHp")
-            CatchRateDisplayMod.debug("Base catch rate: $baseCatchRate")
-            CatchRateDisplayMod.debug("Ball: ${ballId.path}, multiplier: $ballMultiplier, valid: $ballIsValid")
-            CatchRateDisplayMod.debug("Status: ${status?.name?.path ?: "none"}, bonusStatus: $bonusStatus")
-            CatchRateDisplayMod.debug("Level bonus: $bonusLevel (level ${pokemon.level} < 13? ${pokemon.level < 13})")
-            CatchRateDisplayMod.debug("Level penalty (not applied by Cobblemon): $levelPenaltyWouldBe")
-            CatchRateDisplayMod.debug("Modified catch rate: $modifiedCatchRate")
-            CatchRateDisplayMod.debug("Shake probability: $shakeProbability / 65537 (formula-guaranteed: $isFormulaGuaranteed)")
-            CatchRateDisplayMod.debug("Catch chance: $catchChance%")
-            CatchRateDisplayMod.debug("NOTE: This uses raw catch rate ${baseCatchRate.toInt()}. Other mods may modify")
-            CatchRateDisplayMod.debug("this via PokemonCatchRateEvent, which we cannot replicate.")
-            CatchRateDisplayMod.debug("==========================================")
+            CatchRateDisplayMod.debug("Pokemon: ${pokemon.species.name} Lv${pokemon.level} | HP: $currentHp/$maxHp | Base: $baseCatchRate")
+            CatchRateDisplayMod.debug("Ball: ${ballId.path} ${ballMultiplier}x (valid=$ballIsValid) | Status: ${status?.name?.path ?: "none"} ${bonusStatus}x | LvBonus: $bonusLevel")
+            CatchRateDisplayMod.debug("ModifiedRate: $modifiedCatchRate | Shake: $shakeProbability/65537 (guaranteed=$isFormulaGuaranteed) | Catch: $catchChance%")
             
             val response = CatchRateResponsePayload(
                 pokemonUuid = request.pokemonUuid,

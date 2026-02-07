@@ -10,6 +10,7 @@ import com.catchrate.CatchRateConstants.SHAKE_RANDOM_BOUND
 import com.catchrate.CatchRateConstants.STATUS_NONE_MULT
 import com.catchrate.CatchRateConstants.STATUS_PARA_BURN_POISON_MULT
 import com.catchrate.CatchRateConstants.STATUS_SLEEP_FROZEN_MULT
+import java.util.Locale
 import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -139,7 +140,7 @@ object CatchRateFormula {
             "100.0"
         } else {
             // Cap at 99.9% only for catches that are NOT mathematically guaranteed
-            String.format("%.1f", percentage.coerceIn(0.0, 99.9))
+            String.format(Locale.US, "%.1f", percentage.coerceIn(0.0, 99.9))
         }
     }
     

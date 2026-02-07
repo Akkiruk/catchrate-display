@@ -1,5 +1,6 @@
 # Gradle
 .gradle/
+.kotlin/
 build/
 out/
 bin/
@@ -27,6 +28,7 @@ desktop.ini
 # Logs
 logs/
 *.log
+build-log.txt
 
 # Temporary files
 *.tmp

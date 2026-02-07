@@ -3,6 +3,7 @@ package com.catchrate.client
 import com.catchrate.CatchRateCalculator
 import com.catchrate.CatchRateConstants.Colors
 import com.catchrate.CatchRateFormula
+import com.catchrate.CatchRateKeybinds
 import com.catchrate.CatchRateResult
 import com.catchrate.config.CatchRateConfig
 import com.catchrate.network.CatchRateClientNetworking
@@ -445,9 +446,9 @@ class CatchRateHudRenderer : HudRenderCallback {
             drawContext.drawTextWithShadow(textRenderer, "★ 100% CATCH ★", x + 6, barY + 12, Colors.TEXT_GREEN)
         } else {
             HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, result.catchRate, false)
-            val percentText = "${CatchRateFormula.formatCatchPercentage(result.catchRate, result.isGuaranteed)}%"
+            val pctText = "${CatchRateFormula.formatCatchPercentage(result.catchRate, result.isGuaranteed)}%"
             val percentColor = HudDrawing.getChanceColorInt(result.catchRate)
-            drawContext.drawTextWithShadow(textRenderer, percentText, x + 6, barY + 12, percentColor)
+            drawContext.drawTextWithShadow(textRenderer, pctText, x + 6, barY + 12, percentColor)
         }
         
         // HP multiplier row (matches in-combat format)
@@ -548,7 +549,8 @@ class CatchRateHudRenderer : HudRenderCallback {
         // Footer separator and text
         val footerY = y + boxHeight - padding - 9
         drawContext.drawHorizontalLine(x + padding, x + boxWidth - padding, footerY - 4, Colors.BAR_BORDER)
-        drawContext.drawTextWithShadow(textRenderer, "Release G to close", x + padding, footerY, Colors.TEXT_DARK_GRAY)
+        val keyName = CatchRateKeybinds.comparisonKeyName
+        drawContext.drawTextWithShadow(textRenderer, "Release $keyName to close", x + padding, footerY, Colors.TEXT_DARK_GRAY)
     }
     
     // ==================== HELPER METHODS ====================

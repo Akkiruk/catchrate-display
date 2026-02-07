@@ -22,6 +22,10 @@ object CatchRateKeybinds {
     var isComparisonHeld = false
         private set
     
+    /** Display name of the comparison keybind, for use in UI text */
+    val comparisonKeyName: String
+        get() = showComparisonKey.boundKeyLocalizedText.string
+    
     private fun bind(name: String, key: Int) = KeyBindingHelper.registerKeyBinding(
         KeyBinding("key.catchrate.$name", InputUtil.Type.KEYSYM, key, "category.catchrate")
     )

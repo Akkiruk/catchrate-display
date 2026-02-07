@@ -286,8 +286,4 @@ object BallMultiplierCalculator {
         return BallResult(1F, false, "Requires fishing context", requiresServer = true)
     }
     
-    // === UTILITY ===
-    /** @deprecated Use CatchRateFormula.formatBallName() instead */
-    @Deprecated("Use CatchRateFormula.formatBallName()", ReplaceWith("CatchRateFormula.formatBallName(name)"))
-    fun formatBallName(name: String): String = CatchRateFormula.formatBallName(name)
 }

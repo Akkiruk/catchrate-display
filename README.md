@@ -4,8 +4,6 @@
 [![Fabric API](https://img.shields.io/badge/Fabric%20API-0.116%2B-orange.svg)](https://fabricmc.net/)
 [![Cobblemon](https://img.shields.io/badge/Cobblemon-1.6.0%2B-blue.svg)](https://cobblemon.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-1.2.2-blue)
-
 A Fabric mod for Minecraft 1.21+ that displays real-time catch rates during Cobblemon battles.
 
 ## Compatibility
@@ -43,8 +41,8 @@ A Fabric mod for Minecraft 1.21+ that displays real-time catch rates during Cobb
 |-----|--------|
 | K | Toggle HUD visibility |
 | G (hold) | Show ball comparison panel |
-| HOME | Reset HUD position |
-| END | Cycle anchor position |
+| Unbound | Reset HUD position |
+| Unbound | Cycle anchor position |
 
 All keybinds configurable in Options → Controls → "Catch Rate Display".
 
@@ -90,7 +88,7 @@ cd catchrate-display
 ./gradlew build
 ```
 
-Output: `build/libs/catchrate-display-1.2.2.jar`
+Output jar will be in `build/libs/`.
 
 ## License
 
