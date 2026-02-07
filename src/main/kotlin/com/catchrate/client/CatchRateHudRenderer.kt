@@ -381,9 +381,129 @@ class CatchRateHudRenderer : HudRenderCallback {
         val ballItemId = getBallId(heldItem)
         val ballName = ballItemId.substringAfter(":").lowercase()
         
-        // Calculate the catch rate for the wild Pokemon
+        val serverHasMod = CatchRateClientNetworking.isServerModPresent()
+        
+        // When server mod is present, use server-side calculation for accurate data
+        // This fixes the bug where non-host multiplayer clients see identical catch rates
+        // because Pokemon species data isn't fully synced to the client
+        if (serverHasMod) {
+            CatchRateClientNetworking.requestWorldCatchRate(pokemonEntity.id, ballItemId)
+            val serverResponse = CatchRateClientNetworking.getCachedWorldResponse(pokemon.uuid)
+            if (serverResponse != null) {
+                renderOutOfCombatServerHud(drawContext, client, serverResponse)
+                return
+            }
+            // If no server response yet, fall through to client-side calculation as a loading fallback
+        }
+        
+        // Client-side calculation (used when server mod not present, or as initial fallback)
         val result = BallComparisonCalculator.calculateForWorldPokemon(pokemonEntity, ballName) ?: return
         
+        renderOutOfCombatClientHud(drawContext, client, pokemon, result)
+    }
+    
+    /**
+     * Render out-of-combat HUD using server-provided data.
+     * This is the accurate path for multiplayer - the server has full species data.
+     */
+    private fun renderOutOfCombatServerHud(drawContext: DrawContext, client: MinecraftClient, data: CatchRateResponsePayload) {
+        val config = CatchRateConfig.get()
+        val textRenderer = client.textRenderer
+        val screenWidth = client.window.scaledWidth
+        val screenHeight = client.window.scaledHeight
+        
+        // HP multiplier
+        val hpMultiplier = (3.0 - 2.0 * data.hpPercent / 100.0) / 3.0
+        val hpText = "HP ${String.format("%.2f", hpMultiplier)}x"
+        
+        // Status
+        val hasStatus = data.statusMultiplier > 1.0
+        val statusIcon = HudDrawing.getStatusIcon(data.statusEffect)
+        val statusText = "$statusIcon ${data.statusEffect} ${String.format("%.1f", data.statusMultiplier)}x"
+        
+        // Ball text
+        val ballIcon = if (data.ballConditionMet) "●" else "○"
+        val ballText = "$ballIcon ${CatchRateFormula.formatBallNameCompact(data.ballName)} ${String.format("%.1f", data.ballMultiplier)}x"
+        
+        // Penalty text
+        val penaltyText = "⚠ Out of combat: 0.5x"
+        
+        // Pokemon name
+        val nameText = "${data.pokemonName} Lv${data.pokemonLevel}"
+        
+        // Percentage text
+        val percentText = if (data.isGuaranteed) {
+            "★ 100% CATCH ★"
+        } else {
+            "${CatchRateFormula.formatCatchPercentage(data.catchChance, false)}%"
+        }
+        
+        // Dynamic box width
+        val textWidths = mutableListOf(
+            textRenderer.getWidth(nameText) + textRenderer.getWidth(" WILD") + 8,
+            textRenderer.getWidth(hpText),
+            textRenderer.getWidth(ballText),
+            textRenderer.getWidth(data.ballConditionDesc),
+            textRenderer.getWidth(penaltyText),
+            textRenderer.getWidth(percentText)
+        )
+        if (hasStatus) textWidths.add(textRenderer.getWidth(statusText))
+        
+        val boxWidth = (textWidths.maxOrNull() ?: 100) + 16
+        val boxHeight = if (hasStatus) 92 else 82
+        val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
+        
+        // Draw styled panel with wild indicator
+        HudDrawing.drawStyledPanel(drawContext, x, y, boxWidth, boxHeight, data.catchChance, isWild = true)
+        
+        // Pokemon name and level header
+        drawContext.drawTextWithShadow(textRenderer, nameText, x + 6, y + 4, Colors.TEXT_WHITE)
+        
+        // Wild indicator
+        drawContext.drawTextWithShadow(textRenderer, "WILD", x + boxWidth - textRenderer.getWidth("WILD") - 6, y + 4, Colors.TEXT_WILD_RED)
+        
+        // Catch rate display with progress bar
+        val barY = y + 16
+        if (data.isGuaranteed) {
+            HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, 100.0, true)
+            drawContext.drawTextWithShadow(textRenderer, "★ 100% CATCH ★", x + 6, barY + 12, Colors.TEXT_GREEN)
+        } else {
+            HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, data.catchChance, false)
+            val pctText = "${CatchRateFormula.formatCatchPercentage(data.catchChance, false)}%"
+            val percentColor = HudDrawing.getChanceColorInt(data.catchChance)
+            drawContext.drawTextWithShadow(textRenderer, pctText, x + 6, barY + 12, percentColor)
+        }
+        
+        // HP multiplier row
+        var currentY = barY + 26
+        drawContext.drawTextWithShadow(textRenderer, hpText, x + 6, currentY, Colors.TEXT_GRAY)
+        
+        // Status effect row (if any)
+        if (hasStatus) {
+            currentY += 10
+            drawContext.drawTextWithShadow(textRenderer, statusText, x + 6, currentY, Colors.TEXT_PURPLE)
+        }
+        
+        // Ball multiplier row
+        currentY += 10
+        val ballColor = HudDrawing.getBallMultiplierColor(data.ballMultiplier)
+        drawContext.drawTextWithShadow(textRenderer, ballText, x + 6, currentY, ballColor)
+        
+        // Ball condition description row
+        currentY += 10
+        val conditionColor = if (data.ballConditionMet) Colors.TEXT_DARK_GREEN else Colors.TEXT_DARK_GRAY
+        drawContext.drawTextWithShadow(textRenderer, data.ballConditionDesc, x + 6, currentY, conditionColor)
+        
+        // Out of combat penalty indicator
+        currentY += 10
+        drawContext.drawTextWithShadow(textRenderer, penaltyText, x + 6, currentY, Colors.TEXT_ORANGE)
+    }
+    
+    /**
+     * Render out-of-combat HUD using client-side calculation.
+     * This is the fallback when the server mod is not installed.
+     */
+    private fun renderOutOfCombatClientHud(drawContext: DrawContext, client: MinecraftClient, pokemon: com.cobblemon.mod.common.pokemon.Pokemon, result: BallComparisonCalculator.BallCatchRate) {
         val config = CatchRateConfig.get()
         val textRenderer = client.textRenderer
         val screenWidth = client.window.scaledWidth

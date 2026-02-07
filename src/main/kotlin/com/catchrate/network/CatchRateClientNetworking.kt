@@ -13,11 +13,17 @@ import java.util.concurrent.ConcurrentHashMap
 object CatchRateClientNetworking {
     
     private val responseCache = ConcurrentHashMap<UUID, CatchRateResponsePayload>()
+    private val worldResponseCache = ConcurrentHashMap<Int, CatchRateResponsePayload>()
     
     private data class RequestKey(val pokemonUuid: UUID, val ballId: String, val turnCount: Int)
     private var lastRequest: RequestKey? = null
     private var lastRequestTime = 0L
     private const val REQUEST_COOLDOWN_MS = 250L
+    
+    private data class WorldRequestKey(val entityId: Int, val ballId: String)
+    private var lastWorldRequest: WorldRequestKey? = null
+    private var lastWorldRequestTime = 0L
+    private const val WORLD_REQUEST_COOLDOWN_MS = 300L
     
     private var hasShownServerWarning = false
     private var hasConnectedToServer = false
@@ -27,6 +33,7 @@ object CatchRateClientNetworking {
         try {
             PayloadTypeRegistry.playS2C().register(CatchRateResponsePayload.ID, CatchRateResponsePayload.CODEC)
             PayloadTypeRegistry.playC2S().register(CatchRateRequestPayload.ID, CatchRateRequestPayload.CODEC)
+            PayloadTypeRegistry.playC2S().register(WorldCatchRateRequestPayload.ID, WorldCatchRateRequestPayload.CODEC)
         } catch (e: IllegalArgumentException) {
             // Already registered in single-player
         }
@@ -85,7 +92,46 @@ object CatchRateClientNetworking {
     
     fun clearCache() {
         responseCache.clear()
+        worldResponseCache.clear()
         lastRequest = null
+        lastWorldRequest = null
+    }
+    
+    // ==================== WORLD (OUT-OF-COMBAT) METHODS ====================
+    
+    /**
+     * Request a catch rate calculation from the server for a world Pokemon (out-of-combat).
+     * Uses the entity's network ID to identify the Pokemon on the server.
+     */
+    fun requestWorldCatchRate(entityId: Int, ballItemId: String): Boolean {
+        if (!isServerModPresent()) return false
+        
+        val now = System.currentTimeMillis()
+        val requestKey = WorldRequestKey(entityId, ballItemId)
+        
+        if (requestKey == lastWorldRequest && (now - lastWorldRequestTime) < WORLD_REQUEST_COOLDOWN_MS) {
+            return false
+        }
+        
+        lastWorldRequest = requestKey
+        lastWorldRequestTime = now
+        
+        ClientPlayNetworking.send(WorldCatchRateRequestPayload(entityId, ballItemId))
+        return true
+    }
+    
+    /**
+     * Get cached world catch rate response by Pokemon UUID.
+     * The response uses the Pokemon's UUID (not entity ID), so we look up by UUID.
+     */
+    fun getCachedWorldResponse(pokemonUuid: UUID): CatchRateResponsePayload? {
+        // World responses go into the same responseCache (keyed by Pokemon UUID)
+        return responseCache[pokemonUuid]
+    }
+    
+    fun clearWorldCache() {
+        worldResponseCache.clear()
+        lastWorldRequest = null
     }
     
     private fun showServerWarning() {

@@ -10,6 +10,7 @@ import java.util.UUID
 object CatchRatePackets {
     val REQUEST_ID: Identifier = Identifier.of(CatchRateDisplayMod.MOD_ID, "catch_rate_request")
     val RESPONSE_ID: Identifier = Identifier.of(CatchRateDisplayMod.MOD_ID, "catch_rate_response")
+    val WORLD_REQUEST_ID: Identifier = Identifier.of(CatchRateDisplayMod.MOD_ID, "world_catch_rate_request")
 }
 
 data class CatchRateRequestPayload(
@@ -97,6 +98,36 @@ data class CatchRateResponsePayload(
                     lowLevelBonus = buf.readDouble(),
                     isGuaranteed = buf.readBoolean(),
                     baseCatchRate = buf.readInt()
+                )
+            }
+        }
+    }
+    
+    override fun getId(): CustomPayload.Id<out CustomPayload> = ID
+}
+
+/**
+ * Request payload for out-of-combat world Pokemon catch rate calculation.
+ * Uses the entity's network ID (always available on client) to identify the Pokemon.
+ */
+data class WorldCatchRateRequestPayload(
+    val entityId: Int,
+    val ballItemId: String
+) : CustomPayload {
+    
+    companion object {
+        val ID: CustomPayload.Id<WorldCatchRateRequestPayload> = CustomPayload.Id(CatchRatePackets.WORLD_REQUEST_ID)
+        
+        val CODEC: PacketCodec<RegistryByteBuf, WorldCatchRateRequestPayload> = object : PacketCodec<RegistryByteBuf, WorldCatchRateRequestPayload> {
+            override fun encode(buf: RegistryByteBuf, payload: WorldCatchRateRequestPayload) {
+                buf.writeInt(payload.entityId)
+                buf.writeString(payload.ballItemId)
+            }
+            
+            override fun decode(buf: RegistryByteBuf): WorldCatchRateRequestPayload {
+                return WorldCatchRateRequestPayload(
+                    entityId = buf.readInt(),
+                    ballItemId = buf.readString()
                 )
             }
         }

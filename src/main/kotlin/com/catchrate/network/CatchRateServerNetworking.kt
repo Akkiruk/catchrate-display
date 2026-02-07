@@ -9,6 +9,7 @@ import com.catchrate.CatchRateFormula
 import com.cobblemon.mod.common.api.pokeball.PokeBalls
 import com.cobblemon.mod.common.api.pokemon.status.Statuses
 import com.cobblemon.mod.common.battles.BattleRegistry
+import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.cobblemon.mod.common.pokemon.status.PersistentStatus
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
@@ -32,6 +33,7 @@ object CatchRateServerNetworking {
     fun initialize() {
         try {
             PayloadTypeRegistry.playC2S().register(CatchRateRequestPayload.ID, CatchRateRequestPayload.CODEC)
+            PayloadTypeRegistry.playC2S().register(WorldCatchRateRequestPayload.ID, WorldCatchRateRequestPayload.CODEC)
             PayloadTypeRegistry.playS2C().register(CatchRateResponsePayload.ID, CatchRateResponsePayload.CODEC)
         } catch (e: IllegalArgumentException) {
             // Already registered in single-player
@@ -39,6 +41,10 @@ object CatchRateServerNetworking {
         
         ServerPlayNetworking.registerGlobalReceiver(CatchRateRequestPayload.ID) { payload, context ->
             handleCatchRateRequest(context.player(), payload)
+        }
+        
+        ServerPlayNetworking.registerGlobalReceiver(WorldCatchRateRequestPayload.ID) { payload, context ->
+            handleWorldCatchRateRequest(context.player(), payload)
         }
     }
     
@@ -183,6 +189,112 @@ object CatchRateServerNetworking {
             
         } catch (e: Exception) {
             CatchRateDisplayMod.LOGGER.error("Error calculating catch rate", e)
+        }
+    }
+    
+    /**
+     * Handle a world (out-of-combat) catch rate request.
+     * Looks up the PokemonEntity by entity ID in the server world and calculates
+     * the catch rate with full server-side species data.
+     * This fixes the bug where non-host multiplayer clients see the same catch rate
+     * for every Pokemon because client-side species data isn't fully synced.
+     */
+    private fun handleWorldCatchRateRequest(player: ServerPlayerEntity, request: WorldCatchRateRequestPayload) {
+        try {
+            val entity = player.serverWorld.getEntityById(request.entityId)
+            if (entity !is PokemonEntity) return
+            
+            // Only calculate for wild Pokemon (no owner)
+            if (entity.pokemon.getOwnerUUID() != null) return
+            
+            val pokemon = entity.pokemon
+            val ballId = parseBallId(request.ballItemId)
+            val pokeBall = PokeBalls.getPokeBall(ballId) ?: return
+            val ballName = CatchRateFormula.formatBallName(ballId.path)
+            
+            // Check for guaranteed catch balls (Master Ball)
+            if (pokeBall.catchRateModifier.isGuaranteed()) {
+                sendResponse(player, buildGuaranteedResponse(pokemon.uuid, pokemon, ballName))
+                return
+            }
+            
+            val currentHp = pokemon.currentHealth.toFloat()
+            val maxHp = pokemon.maxHealth.toFloat()
+            val hpPercent = if (maxHp > 0) (currentHp / maxHp * 100.0) else 100.0
+            val baseCatchRate = pokemon.form.catchRate.toFloat()
+            
+            // Get ball multiplier from Cobblemon API
+            val modifier = pokeBall.catchRateModifier
+            var ballIsValid = modifier.isValid(player, pokemon)
+            var ballMultiplier = if (ballIsValid) modifier.value(player, pokemon) else 1F
+            
+            // Build context for unified calculator (out-of-combat, turn 0)
+            val world = player.world
+            val ctx = BallContextFactory.fromPokemon(pokemon, player, world, inBattle = false, turnCount = 0, activeBattler = null)
+            
+            // Get condition description from unified calculator
+            val unifiedResult = BallMultiplierCalculator.calculate(ballId.path, ctx)
+            val conditionMet = unifiedResult.conditionMet
+            val conditionDesc = unifiedResult.reason
+            
+            // Status bonus
+            val status = pokemon.status?.status
+            val bonusStatus = getStatusMultiplierFromStatus(status)
+            
+            // Level bonus (integer division like Cobblemon)
+            val bonusLevel = if (pokemon.level < 13) max((36 - (2 * pokemon.level)) / 10, 1) else 1
+            
+            // Out of battle modifier = 0.5
+            val inBattleModifier = CatchRateConstants.OUT_OF_BATTLE_MODIFIER
+            
+            // darkGrass = 1F
+            val darkGrass = 1F
+            
+            // Calculate modifiedCatchRate using Cobblemon's exact formula
+            var modifiedCatchRate = modifier
+                .behavior(player, pokemon)
+                .mutator((3F * maxHp - 2F * currentHp) * darkGrass * baseCatchRate * inBattleModifier, ballMultiplier) / (3F * maxHp)
+            modifiedCatchRate *= bonusStatus * bonusLevel
+            
+            // Shake probability
+            val shakeProbability = (65536F / (255F / modifiedCatchRate).pow(0.1875F)).roundToInt()
+            val isFormulaGuaranteed = shakeProbability >= 65537
+            
+            val catchChance: Float
+            if (isFormulaGuaranteed) {
+                catchChance = 100F
+            } else {
+                val perShakeProb = shakeProbability.toFloat() / 65537F
+                catchChance = (perShakeProb.pow(4) * 100F).coerceIn(0F, 100F)
+            }
+            
+            CatchRateDisplayMod.debug("=== WORLD CATCH RATE (out-of-combat) ===")
+            CatchRateDisplayMod.debug("Pokemon: ${pokemon.species.name} Lv${pokemon.level} | HP: $currentHp/$maxHp | Base: $baseCatchRate")
+            CatchRateDisplayMod.debug("Ball: ${ballId.path} ${ballMultiplier}x (valid=$ballIsValid) | Status: ${status?.name?.path ?: "none"} ${bonusStatus}x | LvBonus: $bonusLevel")
+            CatchRateDisplayMod.debug("Out-of-combat: 0.5x | ModifiedRate: $modifiedCatchRate | Shake: $shakeProbability/65537 | Catch: $catchChance%")
+            
+            val response = CatchRateResponsePayload(
+                pokemonUuid = pokemon.uuid,
+                catchChance = catchChance.toDouble(),
+                pokemonName = pokemon.species.name,
+                pokemonLevel = pokemon.level,
+                hpPercent = hpPercent.coerceIn(0.0, 100.0),
+                statusEffect = CatchRateFormula.getStatusDisplayName(status?.name?.path),
+                ballName = ballName,
+                ballMultiplier = ballMultiplier.toDouble(),
+                ballConditionMet = conditionMet,
+                ballConditionDesc = conditionDesc,
+                statusMultiplier = bonusStatus.toDouble(),
+                lowLevelBonus = bonusLevel.toDouble(),
+                isGuaranteed = isFormulaGuaranteed,
+                baseCatchRate = baseCatchRate.toInt()
+            )
+            
+            sendResponse(player, response)
+            CatchRateDisplayMod.debug("World sent: ${pokemon.species.name} Lv${pokemon.level}, $ballName ${ballMultiplier}x = ${String.format("%.1f", catchChance)}%")
+            
+        } catch (e: Exception) {
+            CatchRateDisplayMod.LOGGER.error("Error calculating world catch rate", e)
         }
     }
     
