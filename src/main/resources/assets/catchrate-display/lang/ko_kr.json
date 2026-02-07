@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "포획률 표시",
+  "key.catchrate.toggle_hud": "HUD 전환",
+  "key.catchrate.show_comparison": "볼 비교 보기",
+  "key.catchrate.reset_position": "HUD 위치 초기화",
+  "key.catchrate.move_up": "HUD 위로 이동",
+  "key.catchrate.move_down": "HUD 아래로 이동",
+  "key.catchrate.move_left": "HUD 왼쪽으로 이동",
+  "key.catchrate.move_right": "HUD 오른쪽으로 이동",
+  "key.catchrate.cycle_anchor": "HUD 앵커 변경"
+}

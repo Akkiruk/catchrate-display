@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Εμφάνιση Ποσοστού Σύλληψης",
+  "key.catchrate.toggle_hud": "Εναλλαγή HUD",
+  "key.catchrate.show_comparison": "Εμφάνιση Σύγκρισης Μπαλών",
+  "key.catchrate.reset_position": "Επαναφορά Θέσης HUD",
+  "key.catchrate.move_up": "Μετακίνηση HUD Πάνω",
+  "key.catchrate.move_down": "Μετακίνηση HUD Κάτω",
+  "key.catchrate.move_left": "Μετακίνηση HUD Αριστερά",
+  "key.catchrate.move_right": "Μετακίνηση HUD Δεξιά",
+  "key.catchrate.cycle_anchor": "Αλλαγή Άγκυρας HUD"
+}

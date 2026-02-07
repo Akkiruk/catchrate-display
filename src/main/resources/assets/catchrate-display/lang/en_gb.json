@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Catch Rate Display",
+  "key.catchrate.toggle_hud": "Toggle HUD",
+  "key.catchrate.show_comparison": "Show Ball Comparison",
+  "key.catchrate.reset_position": "Reset HUD Position",
+  "key.catchrate.move_up": "Move HUD Up",
+  "key.catchrate.move_down": "Move HUD Down",
+  "key.catchrate.move_left": "Move HUD Left",
+  "key.catchrate.move_right": "Move HUD Right",
+  "key.catchrate.cycle_anchor": "Cycle HUD Anchor"
+}

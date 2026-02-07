@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Vangkans Weergave",
+  "key.catchrate.toggle_hud": "HUD Schakelen",
+  "key.catchrate.show_comparison": "Bal Vergelijking Tonen",
+  "key.catchrate.reset_position": "HUD Positie Resetten",
+  "key.catchrate.move_up": "HUD Omhoog",
+  "key.catchrate.move_down": "HUD Omlaag",
+  "key.catchrate.move_left": "HUD Naar Links",
+  "key.catchrate.move_right": "HUD Naar Rechts",
+  "key.catchrate.cycle_anchor": "HUD Anker Wisselen"
+}

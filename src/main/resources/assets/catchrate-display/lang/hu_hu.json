@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Elkapási Arány Kijelző",
+  "key.catchrate.toggle_hud": "HUD Váltása",
+  "key.catchrate.show_comparison": "Labda Összehasonlítás Megjelenítése",
+  "key.catchrate.reset_position": "HUD Pozíció Visszaállítása",
+  "key.catchrate.move_up": "HUD Mozgatása Fel",
+  "key.catchrate.move_down": "HUD Mozgatása Le",
+  "key.catchrate.move_left": "HUD Mozgatása Balra",
+  "key.catchrate.move_right": "HUD Mozgatása Jobbra",
+  "key.catchrate.cycle_anchor": "HUD Horgony Váltása"
+}

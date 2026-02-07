@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Hiển Thị Tỷ Lệ Bắt",
+  "key.catchrate.toggle_hud": "Bật/Tắt HUD",
+  "key.catchrate.show_comparison": "Hiển Thị So Sánh Bóng",
+  "key.catchrate.reset_position": "Đặt Lại Vị Trí HUD",
+  "key.catchrate.move_up": "Di Chuyển HUD Lên",
+  "key.catchrate.move_down": "Di Chuyển HUD Xuống",
+  "key.catchrate.move_left": "Di Chuyển HUD Trái",
+  "key.catchrate.move_right": "Di Chuyển HUD Phải",
+  "key.catchrate.cycle_anchor": "Chuyển Đổi Neo HUD"
+}

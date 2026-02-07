@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Wyświetlanie Szansy Złapania",
+  "key.catchrate.toggle_hud": "Przełącz HUD",
+  "key.catchrate.show_comparison": "Pokaż Porównanie Poké Balli",
+  "key.catchrate.reset_position": "Zresetuj Pozycję HUD",
+  "key.catchrate.move_up": "Przesuń HUD w Górę",
+  "key.catchrate.move_down": "Przesuń HUD w Dół",
+  "key.catchrate.move_left": "Przesuń HUD w Lewo",
+  "key.catchrate.move_right": "Przesuń HUD w Prawo",
+  "key.catchrate.cycle_anchor": "Zmień Kotwicę HUD"
+}

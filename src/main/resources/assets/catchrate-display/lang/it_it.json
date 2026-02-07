@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Indicatore Tasso di Cattura",
+  "key.catchrate.toggle_hud": "Attiva/Disattiva HUD",
+  "key.catchrate.show_comparison": "Mostra Confronto Poké Ball",
+  "key.catchrate.reset_position": "Reimposta Posizione HUD",
+  "key.catchrate.move_up": "Sposta HUD in Alto",
+  "key.catchrate.move_down": "Sposta HUD in Basso",
+  "key.catchrate.move_left": "Sposta HUD a Sinistra",
+  "key.catchrate.move_right": "Sposta HUD a Destra",
+  "key.catchrate.cycle_anchor": "Cambia Ancoraggio HUD"
+}

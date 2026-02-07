@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Indicador de Tasa de Captura",
+  "key.catchrate.toggle_hud": "Alternar HUD",
+  "key.catchrate.show_comparison": "Mostrar Comparación de Bolas",
+  "key.catchrate.reset_position": "Restablecer Posición del HUD",
+  "key.catchrate.move_up": "Mover HUD Arriba",
+  "key.catchrate.move_down": "Mover HUD Abajo",
+  "key.catchrate.move_left": "Mover HUD Izquierda",
+  "key.catchrate.move_right": "Mover HUD Derecha",
+  "key.catchrate.cycle_anchor": "Cambiar Ancla del HUD"
+}

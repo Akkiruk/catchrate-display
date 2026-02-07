@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Kaptrado-Ekrano",
+  "key.catchrate.toggle_hud": "Ŝalti/Malŝalti HUD",
+  "key.catchrate.show_comparison": "Montri Pilko-Komparon",
+  "key.catchrate.reset_position": "Restarigi HUD-Pozicion",
+  "key.catchrate.move_up": "Movi HUD Supren",
+  "key.catchrate.move_down": "Movi HUD Malsupren",
+  "key.catchrate.move_left": "Movi HUD Maldekstren",
+  "key.catchrate.move_right": "Movi HUD Dekstren",
+  "key.catchrate.cycle_anchor": "Ŝanĝi HUD-Ankron"
+}

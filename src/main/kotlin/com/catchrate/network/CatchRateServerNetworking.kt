@@ -6,6 +6,7 @@ import com.catchrate.BallMultiplierCalculator.PartyMember
 import com.catchrate.CatchRateConstants
 import com.catchrate.CatchRateDisplayMod
 import com.catchrate.CatchRateFormula
+import com.cobblemon.mod.common.Cobblemon
 import com.cobblemon.mod.common.api.pokeball.PokeBalls
 import com.cobblemon.mod.common.api.pokemon.status.Statuses
 import com.cobblemon.mod.common.battles.BattleRegistry
@@ -15,6 +16,9 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Identifier
+import kotlin.math.max
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 /**
  * Server-side catch rate calculation with accurate multipliers via Cobblemon API.
@@ -106,28 +110,65 @@ object CatchRateServerNetworking {
             val conditionMet = unifiedResult.conditionMet
             val conditionDesc = unifiedResult.reason
             
-            // Use CatchRateFormula for status multiplier
+            // ============================================================
+            // REPLICATE COBBLEMON'S EXACT FORMULA FROM CobblemonCaptureCalculator
+            // ============================================================
+            
+            // Status bonus - exact same as Cobblemon
             val status = pokemon.status?.status
-            val statusMultiplier = getStatusMultiplierFromStatus(status)
+            val bonusStatus = getStatusMultiplierFromStatus(status)
             
-            // Use CatchRateFormula for level bonus
-            val lowLevelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
+            // Level bonus - exact same as Cobblemon (integer division!)
+            val bonusLevel = if (pokemon.level < 13) max((36 - (2 * pokemon.level)) / 10, 1) else 1
             
-            // NOTE: Cobblemon's findHighestThrowerLevel() always returns null for wild battles
-            // due to a logic issue in their code, so the level penalty is never applied.
-            // We match Cobblemon's actual behavior by not applying level penalty.
+            // inBattleModifier - we're always in battle here, so 1F
+            val inBattleModifier = 1F
             
-            // Use Cobblemon's behavior mutator for the HP component, then apply our formula
-            val hpComponent = (3F * maxHp - 2F * currentHp) * baseCatchRate
-            var modifiedCatchRate = modifier.behavior(player, pokemon).mutator(hpComponent, ballMultiplier) / (3F * maxHp)
-            modifiedCatchRate *= statusMultiplier * lowLevelBonus
+            // darkGrass - Cobblemon sets this to 1F
+            val darkGrass = 1F
             
-            // Use CatchRateFormula to convert modified rate to percentage
-            val catchChance = CatchRateFormula.modifiedRateToPercentage(modifiedCatchRate)
+            // Calculate modifiedCatchRate using Cobblemon's exact formula
+            var modifiedCatchRate = modifier
+                .behavior(player, pokemon)
+                .mutator((3F * maxHp - 2F * currentHp) * darkGrass * baseCatchRate * inBattleModifier, ballMultiplier) / (3F * maxHp)
+            modifiedCatchRate *= bonusStatus * bonusLevel
+            
+            // Level penalty calculation - mirrors Cobblemon's findHighestThrowerLevel logic
+            // NOTE: Cobblemon's findHighestThrowerLevel has a bug where it checks wrong UUIDs
+            // For accuracy, we should NOT apply level penalty since Cobblemon doesn't actually apply it
+            // But let's log what it would be for debugging
+            val playerHighestLevel = playerActor?.pokemonList?.maxOfOrNull { it.effectedPokemon.level }
+            val levelPenaltyWouldBe = if (playerHighestLevel != null && playerHighestLevel < pokemon.level) {
+                val config = Cobblemon.config
+                max(0.1F, minOf(1F, 1F - ((pokemon.level - playerHighestLevel).toFloat() / (config.maxPokemonLevel / 2F))))
+            } else 1F
+            
+            // Cobblemon's shake probability formula (NOT our abstraction)
+            val shakeProbability = (65536F / (255F / modifiedCatchRate).pow(0.1875F)).roundToInt()
+            
+            // Convert to catch percentage using Cobblemon's actual logic
+            // Each shake: probability is shakeProbability/65537 (note: 65537, not 65536!)
+            // 4 shakes needed, so: (shakeProbability/65537)^4
+            val perShakeProb = shakeProbability.toFloat() / 65537F
+            val catchChance = (perShakeProb.pow(4) * 100F).coerceIn(0F, 100F)
+            
+            // DETAILED DEBUG LOGGING
+            CatchRateDisplayMod.debug("=== CATCH RATE DEBUG (Cobblemon-exact) ===")
+            CatchRateDisplayMod.debug("Pokemon: ${pokemon.species.name} Lv${pokemon.level}")
+            CatchRateDisplayMod.debug("HP: $currentHp / $maxHp")
+            CatchRateDisplayMod.debug("Base catch rate: $baseCatchRate")
+            CatchRateDisplayMod.debug("Ball: ${ballId.path}, multiplier: $ballMultiplier, valid: $ballIsValid")
+            CatchRateDisplayMod.debug("Status: ${status?.name?.path ?: "none"}, bonusStatus: $bonusStatus")
+            CatchRateDisplayMod.debug("Level bonus: $bonusLevel (level ${pokemon.level} < 13? ${pokemon.level < 13})")
+            CatchRateDisplayMod.debug("Level penalty (not applied by Cobblemon): $levelPenaltyWouldBe")
+            CatchRateDisplayMod.debug("Modified catch rate: $modifiedCatchRate")
+            CatchRateDisplayMod.debug("Shake probability: $shakeProbability / 65537")
+            CatchRateDisplayMod.debug("Catch chance: $catchChance%")
+            CatchRateDisplayMod.debug("==========================================")
             
             val response = CatchRateResponsePayload(
                 pokemonUuid = request.pokemonUuid,
-                catchChance = catchChance.toDouble().coerceIn(0.0, 100.0),
+                catchChance = catchChance.toDouble(),
                 pokemonName = pokemon.species.name,
                 pokemonLevel = pokemon.level,
                 hpPercent = hpPercent.coerceIn(0.0, 100.0),
@@ -136,8 +177,8 @@ object CatchRateServerNetworking {
                 ballMultiplier = ballMultiplier.toDouble(),
                 ballConditionMet = conditionMet,
                 ballConditionDesc = conditionDesc,
-                statusMultiplier = statusMultiplier.toDouble(),
-                lowLevelBonus = lowLevelBonus.toDouble(),
+                statusMultiplier = bonusStatus.toDouble(),
+                lowLevelBonus = bonusLevel.toDouble(),
                 isGuaranteed = false,
                 baseCatchRate = baseCatchRate.toInt()
             )

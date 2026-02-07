@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Отображение Шанса Поимки",
+  "key.catchrate.toggle_hud": "Переключить HUD",
+  "key.catchrate.show_comparison": "Показать Сравнение Шаров",
+  "key.catchrate.reset_position": "Сбросить Позицию HUD",
+  "key.catchrate.move_up": "Переместить HUD Вверх",
+  "key.catchrate.move_down": "Переместить HUD Вниз",
+  "key.catchrate.move_left": "Переместить HUD Влево",
+  "key.catchrate.move_right": "Переместить HUD Вправо",
+  "key.catchrate.cycle_anchor": "Сменить Привязку HUD"
+}

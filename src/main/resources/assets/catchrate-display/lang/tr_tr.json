@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Yakalama Oranı Göstergesi",
+  "key.catchrate.toggle_hud": "HUD'u Aç/Kapat",
+  "key.catchrate.show_comparison": "Top Karşılaştırmasını Göster",
+  "key.catchrate.reset_position": "HUD Konumunu Sıfırla",
+  "key.catchrate.move_up": "HUD'u Yukarı Taşı",
+  "key.catchrate.move_down": "HUD'u Aşağı Taşı",
+  "key.catchrate.move_left": "HUD'u Sola Taşı",
+  "key.catchrate.move_right": "HUD'u Sağa Taşı",
+  "key.catchrate.cycle_anchor": "HUD Bağlantı Noktasını Değiştir"
+}

@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "捕獲率表示",
+  "key.catchrate.toggle_hud": "HUDの切り替え",
+  "key.catchrate.show_comparison": "ボール比較を表示",
+  "key.catchrate.reset_position": "HUD位置をリセット",
+  "key.catchrate.move_up": "HUDを上に移動",
+  "key.catchrate.move_down": "HUDを下に移動",
+  "key.catchrate.move_left": "HUDを左に移動",
+  "key.catchrate.move_right": "HUDを右に移動",
+  "key.catchrate.cycle_anchor": "HUDアンカーを切り替え"
+}

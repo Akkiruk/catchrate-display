@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "捕获率显示",
+  "key.catchrate.toggle_hud": "切换HUD",
+  "key.catchrate.show_comparison": "显示球类比较",
+  "key.catchrate.reset_position": "重置HUD位置",
+  "key.catchrate.move_up": "向上移动HUD",
+  "key.catchrate.move_down": "向下移动HUD",
+  "key.catchrate.move_left": "向左移动HUD",
+  "key.catchrate.move_right": "向右移动HUD",
+  "key.catchrate.cycle_anchor": "切换HUD锚点"
+}

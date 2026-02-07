@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.31] - 2026-02-02
+
+### Fixed
+- **Replicated Cobblemon's exact capture formula** for perfect accuracy
+- Fixed shake probability divisor: Cobblemon uses 65537, not 65536 (Random.nextInt(65537) generates 0-65536)
+- Removed level penalty application (Cobblemon's findHighestThrowerLevel has a bug where it always returns null)
+- HP component now exactly matches Cobblemon's structure with all multipliers in correct order
+- Added comprehensive debug logging to compare our calculation with Cobblemon's actual values
+
+### Technical Details
+- Server-side calculation now mirrors CobblemonCaptureCalculator line-by-line
+- Shake probability: `(shakeProbability / 65537)^4` instead of `(shakeProbability / 65536)^4`
+- This small difference could cause up to ~0.006% discrepancy at high catch rates
+
 ## [1.2.30] - 2026-02-01
 
 ### Fixed

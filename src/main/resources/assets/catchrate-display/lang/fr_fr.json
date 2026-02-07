@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Affichage du Taux de Capture",
+  "key.catchrate.toggle_hud": "Basculer le HUD",
+  "key.catchrate.show_comparison": "Afficher la Comparaison des Balls",
+  "key.catchrate.reset_position": "Réinitialiser la Position du HUD",
+  "key.catchrate.move_up": "Déplacer le HUD vers le Haut",
+  "key.catchrate.move_down": "Déplacer le HUD vers le Bas",
+  "key.catchrate.move_left": "Déplacer le HUD vers la Gauche",
+  "key.catchrate.move_right": "Déplacer le HUD vers la Droite",
+  "key.catchrate.cycle_anchor": "Changer l'Ancrage du HUD"
+}

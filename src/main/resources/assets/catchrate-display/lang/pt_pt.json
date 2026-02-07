@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Exibição da Taxa de Captura",
+  "key.catchrate.toggle_hud": "Alternar HUD",
+  "key.catchrate.show_comparison": "Mostrar Comparação de Pokébolas",
+  "key.catchrate.reset_position": "Repor Posição do HUD",
+  "key.catchrate.move_up": "Mover HUD para Cima",
+  "key.catchrate.move_down": "Mover HUD para Baixo",
+  "key.catchrate.move_left": "Mover HUD para Esquerda",
+  "key.catchrate.move_right": "Mover HUD para Direita",
+  "key.catchrate.cycle_anchor": "Alternar Âncora do HUD"
+}

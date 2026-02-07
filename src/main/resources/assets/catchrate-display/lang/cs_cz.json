@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Zobrazení Míry Chycení",
+  "key.catchrate.toggle_hud": "Přepnout HUD",
+  "key.catchrate.show_comparison": "Zobrazit Porovnání Míčů",
+  "key.catchrate.reset_position": "Obnovit Pozici HUD",
+  "key.catchrate.move_up": "Posunout HUD Nahoru",
+  "key.catchrate.move_down": "Posunout HUD Dolů",
+  "key.catchrate.move_left": "Posunout HUD Vlevo",
+  "key.catchrate.move_right": "Posunout HUD Vpravo",
+  "key.catchrate.cycle_anchor": "Změnit Kotvu HUD"
+}

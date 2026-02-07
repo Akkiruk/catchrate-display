@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Fångstfrekvensvisning",
+  "key.catchrate.toggle_hud": "Växla HUD",
+  "key.catchrate.show_comparison": "Visa Bolljämförelse",
+  "key.catchrate.reset_position": "Återställ HUD-position",
+  "key.catchrate.move_up": "Flytta HUD Uppåt",
+  "key.catchrate.move_down": "Flytta HUD Nedåt",
+  "key.catchrate.move_left": "Flytta HUD Vänster",
+  "key.catchrate.move_right": "Flytta HUD Höger",
+  "key.catchrate.cycle_anchor": "Byt HUD-ankare"
+}

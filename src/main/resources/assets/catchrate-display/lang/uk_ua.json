@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Відображення Шансу Ловлі",
+  "key.catchrate.toggle_hud": "Перемкнути HUD",
+  "key.catchrate.show_comparison": "Показати Порівняння М'ячів",
+  "key.catchrate.reset_position": "Скинути Позицію HUD",
+  "key.catchrate.move_up": "Перемістити HUD Вгору",
+  "key.catchrate.move_down": "Перемістити HUD Вниз",
+  "key.catchrate.move_left": "Перемістити HUD Вліво",
+  "key.catchrate.move_right": "Перемістити HUD Вправо",
+  "key.catchrate.cycle_anchor": "Змінити Прив'язку HUD"
+}

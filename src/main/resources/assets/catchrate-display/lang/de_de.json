@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "Fangrate-Anzeige",
+  "key.catchrate.toggle_hud": "HUD umschalten",
+  "key.catchrate.show_comparison": "Ball-Vergleich anzeigen",
+  "key.catchrate.reset_position": "HUD-Position zurücksetzen",
+  "key.catchrate.move_up": "HUD nach oben",
+  "key.catchrate.move_down": "HUD nach unten",
+  "key.catchrate.move_left": "HUD nach links",
+  "key.catchrate.move_right": "HUD nach rechts",
+  "key.catchrate.cycle_anchor": "HUD-Anker wechseln"
+}

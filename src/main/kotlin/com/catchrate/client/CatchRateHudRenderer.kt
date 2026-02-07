@@ -69,6 +69,9 @@ class CatchRateHudRenderer : HudRenderCallback {
         
         if (!config.hudEnabled) return
         
+        // Respect F1 to hide HUD
+        if (client.options.hudHidden) return
+        
         this.tickCounter++
         
         val battle = CobblemonClient.battle
@@ -199,11 +202,19 @@ class CatchRateHudRenderer : HudRenderCallback {
             val ballIcon = if (data.ballConditionMet) "●" else "○"
             val ballText = "$ballIcon ${CatchRateFormula.formatBallNameCompact(data.ballName)} ${String.format("%.1f", data.ballMultiplier)}x"
             
+            // Calculate percentage text width (must include in box sizing)
+            val percentText = if (data.isGuaranteed) {
+                "★ 100% CATCH ★"
+            } else {
+                "${CatchRateFormula.formatCatchPercentage(data.catchChance, false)}%"
+            }
+            
             val textWidths = mutableListOf(
                 textRenderer.getWidth(nameText),
                 textRenderer.getWidth(hpText),
                 textRenderer.getWidth(ballText),
-                textRenderer.getWidth(data.ballConditionDesc)
+                textRenderer.getWidth(data.ballConditionDesc),
+                textRenderer.getWidth(percentText)
             )
             val hasStatus = data.statusMultiplier > 1.0
             if (hasStatus) textWidths.add(textRenderer.getWidth(statusText))
@@ -263,8 +274,32 @@ class CatchRateHudRenderer : HudRenderCallback {
         val screenWidth = client.window.scaledWidth
         val screenHeight = client.window.scaledHeight
         
-        val boxWidth = 130
-        val boxHeight = 68
+        // Calculate dynamic box size based on content
+        val headerText = "Catch Rate"
+        val percentText = if (result.isGuaranteed) {
+            "✓ GUARANTEED"
+        } else {
+            "${CatchRateFormula.formatCatchPercentage(result.percentage, result.isGuaranteed)}%"
+        }
+        val statusIcon = HudDrawing.getStatusIcon(result.statusName)
+        val statusText = "$statusIcon ${result.statusName}"
+        val ballDisplay = CatchRateFormula.formatBallNameCompact(result.ballName)
+        val turnInfo = if (ballName == "timer_ball" || ballName == "quick_ball") " T$turnCount" else ""
+        val ballText = "● $ballDisplay ${String.format("%.1f", result.ballMultiplier)}x$turnInfo"
+        
+        val textWidths = mutableListOf(
+            textRenderer.getWidth(headerText),
+            textRenderer.getWidth(percentText),
+            textRenderer.getWidth(ballText),
+            88  // HP label + health bar minimum width
+        )
+        if (result.statusMultiplier > 1.0) {
+            textWidths.add(textRenderer.getWidth(statusText))
+        }
+        
+        val boxWidth = (textWidths.maxOrNull() ?: 100) + 16
+        val hasStatus = result.statusMultiplier > 1.0
+        val boxHeight = if (hasStatus) 78 else 68
         val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
         
         // Draw styled panel using HudDrawing
@@ -277,10 +312,9 @@ class CatchRateHudRenderer : HudRenderCallback {
         val barY = y + 16
         if (result.isGuaranteed) {
             HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, 100.0, true)
-            drawContext.drawTextWithShadow(textRenderer, "✓ GUARANTEED", x + 6, barY + 12, Colors.TEXT_GREEN)
+            drawContext.drawTextWithShadow(textRenderer, percentText, x + 6, barY + 12, Colors.TEXT_GREEN)
         } else {
             HudDrawing.drawCatchBar(drawContext, x + 6, barY, boxWidth - 12, result.percentage, false)
-            val percentText = "${CatchRateFormula.formatCatchPercentage(result.percentage, result.isGuaranteed)}%"
             val percentColor = HudDrawing.getChanceColorInt(result.percentage)
             drawContext.drawTextWithShadow(textRenderer, percentText, x + 6, barY + 12, percentColor)
         }
@@ -293,17 +327,14 @@ class CatchRateHudRenderer : HudRenderCallback {
         // Status effect (if any)
         val infoY = hpY + 12
         var currentY = infoY
-        if (result.statusMultiplier > 1.0) {
-            val statusIcon = HudDrawing.getStatusIcon(result.statusName)
-            drawContext.drawTextWithShadow(textRenderer, "$statusIcon ${result.statusName}", x + 6, currentY, Colors.TEXT_PURPLE)
+        if (hasStatus) {
+            drawContext.drawTextWithShadow(textRenderer, statusText, x + 6, currentY, Colors.TEXT_PURPLE)
             currentY += 10
         }
         
         // Ball multiplier
         val ballColor = HudDrawing.getBallMultiplierColor(result.ballMultiplier)
-        val ballDisplay = CatchRateFormula.formatBallNameCompact(result.ballName)
-        val turnInfo = if (ballName == "timer_ball" || ballName == "quick_ball") " T$turnCount" else ""
-        drawContext.drawTextWithShadow(textRenderer, "● $ballDisplay ${String.format("%.1f", result.ballMultiplier)}x$turnInfo", x + 6, currentY, ballColor)
+        drawContext.drawTextWithShadow(textRenderer, ballText, x + 6, currentY, ballColor)
     }
     
     private fun renderUnsupportedBallHud(drawContext: DrawContext, client: MinecraftClient, ballName: String) {
@@ -376,13 +407,21 @@ class CatchRateHudRenderer : HudRenderCallback {
         // Pokemon name with WILD indicator
         val nameText = "${pokemon.species.name} Lv${pokemon.level}"
         
+        // Calculate percentage text width (must include in box sizing)
+        val percentText = if (result.isGuaranteed) {
+            "★ 100% CATCH ★"
+        } else {
+            "${CatchRateFormula.formatCatchPercentage(result.catchRate, result.isGuaranteed)}%"
+        }
+        
         // Calculate dynamic box width like in-combat
         val textWidths = mutableListOf(
             textRenderer.getWidth(nameText) + textRenderer.getWidth(" WILD") + 8,
             textRenderer.getWidth(hpText),
             textRenderer.getWidth(ballText),
             textRenderer.getWidth(result.reason),
-            textRenderer.getWidth(penaltyText)
+            textRenderer.getWidth(penaltyText),
+            textRenderer.getWidth(percentText)
         )
         if (hasStatus) textWidths.add(textRenderer.getWidth(statusText))
         

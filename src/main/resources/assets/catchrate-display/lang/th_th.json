@@ -1,0 +1,11 @@
+{
+  "category.catchrate": "การแสดงอัตราการจับ",
+  "key.catchrate.toggle_hud": "สลับ HUD",
+  "key.catchrate.show_comparison": "แสดงการเปรียบเทียบลูกบอล",
+  "key.catchrate.reset_position": "รีเซ็ตตำแหน่ง HUD",
+  "key.catchrate.move_up": "ย้าย HUD ขึ้น",
+  "key.catchrate.move_down": "ย้าย HUD ลง",
+  "key.catchrate.move_left": "ย้าย HUD ไปซ้าย",
+  "key.catchrate.move_right": "ย้าย HUD ไปขวา",
+  "key.catchrate.cycle_anchor": "เปลี่ยนจุดยึด HUD"
+}
