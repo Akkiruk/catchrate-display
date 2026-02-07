@@ -1,10 +1,61 @@
 # Changelog
 
-## [1.2.33] - 2026-02-07
+## [1.3.0] - 2026-02-07
+
+### Major: Architectury Multiloader Support
+- **CatchRate Display now supports both Fabric AND NeoForge!**
+- Migrated from Fabric-only to Architectury multiloader build system
+- Common codebase shared between both platforms (~90% code reuse)
+- Platform-specific entrypoints for Fabric (`ModInitializer`/`ClientModInitializer`) and NeoForge (`@Mod`/`@EventBusSubscriber`)
+- Platform abstraction layer (`PlatformHelper` with `@ExpectPlatform`) for config paths, networking, and mod loader detection
+- Separate JARs produced for each loader (Fabric and NeoForge)
+- Remapped entire codebase from Yarn to Mojang mappings (50+ API name changes) for Architectury compatibility
+  - `PlayerEntity` → `Player`, `MinecraftClient` → `Minecraft`, `DrawContext` → `GuiGraphics`
+  - `Text` → `Component`, `Formatting` → `ChatFormatting`, `Identifier` → `ResourceLocation`
+  - `KeyBinding` → `KeyMapping`, `ItemStack` methods, `World` → `Level`, and many more
+- Network system rewritten using `CustomPacketPayload` with `StreamCodec` (Mojmap 1.21+ API)
+  - Fabric: `PayloadTypeRegistry` registration
+  - NeoForge: `RegisterPayloadHandlersEvent` with versioned registrar
+- HUD rendering abstracted per platform
+  - Fabric: `HudRenderCallback.EVENT`
+  - NeoForge: `RegisterGuiLayersEvent.registerAboveAll`
+
+### Localization Overhaul
+- **28 language files** now included with full translations:
+  - English (US, GB, Pirate), Czech, German, Greek, Esperanto, Spanish (Spain, Mexico),
+    French (France, Canada), Hungarian, Italian, Japanese, Korean, Dutch, Polish,
+    Portuguese (Brazil, Portugal), Russian, Swedish, Thai, Turkish, Ukrainian, Vietnamese,
+    Chinese (Simplified, Traditional, Hong Kong)
+- All HUD text, config descriptions, ball names, status effects, and condition descriptions
+  are now translatable
+- Fixed locale-dependent number formatting (decimal separators now consistent)
+- Dynamic keybind display names now localized
 
 ### Fixed
+- **Out-of-combat catch rate now accurate in multiplayer** (Fixes [#1](https://github.com/Akkiruk/catchrate-display/issues/1))
+  - On non-host multiplayer clients, every Pokemon showed the same catch rate (e.g. 7.1% with Poke Ball)
+  - Root cause: The out-of-combat code path calculated catch rates entirely client-side, but Cobblemon
+    does not fully sync species data (`catchRate`, `maxHealth`, etc.) to non-host clients
+  - Fix: Added server-side networking for out-of-combat catch rate calculation, mirroring the approach
+    already used for in-battle calculations
+  - New `WorldCatchRateRequestPayload` packet (sends entity network ID + ball type to server)
+  - Server handler looks up `PokemonEntity` by ID and calculates with full species data
+  - Client uses server response when available, falls back to client-side calculation when
+    server mod is not installed
+  - Reuses existing `CatchRateResponsePayload` for the response
 - Ball comparison panel now properly updates when turn count changes (Timer Ball, Quick Ball)
 - Ball comparison cache cleared on battle start, turn increment, and HP/status/target changes
+- Removed dead code and unused imports
+
+### Technical
+- Build system: 3-subproject Gradle structure (`common/`, `fabric/`, `neoforge/`) with Architectury Loom 1.9.424
+- Architect Plugin 3.4.162 for cross-platform compilation
+- Mojang mappings + Parchment for parameter name readability
+- `@ExpectPlatform` pattern for platform-specific implementations (`PlatformHelper`)
+  - Fabric: `FabricLoader` API, `ClientPlayNetworking`
+  - NeoForge: `FMLPaths`, `PacketDistributor`
+- Source files organized: 14 common, 3 Fabric-specific, 3 NeoForge-specific
+- Minimum Cobblemon 1.6+, Minecraft 1.21
 
 ## [1.2.32] - 2026-02-06
 
