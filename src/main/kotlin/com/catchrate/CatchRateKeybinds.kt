@@ -9,6 +9,16 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.lwjgl.glfw.GLFW
 
+/**
+ * Translation helper for keybind feedback messages.
+ */
+object KeybindTranslations {
+    fun enabled() = Text.translatable("catchrate.message.enabled").string
+    fun disabled() = Text.translatable("catchrate.message.disabled").string
+    fun positionReset() = Text.translatable("catchrate.message.position_reset").string
+    fun anchor(anchorName: String) = Text.translatable("catchrate.message.anchor", anchorName).string
+}
+
 object CatchRateKeybinds {
     private lateinit var toggleHudKey: KeyBinding
     private lateinit var showComparisonKey: KeyBinding
@@ -48,8 +58,8 @@ object CatchRateKeybinds {
         while (toggleHudKey.wasPressed()) {
             config.hudEnabled = !config.hudEnabled
             config.save()
-            val status = if (config.hudEnabled) "§aEnabled" else "§cDisabled"
-            player?.sendMessage(Text.literal("Catch Rate: $status").formatted(Formatting.GOLD), true)
+            val status = if (config.hudEnabled) KeybindTranslations.enabled() else KeybindTranslations.disabled()
+            player?.sendMessage(Text.literal(status).formatted(Formatting.GOLD), true)
         }
         
         isComparisonHeld = showComparisonKey.isPressed
@@ -63,12 +73,12 @@ object CatchRateKeybinds {
         
         while (resetPositionKey.wasPressed()) {
             config.resetPosition()
-            player?.sendMessage(Text.literal("HUD position reset").formatted(Formatting.GOLD), true)
+            player?.sendMessage(Text.literal(KeybindTranslations.positionReset()).formatted(Formatting.GOLD), true)
         }
         
         while (cycleAnchorKey.wasPressed()) {
             config.cycleAnchor()
-            player?.sendMessage(Text.literal("Anchor: ${config.hudAnchor.name.replace("_", " ")}").formatted(Formatting.GOLD), true)
+            player?.sendMessage(Text.literal(KeybindTranslations.anchor(config.hudAnchor.name.replace("_", " "))).formatted(Formatting.GOLD), true)
         }
         
         config.flushPendingSave()
