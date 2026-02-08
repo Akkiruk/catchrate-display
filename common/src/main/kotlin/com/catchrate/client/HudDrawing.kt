@@ -100,50 +100,13 @@ object HudDrawing {
         }
     }
     
-    fun drawHealthBar(
-        guiGraphics: GuiGraphics,
-        x: Int,
-        y: Int,
-        width: Int,
-        ratio: Float
-    ) {
-        val barHeight = Dimensions.HEALTH_BAR_HEIGHT
-        
-        // Bar background
-        guiGraphics.fill(x, y, x + width, y + barHeight, Colors.BAR_BACKGROUND)
-        
-        // Calculate health colors (Cobblemon style - green to yellow to red)
-        val (red, green) = getHealthBarColors(ratio)
-        val healthColor = (255 shl 24) or ((red * 255).toInt() shl 16) or ((green * 255).toInt() shl 8) or 70
-        
-        // Fill bar
-        val fillWidth = ((width - 2) * ratio).roundToInt().coerceAtLeast(0)
-        if (fillWidth > 0) {
-            guiGraphics.fill(x + 1, y + 1, x + 1 + fillWidth, y + barHeight - 1, healthColor)
+    fun getHpMultiplierColor(multiplier: Double): Int {
+        return when {
+            multiplier >= 0.9 -> Colors.CHANCE_HIGH      // very low HP
+            multiplier >= 0.67 -> Colors.CHANCE_MEDIUM    // ~half HP
+            multiplier >= 0.5 -> Colors.CHANCE_LOW        // moderate HP
+            else -> Colors.CHANCE_VERY_LOW                // near-full HP
         }
-        
-        // Border
-        guiGraphics.hLine(x, x + width - 1, y, Colors.BAR_BORDER)
-        guiGraphics.hLine(x, x + width - 1, y + barHeight - 1, Colors.BAR_BORDER)
-    }
-    
-    private fun getHealthBarColors(ratio: Float): Pair<Float, Float> {
-        val redThreshold = 0.2f
-        val yellowThreshold = 0.5f
-        
-        val r = if (ratio > redThreshold) {
-            (-2 * ratio + 2).coerceIn(0f, 1f)
-        } else {
-            1.0f
-        }
-        
-        val g = when {
-            ratio > yellowThreshold -> 1.0f
-            ratio > redThreshold -> (ratio / yellowThreshold).coerceIn(0f, 1f)
-            else -> 0.0f
-        }
-        
-        return r to g
     }
     
     // ==================== COLOR UTILITIES ====================

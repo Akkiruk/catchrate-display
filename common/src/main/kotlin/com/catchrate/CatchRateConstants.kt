@@ -107,7 +107,6 @@ object CatchRateConstants {
     object Dimensions {
         const val HUD_PADDING = 6
         const val LINE_HEIGHT = 10
-        const val HEALTH_BAR_HEIGHT = 6
         const val CATCH_BAR_HEIGHT = 8
     }
 }

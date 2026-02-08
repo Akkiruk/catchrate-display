@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.2.0] - 2026-02-08
+
+### Changed
+- Unified in-battle and out-of-combat HUD into a single consistent layout
+- HUD header now shows Pokemon name and level instead of generic "Catch Rate" text
+- Replaced HP health bar with text-based HP multiplier display (e.g. "HP 0.85x")
+- HP multiplier color-coded by catch benefit (green = low HP, red = full HP)
+
+### Removed
+- Health bar rendering code (drawHealthBar, HEALTH_BAR_HEIGHT constant)
+- Separate out-of-combat HUD renderer
+
+---
+
 ## [2.1.2] - 2026-02-08
 
 ### Fixed
