@@ -1,8 +1,6 @@
 name: Publish to CurseForge and Modrinth
 
 on:
-  release:
-    types: [published]
   push:
     tags:
       - 'v*'
@@ -12,6 +10,9 @@ on:
         description: 'Version to publish (e.g., 1.2.3)'
         required: true
         type: string
+
+permissions:
+  contents: write
 
 jobs:
   build-and-publish:
@@ -51,10 +52,21 @@ jobs:
         id: changelog
         run: |
           VERSION="${{ steps.get_version.outputs.VERSION }}"
-          # Extract changelog section for this version
           sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | sed '$d' | tail -n +2 > current_changelog.txt
           echo "Changelog:"
           cat current_changelog.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "v${{ steps.get_version.outputs.VERSION }}"
+          body_path: current_changelog.txt
+          files: |
+            fabric/build/libs/catchrate-display-fabric-${{ steps.get_version.outputs.VERSION }}.jar
+            neoforge/build/libs/catchrate-display-neoforge-${{ steps.get_version.outputs.VERSION }}.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       # Publish Fabric version
       - name: Publish Fabric to CurseForge and Modrinth
