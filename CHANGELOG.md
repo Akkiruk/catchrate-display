@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.1] - 2026-02-08
+
+### Fixed
+- Timer Ball now correctly gives 1x multiplier on turn 1 (was incorrectly giving 1.3x)
+
+---
+
 ## [2.4.0] - 2026-02-08
 
 ### Changed
