@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.0] - 2026-02-08
+
+### Added
+- Cursor now hides when ball comparison menu is open (G key)
+- Updated cross-platform implementation guidelines for stricter Fabric/NeoForge parity
+
+---
+
 ## [2.4.3] - 2026-02-08
 
 ### Fixed
