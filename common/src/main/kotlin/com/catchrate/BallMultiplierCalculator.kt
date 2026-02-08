@@ -114,7 +114,7 @@ object BallMultiplierCalculator {
         val pokeBall = pokeBallCache.getOrPut(lower) {
             try {
                 PokeBalls.getPokeBall(ResourceLocation.fromNamespaceAndPath("cobblemon", lower))
-            } catch (e: Exception) { null }
+            } catch (e: Throwable) { null }
         }
         
         if (pokeBall?.catchRateModifier?.isGuaranteed() == true || lower.contains("master")) {

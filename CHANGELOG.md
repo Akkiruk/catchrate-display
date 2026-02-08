@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1] - 2026-02-08
+
+### Fixed
+- Crash with Cobblemon 1.6.x due to PokeBalls.getPokeBall() API incompatibility (IncompatibleClassChangeError)
+
+---
+
 ## [2.3.0] - 2026-02-08
 
 ### Added

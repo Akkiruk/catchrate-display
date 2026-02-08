@@ -113,7 +113,7 @@ object CatchRateCalculator {
         val ballName = itemStack.item.toString().substringAfter(":").substringBefore("}").trim()
         return try {
             PokeBalls.getPokeBall(ResourceLocation.fromNamespaceAndPath("cobblemon", ballName))
-        } catch (e: Exception) { 
+        } catch (e: Throwable) { 
             null 
         }
     }
