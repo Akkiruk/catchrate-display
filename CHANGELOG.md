@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.3] - 2026-02-08
+
+### Fixed
+- Status condition showing "None 2.5x" instead of "Asleep 2.5x" during battle (raw path vs display name mismatch)
+
+---
+
 ## [2.4.2] - 2026-02-08
 
 ### Fixed

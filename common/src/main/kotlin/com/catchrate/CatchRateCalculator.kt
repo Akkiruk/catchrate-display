@@ -73,7 +73,7 @@ object CatchRateCalculator {
                 statusMultiplier = 1.0,
                 ballMultiplier = CatchRateConstants.BALL_GUARANTEED_MULT.toDouble(),
                 baseCatchRate = pokemon.species.catchRate,
-                statusName = CatchRateFormula.getStatusDisplayName(pokemon.status?.name?.path),
+                statusName = pokemon.status?.name?.path ?: "",
                 ballName = ballName,
                 turnCount = turnCount,
                 isGuaranteed = true
@@ -123,7 +123,7 @@ object CatchRateCalculator {
             statusMultiplier = bonusStatus.toDouble(),
             ballMultiplier = ballBonus.toDouble(),
             baseCatchRate = catchRate.toInt(),
-            statusName = CatchRateFormula.getStatusDisplayName(statusPath),
+            statusName = statusPath ?: "",
             ballName = ballName,
             turnCount = turnCount,
             isGuaranteed = isFormulaGuaranteed,
