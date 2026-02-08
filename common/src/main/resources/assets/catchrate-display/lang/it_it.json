@@ -8,7 +8,6 @@
   "key.catchrate.move_left": "Sposta HUD a Sinistra",
   "key.catchrate.move_right": "Sposta HUD a Destra",
   "key.catchrate.cycle_anchor": "Cambia Ancoraggio HUD",
-
   "catchrate.status.asleep": "Addormentato",
   "catchrate.status.frozen": "Congelato",
   "catchrate.status.paralyzed": "Paralizzato",
@@ -16,56 +15,41 @@
   "catchrate.status.badly_poisoned": "Gravemente Avvelenato",
   "catchrate.status.burned": "Bruciato",
   "catchrate.status.none": "Nessuno",
-
   "catchrate.hud.header": "Tasso di Cattura",
   "catchrate.hud.guaranteed": "★ CATTURA 100% ★",
   "catchrate.hud.guaranteed_short": "✓ GARANTITO",
   "catchrate.hud.hp": "PS",
   "catchrate.hud.wild": "SELVATICO",
   "catchrate.hud.unknown_percent": "??%",
-  "catchrate.hud.server_required": "Server richiesto",
   "catchrate.hud.out_of_combat_penalty": "⚠ Fuori combattimento: 0.5x",
   "catchrate.hud.release_to_close": "Rilascia %s per chiudere",
   "catchrate.hud.ball_comparison": "⚔ Confronto Ball (Turno %d)",
-
-  "catchrate.ball.guaranteed_catch": "Cattura garantita!",
-  "catchrate.ball.multiplier_always": "%sx sempre",
+  "catchrate.ball.guaranteed_catch": "Cattura garantita",
+  "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Effetto speciale alla cattura",
-  "catchrate.ball.ancient": "Antica: solo potenza di lancio (1x tasso)",
-
+  "catchrate.ball.ancient": "Antica (solo potenza di lancio)",
   "catchrate.ball.quick.not_in_battle": "Funziona solo al turno 1",
-  "catchrate.ball.quick.effective": "5x al primo turno!",
+  "catchrate.ball.quick.effective": "Al primo turno",
   "catchrate.ball.quick.ineffective": "Efficace solo al turno 1",
-
-  "catchrate.ball.timer.turn_info": "Turno %d: %.1fx",
+  "catchrate.ball.timer.turn_info": "Turno %d",
   "catchrate.ball.timer.scales": "Aumenta con i turni",
-
   "catchrate.ball.dusk.dark_area": "Zona buia (L%d)",
   "catchrate.ball.dusk.need_darkness": "Serve oscurità",
-
-  "catchrate.ball.dive.underwater": "Sott'acqua!",
+  "catchrate.ball.dive.underwater": "Sott'acqua",
   "catchrate.ball.dive.need_underwater": "Devi essere sott'acqua",
-
   "catchrate.ball.moon.not_night": "Efficace solo di notte",
-  "catchrate.ball.moon.night_phase": "Notte (fase %d): %.0fx",
-
-  "catchrate.ball.net.effective": "Tipo Coleottero/Acqua!",
+  "catchrate.ball.moon.night_phase": "Notte (fase %d)",
+  "catchrate.ball.net.effective": "Tipo Coleottero/Acqua",
   "catchrate.ball.net.ineffective": "Non Coleottero/Acqua",
-
-  "catchrate.ball.nest.effective": "Lv%d: %.1fx",
+  "catchrate.ball.nest.effective": "Lv%d",
   "catchrate.ball.nest.ineffective": "Solo <Lv30",
-
-  "catchrate.ball.fast.effective": "Velocità %d!",
+  "catchrate.ball.fast.effective": "Velocità %d",
   "catchrate.ball.fast.ineffective": "Velocità <100",
-
   "catchrate.ball.heavy.weight": "%.1fkg",
-
-  "catchrate.ball.beast.ultra_beast": "Ultracreatura!",
-  "catchrate.ball.beast.penalty": "0.1x penalità non-UC",
-
-  "catchrate.ball.dream.sleeping": "Addormentato!",
+  "catchrate.ball.beast.ultra_beast": "Ultracreatura",
+  "catchrate.ball.beast.penalty": "Penalità non-UC",
+  "catchrate.ball.dream.sleeping": "Addormentato",
   "catchrate.ball.dream.need_sleep": "Serve stato sonno",
-
   "catchrate.ball.love.no_battler": "Nessuna info combattente",
   "catchrate.ball.love.need_battler": "Serve combattente attivo",
   "catchrate.ball.love.wild_genderless": "Selvatico senza sesso",
@@ -73,19 +57,12 @@
   "catchrate.ball.love.need_opposite": "Serve sesso opposto",
   "catchrate.ball.love.same_species": "Stessa specie + opposto %s",
   "catchrate.ball.love.opposite_gender": "Sesso opposto %s",
-
-  "catchrate.ball.level.effective": "%.0fx vantaggio livello",
+  "catchrate.ball.level.effective": "Vantaggio livello",
   "catchrate.ball.level.ineffective": "Serve livello più alto",
-  "catchrate.ball.level.requires_server": "Richiede confronto livello",
-
-  "catchrate.ball.repeat.effective": "3.5x - Già catturato!",
+  "catchrate.ball.repeat.effective": "Già catturato",
   "catchrate.ball.repeat.ineffective": "Cattura prima questa specie",
-  "catchrate.ball.repeat.requires_server": "Richiede Pokédex",
-
-  "catchrate.ball.lure.effective": "4x bonus pesca!",
+  "catchrate.ball.lure.effective": "Bonus pesca",
   "catchrate.ball.lure.ineffective": "Solo Pokémon pescati",
-  "catchrate.ball.lure.requires_server": "Richiede contesto pesca",
-
   "catchrate.message.enabled": "Tasso di Cattura: §aAttivato",
   "catchrate.message.disabled": "Tasso di Cattura: §cDisattivato",
   "catchrate.message.position_reset": "Posizione HUD reimpostata",

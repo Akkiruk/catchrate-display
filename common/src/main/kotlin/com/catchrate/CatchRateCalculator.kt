@@ -62,7 +62,8 @@ object CatchRateCalculator {
         val statusPath = pokemon.status?.name?.path
         val bonusStatus = CatchRateFormula.getStatusMultiplier(statusPath)
         val bonusLevel = CatchRateFormula.getLowLevelBonus(level)
-        val ballBonus = getBallMultiplier(pokeBall, ballName, pokemon, turnCount)
+        val ballResult = getBallResult(pokeBall, ballName, pokemon, turnCount)
+        val ballBonus = ballResult.multiplier
         
         // Compute modified rate once, derive percentage from it (avoids duplicate HP/modifier math)
         val modifiedCatchRate = CatchRateFormula.calculateModifiedCatchRate(
@@ -88,7 +89,9 @@ object CatchRateCalculator {
             turnCount = turnCount,
             isGuaranteed = isFormulaGuaranteed,
             levelBonus = bonusLevel.toDouble(),
-            modifiedCatchRate = modifiedCatchRate.toDouble()
+            modifiedCatchRate = modifiedCatchRate.toDouble(),
+            ballConditionMet = ballResult.conditionMet,
+            ballConditionReason = ballResult.reason
         )
     }
     
@@ -107,25 +110,29 @@ object CatchRateCalculator {
         }
     }
     
-    private fun getBallMultiplier(
+    private fun getBallResult(
         pokeBall: PokeBall?, 
         ballName: String, 
         pokemon: ClientBattlePokemon, 
         turnCount: Int
-    ): Float {
+    ): BallMultiplierCalculator.BallResult {
         val minecraft = Minecraft.getInstance()
-        val player = minecraft.player ?: return CatchRateConstants.BALL_STANDARD_MULT
-        val level = minecraft.level ?: return CatchRateConstants.BALL_STANDARD_MULT
+        val player = minecraft.player
+            ?: return BallMultiplierCalculator.BallResult(CatchRateConstants.BALL_STANDARD_MULT, false, "")
+        val level = minecraft.level
+            ?: return BallMultiplierCalculator.BallResult(CatchRateConstants.BALL_STANDARD_MULT, false, "")
         
         if (pokeBall?.catchRateModifier?.isGuaranteed() == true) {
-            return CatchRateConstants.BALL_GUARANTEED_MULT
+            return BallMultiplierCalculator.BallResult(
+                CatchRateConstants.BALL_GUARANTEED_MULT, true,
+                BallTranslations.guaranteedCatch(), isGuaranteed = true
+            )
         }
         
         val battle = CobblemonClient.battle
         val ctx = BallContextFactory.fromBattlePokemon(pokemon, turnCount, player, level, battle)
         
-        val result = BallMultiplierCalculator.calculate(ballName.lowercase(), ctx)
-        return result.multiplier
+        return BallMultiplierCalculator.calculate(ballName.lowercase(), ctx)
     }
     
     private fun getHpPercentage(pokemon: ClientBattlePokemon): Double {

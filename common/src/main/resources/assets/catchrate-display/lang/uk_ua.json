@@ -8,7 +8,6 @@
   "key.catchrate.move_left": "Перемістити HUD Вліво",
   "key.catchrate.move_right": "Перемістити HUD Вправо",
   "key.catchrate.cycle_anchor": "Змінити Прив'язку HUD",
-
   "catchrate.status.asleep": "Спить",
   "catchrate.status.frozen": "Заморожений",
   "catchrate.status.paralyzed": "Паралізований",
@@ -16,56 +15,41 @@
   "catchrate.status.badly_poisoned": "Сильно Отруєний",
   "catchrate.status.burned": "Обпечений",
   "catchrate.status.none": "Немає",
-
   "catchrate.hud.header": "Шанс Ловлі",
   "catchrate.hud.guaranteed": "★ 100% ЛОВЛЯ ★",
   "catchrate.hud.guaranteed_short": "✓ ГАРАНТІЯ",
   "catchrate.hud.hp": "ОЗ",
   "catchrate.hud.wild": "ДИКИЙ",
   "catchrate.hud.unknown_percent": "??%",
-  "catchrate.hud.server_required": "Потрібен сервер",
   "catchrate.hud.out_of_combat_penalty": "⚠ Поза боєм: 0.5x",
   "catchrate.hud.release_to_close": "Відпустіть %s щоб закрити",
   "catchrate.hud.ball_comparison": "⚔ Порівняння М'ячів (Хід %d)",
-
-  "catchrate.ball.guaranteed_catch": "Гарантована ловля!",
-  "catchrate.ball.multiplier_always": "%sx завжди",
+  "catchrate.ball.guaranteed_catch": "Гарантована ловля",
+  "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Спецефект при ловлі",
-  "catchrate.ball.ancient": "Давній: тільки сила кидка (1x шанс)",
-
+  "catchrate.ball.ancient": "Давній (тільки сила кидка)",
   "catchrate.ball.quick.not_in_battle": "Працює тільки в 1 ході",
-  "catchrate.ball.quick.effective": "5x в першому ході!",
+  "catchrate.ball.quick.effective": "В першому ході",
   "catchrate.ball.quick.ineffective": "Ефективний тільки в 1 ході",
-
-  "catchrate.ball.timer.turn_info": "Хід %d: %.1fx",
+  "catchrate.ball.timer.turn_info": "Хід %d",
   "catchrate.ball.timer.scales": "Зростає з ходами",
-
   "catchrate.ball.dusk.dark_area": "Темна зона (L%d)",
   "catchrate.ball.dusk.need_darkness": "Потрібна темрява",
-
-  "catchrate.ball.dive.underwater": "Під водою!",
+  "catchrate.ball.dive.underwater": "Під водою",
   "catchrate.ball.dive.need_underwater": "Потрібно бути під водою",
-
   "catchrate.ball.moon.not_night": "Ефективний тільки вночі",
-  "catchrate.ball.moon.night_phase": "Ніч (фаза %d): %.0fx",
-
-  "catchrate.ball.net.effective": "Тип Жук/Вода!",
+  "catchrate.ball.moon.night_phase": "Ніч (фаза %d)",
+  "catchrate.ball.net.effective": "Тип Жук/Вода",
   "catchrate.ball.net.ineffective": "Не Жук/Вода",
-
-  "catchrate.ball.nest.effective": "Рів%d: %.1fx",
+  "catchrate.ball.nest.effective": "Рів%d",
   "catchrate.ball.nest.ineffective": "Тільки <Рів30",
-
-  "catchrate.ball.fast.effective": "Швидкість %d!",
+  "catchrate.ball.fast.effective": "Швидкість %d",
   "catchrate.ball.fast.ineffective": "Швидкість <100",
-
   "catchrate.ball.heavy.weight": "%.1fкг",
-
-  "catchrate.ball.beast.ultra_beast": "Ультрачудо!",
-  "catchrate.ball.beast.penalty": "0.1x штраф не-УЧ",
-
-  "catchrate.ball.dream.sleeping": "Спить!",
+  "catchrate.ball.beast.ultra_beast": "Ультрачудо",
+  "catchrate.ball.beast.penalty": "Штраф не-УЧ",
+  "catchrate.ball.dream.sleeping": "Спить",
   "catchrate.ball.dream.need_sleep": "Потрібен статус сну",
-
   "catchrate.ball.love.no_battler": "Немає інфо про бійця",
   "catchrate.ball.love.need_battler": "Потрібен активний боєць",
   "catchrate.ball.love.wild_genderless": "Дикий безстатевий",
@@ -73,19 +57,12 @@
   "catchrate.ball.love.need_opposite": "Потрібна протилежна стать",
   "catchrate.ball.love.same_species": "Той же вид + протилежний %s",
   "catchrate.ball.love.opposite_gender": "Протилежна стать %s",
-
-  "catchrate.ball.level.effective": "%.0fx перевага рівня",
+  "catchrate.ball.level.effective": "Перевага рівня",
   "catchrate.ball.level.ineffective": "Потрібен вищий рівень",
-  "catchrate.ball.level.requires_server": "Потрібне порівняння рівня",
-
-  "catchrate.ball.repeat.effective": "3.5x - Вже спійманий!",
+  "catchrate.ball.repeat.effective": "Вже спійманий",
   "catchrate.ball.repeat.ineffective": "Спочатку спіймайте цей вид",
-  "catchrate.ball.repeat.requires_server": "Потрібен Покедекс",
-
-  "catchrate.ball.lure.effective": "4x бонус рибалки!",
+  "catchrate.ball.lure.effective": "Бонус рибалки",
   "catchrate.ball.lure.ineffective": "Тільки виловлені Покемони",
-  "catchrate.ball.lure.requires_server": "Потрібен контекст рибалки",
-
   "catchrate.message.enabled": "Шанс Ловлі: §aУвімкнено",
   "catchrate.message.disabled": "Шанс Ловлі: §cВимкнено",
   "catchrate.message.position_reset": "Позицію HUD скинуто",

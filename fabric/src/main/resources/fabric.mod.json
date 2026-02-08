@@ -3,7 +3,7 @@
   "id": "catchrate-display",
   "version": "${version}",
   "name": "Cobblemon Catch Rate Display",
-  "description": "Shows real-time catch rate percentages during Cobblemon battles. Displays ball effectiveness, status bonuses, and HP impact. Works client-only with estimates, or install on server for 100% accurate calculations.",
+  "description": "Shows real-time catch rate percentages during Cobblemon battles. Displays ball effectiveness, status bonuses, and HP impact. Pure client-side mod — no server installation needed.",
   "authors": ["Akkiruk"],
   "contact": {
     "homepage": "https://modrinth.com/mod/catchrate-display",
@@ -12,7 +12,7 @@
   },
   "license": "MIT",
   "icon": "assets/catchrate-display/icon.png",
-  "environment": "*",
+  "environment": "client",
   "entrypoints": {
     "main": [
       {

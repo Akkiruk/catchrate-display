@@ -8,7 +8,6 @@
   "key.catchrate.move_left": "HUD 왼쪽으로 이동",
   "key.catchrate.move_right": "HUD 오른쪽으로 이동",
   "key.catchrate.cycle_anchor": "HUD 앵커 변경",
-
   "catchrate.status.asleep": "잠들었다",
   "catchrate.status.frozen": "얼었다",
   "catchrate.status.paralyzed": "마비",
@@ -16,56 +15,41 @@
   "catchrate.status.badly_poisoned": "급성 독",
   "catchrate.status.burned": "화상",
   "catchrate.status.none": "없음",
-
   "catchrate.hud.header": "포획률",
   "catchrate.hud.guaranteed": "★ 100% 포획 ★",
   "catchrate.hud.guaranteed_short": "✓ 확정",
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "야생",
   "catchrate.hud.unknown_percent": "??%",
-  "catchrate.hud.server_required": "서버 필요",
   "catchrate.hud.out_of_combat_penalty": "⚠ 전투 밖: 0.5x",
   "catchrate.hud.release_to_close": "%s 놓아서 닫기",
   "catchrate.hud.ball_comparison": "⚔ 볼 비교 (턴 %d)",
-
-  "catchrate.ball.guaranteed_catch": "포획 확정!",
-  "catchrate.ball.multiplier_always": "%sx 항상",
+  "catchrate.ball.guaranteed_catch": "포획 확정",
+  "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "포획 시 특수 효과",
-  "catchrate.ball.ancient": "고대: 던지기 힘만 (1x 포획률)",
-
+  "catchrate.ball.ancient": "고대 (던지기 힘만)",
   "catchrate.ball.quick.not_in_battle": "전투 1턴에서만 작동",
-  "catchrate.ball.quick.effective": "첫 턴 5x!",
+  "catchrate.ball.quick.effective": "첫 턴",
   "catchrate.ball.quick.ineffective": "1턴에만 효과적",
-
-  "catchrate.ball.timer.turn_info": "턴 %d: %.1fx",
+  "catchrate.ball.timer.turn_info": "턴 %d",
   "catchrate.ball.timer.scales": "턴수에 따라 증가",
-
   "catchrate.ball.dusk.dark_area": "어두운 지역 (L%d)",
   "catchrate.ball.dusk.need_darkness": "어둡 필요",
-
-  "catchrate.ball.dive.underwater": "수중!",
+  "catchrate.ball.dive.underwater": "수중",
   "catchrate.ball.dive.need_underwater": "수중이어야 함",
-
   "catchrate.ball.moon.not_night": "밤에만 효과적",
-  "catchrate.ball.moon.night_phase": "밤 (월상 %d): %.0fx",
-
-  "catchrate.ball.net.effective": "벌레/물 타입!",
+  "catchrate.ball.moon.night_phase": "밤 (월상 %d)",
+  "catchrate.ball.net.effective": "벌레/물 타입",
   "catchrate.ball.net.ineffective": "벌레/물 아님",
-
-  "catchrate.ball.nest.effective": "Lv%d: %.1fx",
+  "catchrate.ball.nest.effective": "Lv%d",
   "catchrate.ball.nest.ineffective": "Lv30 미만만",
-
-  "catchrate.ball.fast.effective": "스피드 %d!",
+  "catchrate.ball.fast.effective": "스피드 %d",
   "catchrate.ball.fast.ineffective": "스피드 <100",
-
   "catchrate.ball.heavy.weight": "%.1fkg",
-
-  "catchrate.ball.beast.ultra_beast": "울트라비스트!",
-  "catchrate.ball.beast.penalty": "0.1x 비-UB 페널티",
-
-  "catchrate.ball.dream.sleeping": "잠들었다!",
+  "catchrate.ball.beast.ultra_beast": "울트라비스트",
+  "catchrate.ball.beast.penalty": "비-UB 페널티",
+  "catchrate.ball.dream.sleeping": "잠들었다",
   "catchrate.ball.dream.need_sleep": "잠들기 상태 필요",
-
   "catchrate.ball.love.no_battler": "배틀러 정보 없음",
   "catchrate.ball.love.need_battler": "활성 배틀러 필요",
   "catchrate.ball.love.wild_genderless": "야생이 무성별",
@@ -73,19 +57,12 @@
   "catchrate.ball.love.need_opposite": "이성 배틀러 필요",
   "catchrate.ball.love.same_species": "같은 종 + 이성 %s",
   "catchrate.ball.love.opposite_gender": "이성 %s",
-
-  "catchrate.ball.level.effective": "%.0fx 레벨 우위",
+  "catchrate.ball.level.effective": "레벨 우위",
   "catchrate.ball.level.ineffective": "더 높은 레벨 필요",
-  "catchrate.ball.level.requires_server": "레벨 비교 필요",
-
-  "catchrate.ball.repeat.effective": "3.5x - 이미 포획!",
+  "catchrate.ball.repeat.effective": "이미 포획",
   "catchrate.ball.repeat.ineffective": "이 종을 먼저 포획해야 함",
-  "catchrate.ball.repeat.requires_server": "포켓몬 도감 필요",
-
-  "catchrate.ball.lure.effective": "4x 낚시 보너스!",
+  "catchrate.ball.lure.effective": "낚시 보너스",
   "catchrate.ball.lure.ineffective": "낚시한 포켓몬만",
-  "catchrate.ball.lure.requires_server": "낚시 컨텍스트 필요",
-
   "catchrate.message.enabled": "포획률: §a활성화",
   "catchrate.message.disabled": "포획률: §c비활성화",
   "catchrate.message.position_reset": "HUD 위치 초기화됨",

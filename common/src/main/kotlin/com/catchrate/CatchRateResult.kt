@@ -14,5 +14,7 @@ data class CatchRateResult(
     val turnCount: Int = 1,
     val isGuaranteed: Boolean = false,
     val levelBonus: Double = 1.0,
-    val modifiedCatchRate: Double = 0.0
+    val modifiedCatchRate: Double = 0.0,
+    val ballConditionMet: Boolean = true,
+    val ballConditionReason: String = ""
 )

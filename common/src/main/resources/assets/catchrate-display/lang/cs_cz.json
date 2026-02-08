@@ -8,7 +8,6 @@
   "key.catchrate.move_left": "Posunout HUD Vlevo",
   "key.catchrate.move_right": "Posunout HUD Vpravo",
   "key.catchrate.cycle_anchor": "Změnit Kotvu HUD",
-
   "catchrate.status.asleep": "Spí",
   "catchrate.status.frozen": "Zmrzlý",
   "catchrate.status.paralyzed": "Ochrnutý",
@@ -16,56 +15,41 @@
   "catchrate.status.badly_poisoned": "Těžce Otrávený",
   "catchrate.status.burned": "Popálený",
   "catchrate.status.none": "Žádný",
-
   "catchrate.hud.header": "Míra Chycení",
   "catchrate.hud.guaranteed": "★ 100% CHYCENÍ ★",
   "catchrate.hud.guaranteed_short": "✓ ZARUČENÉ",
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "DIVOKÝ",
   "catchrate.hud.unknown_percent": "??%",
-  "catchrate.hud.server_required": "Vyžadován server",
   "catchrate.hud.out_of_combat_penalty": "⚠ Mimo boj: 0.5x",
   "catchrate.hud.release_to_close": "Uvolněte %s pro zavření",
   "catchrate.hud.ball_comparison": "⚔ Porovnání Míčů (Kolo %d)",
-
-  "catchrate.ball.guaranteed_catch": "Zaručené chycení!",
-  "catchrate.ball.multiplier_always": "%sx vždy",
+  "catchrate.ball.guaranteed_catch": "Zaručené chycení",
+  "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Speciální efekt při chycení",
-  "catchrate.ball.ancient": "Starobylý: pouze síla hodu (1x míra)",
-
+  "catchrate.ball.ancient": "Starobylý (pouze síla hodu)",
   "catchrate.ball.quick.not_in_battle": "Funguje pouze v 1. kole",
-  "catchrate.ball.quick.effective": "5x v prvním kole!",
+  "catchrate.ball.quick.effective": "V prvním kole",
   "catchrate.ball.quick.ineffective": "Účinné pouze v 1. kole",
-
-  "catchrate.ball.timer.turn_info": "Kolo %d: %.1fx",
+  "catchrate.ball.timer.turn_info": "Kolo %d",
   "catchrate.ball.timer.scales": "Roste s koly",
-
   "catchrate.ball.dusk.dark_area": "Tmavá oblast (L%d)",
   "catchrate.ball.dusk.need_darkness": "Potřebuje tmu",
-
-  "catchrate.ball.dive.underwater": "Pod vodou!",
+  "catchrate.ball.dive.underwater": "Pod vodou",
   "catchrate.ball.dive.need_underwater": "Musí být pod vodou",
-
   "catchrate.ball.moon.not_night": "Účinné pouze v noci",
-  "catchrate.ball.moon.night_phase": "Noc (fáze %d): %.0fx",
-
-  "catchrate.ball.net.effective": "Typ Hmyz/Voda!",
+  "catchrate.ball.moon.night_phase": "Noc (fáze %d)",
+  "catchrate.ball.net.effective": "Typ Hmyz/Voda",
   "catchrate.ball.net.ineffective": "Není Hmyz/Voda",
-
-  "catchrate.ball.nest.effective": "Lv%d: %.1fx",
+  "catchrate.ball.nest.effective": "Lv%d",
   "catchrate.ball.nest.ineffective": "Pouze <Lv30",
-
-  "catchrate.ball.fast.effective": "Rychlost %d!",
+  "catchrate.ball.fast.effective": "Rychlost %d",
   "catchrate.ball.fast.ineffective": "Rychlost <100",
-
   "catchrate.ball.heavy.weight": "%.1fkg",
-
-  "catchrate.ball.beast.ultra_beast": "Ultra Bestie!",
-  "catchrate.ball.beast.penalty": "0.1x pokuta ne-UB",
-
-  "catchrate.ball.dream.sleeping": "Spí!",
+  "catchrate.ball.beast.ultra_beast": "Ultra Bestie",
+  "catchrate.ball.beast.penalty": "Pokuta ne-UB",
+  "catchrate.ball.dream.sleeping": "Spí",
   "catchrate.ball.dream.need_sleep": "Potřebuje stav spánku",
-
   "catchrate.ball.love.no_battler": "Žádné info o bojovníkovi",
   "catchrate.ball.love.need_battler": "Potřebuje aktivního bojovníka",
   "catchrate.ball.love.wild_genderless": "Divoký bez pohlaví",
@@ -73,19 +57,12 @@
   "catchrate.ball.love.need_opposite": "Potřebuje opačné pohlaví",
   "catchrate.ball.love.same_species": "Stejný druh + opačné %s",
   "catchrate.ball.love.opposite_gender": "Opačné pohlaví %s",
-
-  "catchrate.ball.level.effective": "%.0fx výhoda úrovně",
+  "catchrate.ball.level.effective": "Výhoda úrovně",
   "catchrate.ball.level.ineffective": "Potřebuje vyšší úroveň",
-  "catchrate.ball.level.requires_server": "Vyžaduje porovnání úrovně",
-
-  "catchrate.ball.repeat.effective": "3.5x - Již chycen!",
+  "catchrate.ball.repeat.effective": "Již chycen",
   "catchrate.ball.repeat.ineffective": "Nejprve chytťte tento druh",
-  "catchrate.ball.repeat.requires_server": "Vyžaduje Pokédex",
-
-  "catchrate.ball.lure.effective": "4x bonus rybaření!",
+  "catchrate.ball.lure.effective": "Bonus rybaření",
   "catchrate.ball.lure.ineffective": "Pouze chycení rybařením",
-  "catchrate.ball.lure.requires_server": "Vyžaduje kontext rybaření",
-
   "catchrate.message.enabled": "Míra Chycení: §aZapnuto",
   "catchrate.message.disabled": "Míra Chycení: §cVypnuto",
   "catchrate.message.position_reset": "Pozice HUD obnovena",

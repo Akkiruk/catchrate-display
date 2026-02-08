@@ -6,8 +6,6 @@ import com.catchrate.CatchRateFormula
 import com.catchrate.CatchRateKeybinds
 import com.catchrate.CatchRateResult
 import com.catchrate.config.CatchRateConfig
-import com.catchrate.network.CatchRateClientNetworking
-import com.catchrate.network.CatchRateResponsePayload
 import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
@@ -29,7 +27,6 @@ object HudTranslations {
     fun hp() = Component.translatable("catchrate.hud.hp").string
     fun wild() = Component.translatable("catchrate.hud.wild").string
     fun unknownPercent() = Component.translatable("catchrate.hud.unknown_percent").string
-    fun serverRequired() = Component.translatable("catchrate.hud.server_required").string
     fun outOfCombatPenalty() = Component.translatable("catchrate.hud.out_of_combat_penalty").string
     fun releaseToClose(key: String) = Component.translatable("catchrate.hud.release_to_close", key).string
     fun ballComparison(turn: Int) = Component.translatable("catchrate.hud.ball_comparison", turn).string
@@ -54,28 +51,11 @@ class CatchRateHudRenderer {
     private var cachedClientResult: CatchRateResult? = null
     private var lastClientCalcTick = 0L
     
-    private var lastServerResponse: CatchRateResponsePayload? = null
-    
     private var cachedComparison: List<BallComparisonCalculator.BallCatchRate>? = null
     private var lastComparisonTick = 0L
     private var lastComparisonTurnCount = 0
     
     private var tickCounter = 0L
-    
-    private var cachedServerHudData: ServerHudCache? = null
-    
-    private data class ServerHudCache(
-        val pokemonUuid: java.util.UUID,
-        val catchChance: Double,
-        val nameText: String,
-        val hpText: String,
-        val statusText: String,
-        val ballText: String,
-        val boxWidth: Int,
-        val hasStatus: Boolean
-    )
-    
-    private val serverRequiredBalls = setOf("love_ball", "level_ball", "repeat_ball", "lure_ball")
     
     companion object {
         private const val CLIENT_CALC_INTERVAL_TICKS = 5L
@@ -120,42 +100,23 @@ class CatchRateHudRenderer {
         
         checkCacheInvalidation(opponentPokemon, heldItem)
         
-        val ballItemId = getBallId(heldItem)
-        val ballName = ballItemId.substringAfter(":").lowercase()
-        val serverHasMod = CatchRateClientNetworking.isServerModPresent()
+        val ballName = getBallId(heldItem).lowercase()
         
         if (config.showBallComparison) {
             renderBallComparisonPanel(guiGraphics, minecraft, opponentPokemon, battle)
             return
         }
         
-        if (serverHasMod) {
-            CatchRateClientNetworking.requestCatchRate(opponentPokemon.uuid, ballItemId, turnCount)
-            val serverResponse = CatchRateClientNetworking.getCachedResponse(opponentPokemon.uuid)
-            if (serverResponse != null) {
-                lastServerResponse = serverResponse
-                renderServerModeHud(guiGraphics, minecraft, serverResponse)
-            } else if (lastServerResponse != null) {
-                renderServerModeHud(guiGraphics, minecraft, lastServerResponse!!)
-            }
-        } else {
-            if (ballName in serverRequiredBalls) {
-                renderUnsupportedBallHud(guiGraphics, minecraft, ballName)
-            } else {
-                val result = getClientCalculation(opponentPokemon, heldItem)
-                renderClientModeHud(guiGraphics, minecraft, result, ballName)
-            }
-        }
+        val result = getClientCalculation(opponentPokemon, heldItem)
+        renderClientModeHud(guiGraphics, minecraft, result, ballName)
     }
     
     private fun onBattleStart(battle: ClientBattle) {
         lastBattleId = battle.battleId
         turnCount = 1
         lastActionRequestCount = 0
-        CatchRateClientNetworking.clearCache()
         cachedClientResult = null
         cachedComparison = null
-        lastServerResponse = null
     }
     
     private fun updateTurnCount(battle: ClientBattle) {
@@ -163,7 +124,6 @@ class CatchRateHudRenderer {
         if (currentRequestCount > 0 && currentRequestCount != lastActionRequestCount) {
             if (lastActionRequestCount > 0) {
                 turnCount++
-                CatchRateClientNetworking.clearCache()
                 cachedClientResult = null
                 cachedComparison = null
             }
@@ -182,7 +142,6 @@ class CatchRateHudRenderer {
         if (statusName != lastStatusName) { needsInvalidation = true; lastStatusName = statusName }
         
         if (needsInvalidation) {
-            CatchRateClientNetworking.invalidateCache(pokemon.uuid)
             cachedClientResult = null
             cachedComparison = null
         }
@@ -195,10 +154,7 @@ class CatchRateHudRenderer {
         lastHpValue = -1F
         lastStatusName = null
         cachedClientResult = null
-        lastServerResponse = null
         cachedComparison = null
-        cachedServerHudData = null
-        CatchRateClientNetworking.clearCache()
     }
     
     private fun getClientCalculation(pokemon: ClientBattlePokemon, heldItem: ItemStack): CatchRateResult {
@@ -209,81 +165,6 @@ class CatchRateHudRenderer {
         return cachedClientResult!!
     }
     
-    private fun renderServerModeHud(guiGraphics: GuiGraphics, minecraft: Minecraft, data: CatchRateResponsePayload) {
-        val config = CatchRateConfig.get()
-        val font = minecraft.font
-        val screenWidth = minecraft.window.guiScaledWidth
-        val screenHeight = minecraft.window.guiScaledHeight
-        
-        val cache = cachedServerHudData
-        val needsRecalc = cache == null || cache.pokemonUuid != data.pokemonUuid || cache.catchChance != data.catchChance
-        
-        val hudCache = if (needsRecalc) {
-            val nameText = "${data.pokemonName} Lv${data.pokemonLevel}"
-            val hpMultiplier = (3.0 - 2.0 * data.hpPercent / 100.0) / 3.0
-            val hpText = "HP ${String.format("%.2f", hpMultiplier)}x"
-            val statusIcon = HudDrawing.getStatusIcon(data.statusEffect)
-            val statusText = "$statusIcon ${data.statusEffect} ${String.format("%.1f", data.statusMultiplier)}x"
-            val ballIcon = if (data.ballConditionMet) "●" else "○"
-            val ballText = "$ballIcon ${CatchRateFormula.formatBallNameCompact(data.ballName)} ${String.format("%.1f", data.ballMultiplier)}x"
-            
-            val percentText = if (data.isGuaranteed) {
-                HudTranslations.guaranteed()
-            } else {
-                "${CatchRateFormula.formatCatchPercentage(data.catchChance, false)}%"
-            }
-            
-            val textWidths = mutableListOf(
-                font.width(nameText),
-                font.width(hpText),
-                font.width(ballText),
-                font.width(data.ballConditionDesc),
-                font.width(percentText)
-            )
-            val hasStatus = data.statusMultiplier > 1.0
-            if (hasStatus) textWidths.add(font.width(statusText))
-            
-            val boxWidth = (textWidths.maxOrNull() ?: 100) + 16
-            
-            ServerHudCache(data.pokemonUuid, data.catchChance, nameText, hpText, statusText, ballText, boxWidth, hasStatus).also {
-                cachedServerHudData = it
-            }
-        } else cache!!
-        
-        val boxHeight = if (hudCache.hasStatus) 82 else 72
-        val (x, y) = config.getPosition(screenWidth, screenHeight, hudCache.boxWidth, boxHeight)
-        
-        HudDrawing.drawStyledPanel(guiGraphics, x, y, hudCache.boxWidth, boxHeight, data.catchChance)
-        
-        guiGraphics.drawString(font, hudCache.nameText, x + 6, y + 4, Colors.TEXT_WHITE)
-        
-        val barY = y + 16
-        if (data.isGuaranteed) {
-            HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, hudCache.boxWidth - 12, 100.0, true)
-            guiGraphics.drawString(font, HudTranslations.guaranteed(), x + 6, barY + 12, Colors.TEXT_GREEN)
-        } else {
-            HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, hudCache.boxWidth - 12, data.catchChance, false)
-            val percentText = "${CatchRateFormula.formatCatchPercentage(data.catchChance, false)}%"
-            val percentColor = HudDrawing.getChanceColorInt(data.catchChance)
-            guiGraphics.drawString(font, percentText, x + 6, barY + 12, percentColor)
-        }
-        
-        var currentY = barY + 26
-        guiGraphics.drawString(font, hudCache.hpText, x + 6, currentY, Colors.TEXT_GRAY)
-        
-        if (hudCache.hasStatus) {
-            currentY += 10
-            guiGraphics.drawString(font, hudCache.statusText, x + 6, currentY, Colors.TEXT_PURPLE)
-        }
-        
-        currentY += 10
-        val ballColor = HudDrawing.getBallMultiplierColor(data.ballMultiplier)
-        guiGraphics.drawString(font, hudCache.ballText, x + 6, currentY, ballColor)
-        
-        currentY += 10
-        val conditionColor = if (data.ballConditionMet) Colors.TEXT_DARK_GREEN else Colors.TEXT_DARK_GRAY
-        guiGraphics.drawString(font, data.ballConditionDesc, x + 6, currentY, conditionColor)
-    }
     
     private fun renderClientModeHud(guiGraphics: GuiGraphics, minecraft: Minecraft, result: CatchRateResult, ballName: String) {
         val config = CatchRateConfig.get()
@@ -301,7 +182,11 @@ class CatchRateHudRenderer {
         val statusText = "$statusIcon ${HudTranslations.status(result.statusName)}"
         val ballDisplay = CatchRateFormula.formatBallNameCompact(result.ballName)
         val turnInfo = if (ballName == "timer_ball" || ballName == "quick_ball") " T$turnCount" else ""
-        val ballText = "● $ballDisplay ${String.format("%.1f", result.ballMultiplier)}x$turnInfo"
+        val ballIcon = if (result.ballConditionMet) "●" else "○"
+        val ballText = "$ballIcon $ballDisplay ${String.format("%.1f", result.ballMultiplier)}x$turnInfo"
+        
+        val hasStatus = result.statusMultiplier > 1.0
+        val hasConditionDesc = result.ballConditionReason.isNotBlank()
         
         val textWidths = mutableListOf(
             font.width(headerText),
@@ -309,13 +194,15 @@ class CatchRateHudRenderer {
             font.width(ballText),
             88
         )
-        if (result.statusMultiplier > 1.0) {
-            textWidths.add(font.width(statusText))
-        }
+        if (hasStatus) textWidths.add(font.width(statusText))
+        if (hasConditionDesc) textWidths.add(font.width(result.ballConditionReason))
         
         val boxWidth = (textWidths.maxOrNull() ?: 100) + 16
-        val hasStatus = result.statusMultiplier > 1.0
-        val boxHeight = if (hasStatus) 78 else 68
+        // Dynamic height: header section (header + bar + percent + HP bar) = 52px base, then 10px per detail row, 6px bottom
+        var clientDetailRows = 1 // ball (always present)
+        if (hasStatus) clientDetailRows++
+        if (hasConditionDesc) clientDetailRows++
+        val boxHeight = 52 + clientDetailRows * 10 + 6
         val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
         
         HudDrawing.drawStyledPanel(guiGraphics, x, y, boxWidth, boxHeight, result.percentage)
@@ -345,29 +232,12 @@ class CatchRateHudRenderer {
         
         val ballColor = HudDrawing.getBallMultiplierColor(result.ballMultiplier)
         guiGraphics.drawString(font, ballText, x + 6, currentY, ballColor)
-    }
-    
-    private fun renderUnsupportedBallHud(guiGraphics: GuiGraphics, minecraft: Minecraft, ballName: String) {
-        val config = CatchRateConfig.get()
-        val font = minecraft.font
-        val screenWidth = minecraft.window.guiScaledWidth
-        val screenHeight = minecraft.window.guiScaledHeight
         
-        val boxWidth = 130
-        val boxHeight = 52
-        val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
-        
-        HudDrawing.drawStyledPanel(guiGraphics, x, y, boxWidth, boxHeight, 0.0)
-        
-        guiGraphics.drawString(font, HudTranslations.header(), x + 6, y + 4, Colors.TEXT_WHITE)
-        
-        val barY = y + 16
-        HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, 0.0, false)
-        guiGraphics.drawString(font, HudTranslations.unknownPercent(), x + 6, barY + 12, Colors.TEXT_YELLOW)
-        
-        val infoY = barY + 24
-        guiGraphics.drawString(font, CatchRateFormula.formatBallNameCompact(ballName), x + 6, infoY, Colors.TEXT_RED)
-        guiGraphics.drawString(font, HudTranslations.serverRequired(), x + 6, infoY + 10, Colors.TEXT_DARK_GRAY)
+        if (hasConditionDesc) {
+            currentY += 10
+            val conditionColor = if (result.ballConditionMet) Colors.TEXT_DARK_GREEN else Colors.TEXT_DARK_GRAY
+            guiGraphics.drawString(font, result.ballConditionReason, x + 6, currentY, conditionColor)
+        }
     }
     
     private fun renderOutOfCombatHud(guiGraphics: GuiGraphics, minecraft: Minecraft, player: LocalPlayer) {
@@ -377,34 +247,9 @@ class CatchRateHudRenderer {
         val pokemonEntity = BallComparisonCalculator.getLookedAtPokemon() ?: return
         val pokemon = pokemonEntity.pokemon
         
-        val ballItemId = getBallId(heldItem)
-        val ballName = ballItemId.substringAfter(":").lowercase()
+        val ballName = getBallId(heldItem).lowercase()
         
-        // Route to server-side calculation when server mod is present (fixes multiplayer accuracy)
-        if (CatchRateClientNetworking.isServerModPresent()) {
-            renderOutOfCombatServerHud(guiGraphics, minecraft, pokemonEntity, ballItemId, ballName)
-        } else {
-            renderOutOfCombatClientHud(guiGraphics, minecraft, pokemonEntity, ballName)
-        }
-    }
-    
-    /**
-     * Render out-of-combat HUD using server-side data (accurate in multiplayer).
-     */
-    private fun renderOutOfCombatServerHud(guiGraphics: GuiGraphics, minecraft: Minecraft, pokemonEntity: com.cobblemon.mod.common.entity.pokemon.PokemonEntity, ballItemId: String, ballName: String) {
-        val pokemon = pokemonEntity.pokemon
-        
-        // Request from server using entity network ID
-        CatchRateClientNetworking.requestWorldCatchRate(pokemonEntity.id, "cobblemon:$ballName")
-        
-        // Try to get cached response
-        val serverResponse = CatchRateClientNetworking.getCachedWorldResponse(pokemon.uuid)
-        if (serverResponse != null) {
-            renderServerModeHud(guiGraphics, minecraft, serverResponse)
-        } else {
-            // Fall back to client calculation while waiting for server response
-            renderOutOfCombatClientHud(guiGraphics, minecraft, pokemonEntity, ballName)
-        }
+        renderOutOfCombatClientHud(guiGraphics, minecraft, pokemonEntity, ballName)
     }
     
     /**
@@ -443,18 +288,23 @@ class CatchRateHudRenderer {
         }
         
         val wildText = HudTranslations.wild()
+        val hasConditionDesc = result.reason.isNotBlank()
         val textWidths = mutableListOf(
             font.width(nameText) + font.width(" $wildText") + 8,
             font.width(hpText),
             font.width(ballText),
-            font.width(result.reason),
             font.width(penaltyText),
             font.width(percentText)
         )
+        if (hasConditionDesc) textWidths.add(font.width(result.reason))
         if (hasStatus) textWidths.add(font.width(statusText))
         
         val boxWidth = (textWidths.maxOrNull() ?: 100) + 16
-        val boxHeight = if (hasStatus) 92 else 82
+        // Dynamic height: header section (name + bar + percent) = 42px base, then 10px per detail row
+        var oocDetailRows = 3 // HP + ball + penalty (always present)
+        if (hasStatus) oocDetailRows++
+        if (hasConditionDesc) oocDetailRows++
+        val boxHeight = 42 + oocDetailRows * 10
         val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
         
         HudDrawing.drawStyledPanel(guiGraphics, x, y, boxWidth, boxHeight, result.catchRate, isWild = true)
@@ -485,9 +335,11 @@ class CatchRateHudRenderer {
         val ballColor = HudDrawing.getBallMultiplierColor(result.multiplier.toFloat())
         guiGraphics.drawString(font, ballText, x + 6, currentY, ballColor)
         
-        currentY += 10
-        val conditionColor = if (result.conditionMet) Colors.TEXT_DARK_GREEN else Colors.TEXT_DARK_GRAY
-        guiGraphics.drawString(font, result.reason, x + 6, currentY, conditionColor)
+        if (hasConditionDesc) {
+            currentY += 10
+            val conditionColor = if (result.conditionMet) Colors.TEXT_DARK_GREEN else Colors.TEXT_DARK_GRAY
+            guiGraphics.drawString(font, result.reason, x + 6, currentY, conditionColor)
+        }
         
         currentY += 10
         guiGraphics.drawString(font, penaltyText, x + 6, currentY, Colors.TEXT_ORANGE)

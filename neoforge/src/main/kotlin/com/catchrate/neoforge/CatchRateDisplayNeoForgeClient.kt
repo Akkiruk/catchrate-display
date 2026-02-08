@@ -3,21 +3,17 @@ package com.catchrate.neoforge
 import com.catchrate.CatchRateKeybinds
 import com.catchrate.CatchRateMod
 import com.catchrate.client.CatchRateHudRenderer
-import com.catchrate.network.CatchRateClientNetworking
 import net.minecraft.client.Minecraft
 import net.neoforged.api.distmarker.Dist
 import net.neoforged.bus.api.SubscribeEvent
 import net.neoforged.fml.common.EventBusSubscriber
-import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent
 import net.neoforged.neoforge.client.event.ClientTickEvent
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent
-import net.neoforged.neoforge.client.gui.GuiLayerManager
 
 /**
  * NeoForge client-side event handler.
- * Uses @EventBusSubscriber for mod bus events (keymappings, GUI layers)
- * and manual registration for game bus events (tick, connection).
+ * Pure client-side - no networking.
  */
 @EventBusSubscriber(modid = CatchRateMod.NEOFORGE_MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = [Dist.CLIENT])
 object CatchRateDisplayNeoForgeClient {
@@ -54,15 +50,5 @@ object CatchRateDisplayNeoForgeClientEvents {
         if (minecraft.player != null) {
             CatchRateKeybinds.tick(minecraft)
         }
-    }
-    
-    @SubscribeEvent
-    fun onClientConnect(event: ClientPlayerNetworkEvent.LoggingIn) {
-        CatchRateClientNetworking.onConnect()
-    }
-    
-    @SubscribeEvent
-    fun onClientDisconnect(event: ClientPlayerNetworkEvent.LoggingOut) {
-        CatchRateClientNetworking.onDisconnect()
     }
 }

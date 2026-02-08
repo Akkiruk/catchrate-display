@@ -8,7 +8,6 @@
   "key.catchrate.move_left": "Flytta HUD Vänster",
   "key.catchrate.move_right": "Flytta HUD Höger",
   "key.catchrate.cycle_anchor": "Byt HUD-ankare",
-
   "catchrate.status.asleep": "Sovande",
   "catchrate.status.frozen": "Frusen",
   "catchrate.status.paralyzed": "Förlamad",
@@ -16,56 +15,41 @@
   "catchrate.status.badly_poisoned": "Svårt Förgiftad",
   "catchrate.status.burned": "Bränd",
   "catchrate.status.none": "Ingen",
-
   "catchrate.hud.header": "Fångstkans",
   "catchrate.hud.guaranteed": "★ 100% FÅNGST ★",
   "catchrate.hud.guaranteed_short": "✓ GARANTERAD",
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "VILD",
   "catchrate.hud.unknown_percent": "??%",
-  "catchrate.hud.server_required": "Server krävs",
   "catchrate.hud.out_of_combat_penalty": "⚠ Utanför strid: 0.5x",
   "catchrate.hud.release_to_close": "Släpp %s för att stänga",
   "catchrate.hud.ball_comparison": "⚔ Bolljämförelse (Tur %d)",
-
-  "catchrate.ball.guaranteed_catch": "Garanterad fångst!",
-  "catchrate.ball.multiplier_always": "%sx alltid",
+  "catchrate.ball.guaranteed_catch": "Garanterad fångst",
+  "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Specialeffekt vid fångst",
-  "catchrate.ball.ancient": "Uråldrig: endast kastkraft (1x chans)",
-
+  "catchrate.ball.ancient": "Uråldrig (endast kastkraft)",
   "catchrate.ball.quick.not_in_battle": "Fungerar bara i tur 1",
-  "catchrate.ball.quick.effective": "5x i första turen!",
+  "catchrate.ball.quick.effective": "I första turen",
   "catchrate.ball.quick.ineffective": "Endast effektiv i tur 1",
-
-  "catchrate.ball.timer.turn_info": "Tur %d: %.1fx",
+  "catchrate.ball.timer.turn_info": "Tur %d",
   "catchrate.ball.timer.scales": "Skalas med turer",
-
   "catchrate.ball.dusk.dark_area": "Mörkt område (L%d)",
   "catchrate.ball.dusk.need_darkness": "Behöver mörker",
-
-  "catchrate.ball.dive.underwater": "Undervattens!",
+  "catchrate.ball.dive.underwater": "Undervattens",
   "catchrate.ball.dive.need_underwater": "Måste vara under vatten",
-
   "catchrate.ball.moon.not_night": "Endast effektiv på natten",
-  "catchrate.ball.moon.night_phase": "Natt (fas %d): %.0fx",
-
-  "catchrate.ball.net.effective": "Insekt/Vatten-typ!",
+  "catchrate.ball.moon.night_phase": "Natt (fas %d)",
+  "catchrate.ball.net.effective": "Insekt/Vatten-typ",
   "catchrate.ball.net.ineffective": "Inte Insekt/Vatten",
-
-  "catchrate.ball.nest.effective": "Niv%d: %.1fx",
+  "catchrate.ball.nest.effective": "Niv%d",
   "catchrate.ball.nest.ineffective": "Endast <Niv30",
-
-  "catchrate.ball.fast.effective": "Hastighet %d!",
+  "catchrate.ball.fast.effective": "Hastighet %d",
   "catchrate.ball.fast.ineffective": "Hastighet <100",
-
   "catchrate.ball.heavy.weight": "%.1fkg",
-
-  "catchrate.ball.beast.ultra_beast": "Ultra Beast!",
-  "catchrate.ball.beast.penalty": "0.1x icke-UB straff",
-
-  "catchrate.ball.dream.sleeping": "Sover!",
+  "catchrate.ball.beast.ultra_beast": "Ultra Beast",
+  "catchrate.ball.beast.penalty": "Icke-UB straff",
+  "catchrate.ball.dream.sleeping": "Sover",
   "catchrate.ball.dream.need_sleep": "Behöver sömnstatus",
-
   "catchrate.ball.love.no_battler": "Ingen stridsinfo",
   "catchrate.ball.love.need_battler": "Behöver aktiv stridare",
   "catchrate.ball.love.wild_genderless": "Vilda könslös",
@@ -73,19 +57,12 @@
   "catchrate.ball.love.need_opposite": "Behöver motsatt kön",
   "catchrate.ball.love.same_species": "Samma art + motsatt %s",
   "catchrate.ball.love.opposite_gender": "Motsatt kön %s",
-
-  "catchrate.ball.level.effective": "%.0fx nivåfördel",
+  "catchrate.ball.level.effective": "Nivåfördel",
   "catchrate.ball.level.ineffective": "Behöver högre nivå",
-  "catchrate.ball.level.requires_server": "Kräver nivåjämförelse",
-
-  "catchrate.ball.repeat.effective": "3.5x - Redan fångad!",
+  "catchrate.ball.repeat.effective": "Redan fångad",
   "catchrate.ball.repeat.ineffective": "Fånga denna art först",
-  "catchrate.ball.repeat.requires_server": "Kräver Pokédex",
-
-  "catchrate.ball.lure.effective": "4x fiskebonus!",
+  "catchrate.ball.lure.effective": "Fiskebonus",
   "catchrate.ball.lure.ineffective": "Endast fiskade Pokémon",
-  "catchrate.ball.lure.requires_server": "Kräver fiskekontext",
-
   "catchrate.message.enabled": "Fångstkans: §aAktiverad",
   "catchrate.message.disabled": "Fångstkans: §cInaktiverad",
   "catchrate.message.position_reset": "HUD-position återställd",

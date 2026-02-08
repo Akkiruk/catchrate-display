@@ -4,13 +4,16 @@ import com.catchrate.BallMultiplierCalculator.BallContext
 import com.catchrate.BallMultiplierCalculator.PartyMember
 import com.catchrate.CatchRateConstants.NIGHT_END_TICK
 import com.catchrate.CatchRateConstants.NIGHT_START_TICK
+import com.cobblemon.mod.common.api.pokedex.PokedexEntryProgress
+import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Gender
 import com.cobblemon.mod.common.pokemon.Pokemon
+import net.minecraft.client.Minecraft
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.entity.player.Player
-import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.Level
 
 /**
@@ -18,7 +21,7 @@ import net.minecraft.world.level.Level
  * Centralizes context building logic that was duplicated across:
  * - BallComparisonCalculator.buildBattleContext()
  * - BallComparisonCalculator.buildWorldContext()
- * - CatchRateServerNetworking inline context building
+ * - CatchRateHudRenderer client-side context building
  */
 object BallContextFactory {
     
@@ -35,6 +38,7 @@ object BallContextFactory {
     ): BallContext {
         val species = pokemon.species
         val timeOfDay = level.dayTime % 24000
+        val aspects = getPokemonAspectsFromBattle(pokemon)
         
         return BallContext(
             speciesId = species.resourceIdentifier.toString(),
@@ -52,7 +56,9 @@ object BallContextFactory {
             isPlayerUnderwater = player.isUnderWater,
             inBattle = true,
             turnCount = turnCount,
-            activeBattler = getActiveBattlerFromClientBattle(battle)
+            activeBattler = getActiveBattlerFromClientBattle(battle),
+            hasCaughtSpecies = checkHasCaughtSpecies(species.resourceIdentifier),
+            pokemonAspects = aspects
         )
     }
     
@@ -66,7 +72,13 @@ object BallContextFactory {
         level: Level
     ): BallContext {
         val pokemon = entity.pokemon
-        return fromPokemon(pokemon, player, level, inBattle = false, turnCount = 0, activeBattler = null)
+        CatchRateMod.debugThrottled("Context", "fromWorldPokemon: ${pokemon.species.name} UUID=${entity.uuid} | entity.aspects=${entity.aspects}")
+        return fromPokemon(
+            pokemon, player, level,
+            inBattle = false, turnCount = 0, activeBattler = null,
+            hasCaughtSpecies = checkHasCaughtSpecies(pokemon.species.resourceIdentifier),
+            pokemonAspects = entity.aspects
+        )
     }
     
     /**
@@ -79,7 +91,9 @@ object BallContextFactory {
         level: Level,
         inBattle: Boolean,
         turnCount: Int,
-        activeBattler: PartyMember?
+        activeBattler: PartyMember?,
+        hasCaughtSpecies: Boolean? = null,
+        pokemonAspects: Set<String> = emptySet()
     ): BallContext {
         val species = pokemon.species
         val timeOfDay = level.dayTime % 24000
@@ -100,45 +114,47 @@ object BallContextFactory {
             isPlayerUnderwater = player.isUnderWater,
             inBattle = inBattle,
             turnCount = turnCount,
-            activeBattler = activeBattler
+            activeBattler = activeBattler,
+            hasCaughtSpecies = hasCaughtSpecies,
+            pokemonAspects = pokemonAspects
         )
+    }
+    
+
+    
+    // ==================== HELPER METHODS ====================
+    
+    /**
+     * Check if the player has caught this species using the client-synced Pokédex.
+     * Returns null if the check fails (e.g., Pokédex not yet synced).
+     */
+    private fun checkHasCaughtSpecies(speciesId: ResourceLocation): Boolean? {
+        return try {
+            val knowledge = CobblemonClient.clientPokedexData.getHighestKnowledgeForSpecies(speciesId)
+            val caught = knowledge == PokedexEntryProgress.CAUGHT
+            CatchRateMod.debugThrottled("Pokedex", "$speciesId -> knowledge=$knowledge, caught=$caught")
+            caught
+        } catch (e: Exception) {
+            CatchRateMod.debug("Pokedex", "Could not check Pokédex for $speciesId: ${e.message}")
+            null
+        }
     }
     
     /**
-     * Create a BallContext for server-side calculations.
-     * Used by CatchRateServerNetworking.
+     * Get Pokemon aspects from ClientBattlePokemon via its FloatingState.
+     * The private `aspects` field is mirrored to `state.currentAspects` which is accessible.
+     * This includes persistent aspects like "fished" from fishing encounters.
      */
-    fun fromServerPokemon(
-        pokemon: Pokemon,
-        player: ServerPlayer,
-        level: Level,
-        turnCount: Int,
-        activeBattler: PartyMember?
-    ): BallContext {
-        val species = pokemon.species
-        val timeOfDay = level.dayTime % 24000
-        
-        return BallContext(
-            speciesId = species.resourceIdentifier.toString(),
-            level = pokemon.level,
-            gender = pokemon.gender,
-            primaryType = pokemon.primaryType.name,
-            secondaryType = pokemon.secondaryType?.name,
-            weight = species.weight,
-            baseSpeed = getBaseSpeed(species.baseStats),
-            labels = safeGetLabels(species),
-            statusPath = pokemon.status?.status?.name?.path,
-            lightLevel = level.getMaxLocalRawBrightness(player.blockPosition()),
-            isNight = timeOfDay in NIGHT_START_TICK..NIGHT_END_TICK,
-            moonPhase = level.moonPhase,
-            isPlayerUnderwater = player.isUnderWater,
-            inBattle = true,
-            turnCount = turnCount,
-            activeBattler = activeBattler
-        )
+    private fun getPokemonAspectsFromBattle(pokemon: ClientBattlePokemon): Set<String> {
+        return try {
+            val aspects = pokemon.state.currentAspects
+            CatchRateMod.debugThrottled("Aspects", "${pokemon.species.name} battle aspects: $aspects")
+            aspects
+        } catch (e: Exception) {
+            CatchRateMod.debug("Aspects", "Could not get battle pokemon aspects: ${e.message}")
+            emptySet()
+        }
     }
-    
-    // ==================== HELPER METHODS ====================
     
     private fun getActiveBattlerFromClientBattle(battle: ClientBattle?): PartyMember? {
         if (battle == null) return null
@@ -147,11 +163,12 @@ object BallContextFactory {
             if (activePokemon != null) {
                 PartyMember(
                     speciesId = activePokemon.species.resourceIdentifier.toString(),
-                    gender = safeParseGender(activePokemon.gender.name)
+                    gender = safeParseGender(activePokemon.gender.name),
+                    level = activePokemon.level
                 )
             } else null
         } catch (e: Exception) {
-            CatchRateMod.debug("Could not access active battler: ${e.message}")
+            CatchRateMod.debug("Battle", "Could not access active battler: ${e.message}")
             null
         }
     }

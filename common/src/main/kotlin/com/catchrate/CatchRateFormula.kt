@@ -20,7 +20,7 @@ import kotlin.math.roundToInt
  * Consolidates the catch formula, status multipliers, HP calculations, and related utilities.
  * 
  * This eliminates duplication across CatchRateCalculator, BallComparisonCalculator, 
- * and CatchRateServerNetworking.
+ * and CatchRateHudRenderer.
  */
 object CatchRateFormula {
     

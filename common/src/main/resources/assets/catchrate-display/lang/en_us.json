@@ -23,48 +23,47 @@
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "WILD",
   "catchrate.hud.unknown_percent": "??%",
-  "catchrate.hud.server_required": "Server required",
   "catchrate.hud.out_of_combat_penalty": "⚠ Out of combat: 0.5x",
   "catchrate.hud.release_to_close": "Release %s to close",
   "catchrate.hud.ball_comparison": "⚔ Ball Comparison (Turn %d)",
 
-  "catchrate.ball.guaranteed_catch": "Guaranteed catch!",
-  "catchrate.ball.multiplier_always": "%sx always",
+  "catchrate.ball.guaranteed_catch": "Guaranteed catch",
+  "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Special effect on capture",
-  "catchrate.ball.ancient": "Ancient: throwPower only (1x catch rate)",
+  "catchrate.ball.ancient": "Ancient ball (throw power only)",
 
   "catchrate.ball.quick.not_in_battle": "Only works turn 1 in battle",
-  "catchrate.ball.quick.effective": "5x on first turn!",
-  "catchrate.ball.quick.ineffective": "Only effective turn 1",
+  "catchrate.ball.quick.effective": "First turn of battle",
+  "catchrate.ball.quick.ineffective": "Not first turn",
 
-  "catchrate.ball.timer.turn_info": "Turn %d: %.1fx",
-  "catchrate.ball.timer.scales": "Scales with turns",
+  "catchrate.ball.timer.turn_info": "Turn %d",
+  "catchrate.ball.timer.scales": "Increases each turn",
 
   "catchrate.ball.dusk.dark_area": "Dark area (L%d)",
   "catchrate.ball.dusk.need_darkness": "Need darkness",
 
-  "catchrate.ball.dive.underwater": "Underwater!",
-  "catchrate.ball.dive.need_underwater": "Need to be underwater",
+  "catchrate.ball.dive.underwater": "Underwater",
+  "catchrate.ball.dive.need_underwater": "Not underwater",
 
-  "catchrate.ball.moon.not_night": "Only effective at night",
-  "catchrate.ball.moon.night_phase": "Night (phase %d): %.0fx",
+  "catchrate.ball.moon.not_night": "Not nighttime",
+  "catchrate.ball.moon.night_phase": "Moon phase %d",
 
-  "catchrate.ball.net.effective": "Bug/Water type!",
-  "catchrate.ball.net.ineffective": "Not Bug/Water",
+  "catchrate.ball.net.effective": "Bug/Water type",
+  "catchrate.ball.net.ineffective": "Not Bug/Water type",
 
-  "catchrate.ball.nest.effective": "Lv%d: %.1fx",
-  "catchrate.ball.nest.ineffective": "Only <Lv30",
+  "catchrate.ball.nest.effective": "Target Lv%d",
+  "catchrate.ball.nest.ineffective": "Target Lv30+",
 
-  "catchrate.ball.fast.effective": "Speed %d!",
-  "catchrate.ball.fast.ineffective": "Speed <100",
+  "catchrate.ball.fast.effective": "Base speed: %d",
+  "catchrate.ball.fast.ineffective": "Base speed under 100",
 
-  "catchrate.ball.heavy.weight": "%.1fkg",
+  "catchrate.ball.heavy.weight": "Weight: %.1fkg",
 
-  "catchrate.ball.beast.ultra_beast": "Ultra Beast!",
-  "catchrate.ball.beast.penalty": "0.1x non-UB penalty",
+  "catchrate.ball.beast.ultra_beast": "Ultra Beast",
+  "catchrate.ball.beast.penalty": "Not an Ultra Beast",
 
-  "catchrate.ball.dream.sleeping": "Sleeping!",
-  "catchrate.ball.dream.need_sleep": "Need sleep status",
+  "catchrate.ball.dream.sleeping": "Target is asleep",
+  "catchrate.ball.dream.need_sleep": "Target not asleep",
 
   "catchrate.ball.love.no_battler": "No battler info",
   "catchrate.ball.love.need_battler": "Need active battler",
@@ -74,17 +73,14 @@
   "catchrate.ball.love.same_species": "Same species + opposite %s",
   "catchrate.ball.love.opposite_gender": "Opposite gender %s",
 
-  "catchrate.ball.level.effective": "%.0fx level advantage",
-  "catchrate.ball.level.ineffective": "Need higher level",
-  "catchrate.ball.level.requires_server": "Requires level comparison",
+  "catchrate.ball.level.effective": "Level advantage",
+  "catchrate.ball.level.ineffective": "No level advantage",
 
-  "catchrate.ball.repeat.effective": "3.5x - Already caught!",
-  "catchrate.ball.repeat.ineffective": "Need to catch this species first",
-  "catchrate.ball.repeat.requires_server": "Requires Pokédex",
+  "catchrate.ball.repeat.effective": "Previously caught species",
+  "catchrate.ball.repeat.ineffective": "Species not yet caught",
 
-  "catchrate.ball.lure.effective": "4x fishing bonus!",
-  "catchrate.ball.lure.ineffective": "Only for fished Pokémon",
-  "catchrate.ball.lure.requires_server": "Requires fishing context",
+  "catchrate.ball.lure.effective": "Fishing encounter",
+  "catchrate.ball.lure.ineffective": "Not a fishing encounter",
 
   "catchrate.message.enabled": "Catch Rate: §aEnabled",
   "catchrate.message.disabled": "Catch Rate: §cDisabled",

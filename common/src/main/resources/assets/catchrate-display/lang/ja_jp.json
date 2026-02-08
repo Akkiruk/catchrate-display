@@ -8,7 +8,6 @@
   "key.catchrate.move_left": "HUDを左に移動",
   "key.catchrate.move_right": "HUDを右に移動",
   "key.catchrate.cycle_anchor": "HUDアンカーを切り替え",
-
   "catchrate.status.asleep": "眠り",
   "catchrate.status.frozen": "凍り",
   "catchrate.status.paralyzed": "まひ",
@@ -16,56 +15,41 @@
   "catchrate.status.badly_poisoned": "猛毒",
   "catchrate.status.burned": "やけど",
   "catchrate.status.none": "なし",
-
   "catchrate.hud.header": "捕獲率",
   "catchrate.hud.guaranteed": "★ 捕獲確定 ★",
   "catchrate.hud.guaranteed_short": "✓ 確定",
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "野生",
   "catchrate.hud.unknown_percent": "??%",
-  "catchrate.hud.server_required": "サーバー必須",
   "catchrate.hud.out_of_combat_penalty": "⚠ 戦闘外: 0.5x",
   "catchrate.hud.release_to_close": "%sを離して閉じる",
   "catchrate.hud.ball_comparison": "⚔ ボール比較 (ターン %d)",
-
-  "catchrate.ball.guaranteed_catch": "捕獲確定！",
-  "catchrate.ball.multiplier_always": "%sx 常時",
+  "catchrate.ball.guaranteed_catch": "捕獲確定",
+  "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "捕獲時の特殊効果",
-  "catchrate.ball.ancient": "古代: 投げ力のみ (1x 捕獲率)",
-
+  "catchrate.ball.ancient": "古代 (投げ力のみ)",
   "catchrate.ball.quick.not_in_battle": "戦闘のターン1でのみ有効",
-  "catchrate.ball.quick.effective": "初ターン 5x！",
+  "catchrate.ball.quick.effective": "初ターン",
   "catchrate.ball.quick.ineffective": "ターン1のみ有効",
-
-  "catchrate.ball.timer.turn_info": "ターン %d: %.1fx",
+  "catchrate.ball.timer.turn_info": "ターン %d",
   "catchrate.ball.timer.scales": "ターン数で増加",
-
   "catchrate.ball.dusk.dark_area": "暗い場所 (L%d)",
   "catchrate.ball.dusk.need_darkness": "暗さが必要",
-
-  "catchrate.ball.dive.underwater": "水中！",
+  "catchrate.ball.dive.underwater": "水中",
   "catchrate.ball.dive.need_underwater": "水中である必要あり",
-
   "catchrate.ball.moon.not_night": "夜のみ有効",
-  "catchrate.ball.moon.night_phase": "夜 (月相 %d): %.0fx",
-
-  "catchrate.ball.net.effective": "むし/みずタイプ！",
+  "catchrate.ball.moon.night_phase": "夜 (月相 %d)",
+  "catchrate.ball.net.effective": "むし/みずタイプ",
   "catchrate.ball.net.ineffective": "むし/みずではない",
-
-  "catchrate.ball.nest.effective": "Lv%d: %.1fx",
+  "catchrate.ball.nest.effective": "Lv%d",
   "catchrate.ball.nest.ineffective": "Lv30未満のみ",
-
-  "catchrate.ball.fast.effective": "素早さ %d！",
+  "catchrate.ball.fast.effective": "素早さ %d",
   "catchrate.ball.fast.ineffective": "素早さ<100",
-
   "catchrate.ball.heavy.weight": "%.1fkg",
-
-  "catchrate.ball.beast.ultra_beast": "ウルトラビースト！",
-  "catchrate.ball.beast.penalty": "0.1x UB以外ペナルティ",
-
-  "catchrate.ball.dream.sleeping": "眠っている！",
+  "catchrate.ball.beast.ultra_beast": "ウルトラビースト",
+  "catchrate.ball.beast.penalty": "UB以外ペナルティ",
+  "catchrate.ball.dream.sleeping": "眠っている",
   "catchrate.ball.dream.need_sleep": "眠り状態が必要",
-
   "catchrate.ball.love.no_battler": "バトラー情報なし",
   "catchrate.ball.love.need_battler": "アクティブなバトラーが必要",
   "catchrate.ball.love.wild_genderless": "野生は性別なし",
@@ -73,19 +57,12 @@
   "catchrate.ball.love.need_opposite": "異性のバトラーが必要",
   "catchrate.ball.love.same_species": "同種 + 異性 %s",
   "catchrate.ball.love.opposite_gender": "異性 %s",
-
-  "catchrate.ball.level.effective": "%.0fx レベル優位",
+  "catchrate.ball.level.effective": "レベル優位",
   "catchrate.ball.level.ineffective": "より高いレベルが必要",
-  "catchrate.ball.level.requires_server": "レベル比較が必要",
-
-  "catchrate.ball.repeat.effective": "3.5x - 捕獲済み！",
+  "catchrate.ball.repeat.effective": "捕獲済み",
   "catchrate.ball.repeat.ineffective": "この種を先に捕獲する必要あり",
-  "catchrate.ball.repeat.requires_server": "ポケモン図鑑が必要",
-
-  "catchrate.ball.lure.effective": "4x 釣りボーナス！",
+  "catchrate.ball.lure.effective": "釣りボーナス",
   "catchrate.ball.lure.ineffective": "釣ったポケモンのみ",
-  "catchrate.ball.lure.requires_server": "釣りコンテキストが必要",
-
   "catchrate.message.enabled": "捕獲率: §a有効",
   "catchrate.message.disabled": "捕獲率: §c無効",
   "catchrate.message.position_reset": "HUD位置をリセット",

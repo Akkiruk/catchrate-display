@@ -1,8 +1,6 @@
 package com.catchrate.platform
 
 import dev.architectury.injectables.annotations.ExpectPlatform
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload
-import net.minecraft.server.level.ServerPlayer
 import java.nio.file.Path
 
 /**
@@ -15,16 +13,4 @@ object PlatformHelper {
     @JvmStatic
     @ExpectPlatform
     fun getConfigDir(): Path = throw AssertionError("@ExpectPlatform not replaced")
-
-    @JvmStatic
-    @ExpectPlatform
-    fun isServerModPresent(): Boolean = throw AssertionError("@ExpectPlatform not replaced")
-
-    @JvmStatic
-    @ExpectPlatform
-    fun sendToServer(payload: CustomPacketPayload): Unit = throw AssertionError("@ExpectPlatform not replaced")
-
-    @JvmStatic
-    @ExpectPlatform
-    fun sendToPlayer(player: ServerPlayer, payload: CustomPacketPayload): Unit = throw AssertionError("@ExpectPlatform not replaced")
 }

@@ -8,7 +8,6 @@
   "key.catchrate.move_left": "Μετακίνηση HUD Αριστερά",
   "key.catchrate.move_right": "Μετακίνηση HUD Δεξιά",
   "key.catchrate.cycle_anchor": "Αλλαγή Άγκυρας HUD",
-
   "catchrate.status.asleep": "Κοιμάται",
   "catchrate.status.frozen": "Παγωμένος",
   "catchrate.status.paralyzed": "Παραλυμένος",
@@ -16,56 +15,41 @@
   "catchrate.status.badly_poisoned": "Βαριά Δηλητηριασμένος",
   "catchrate.status.burned": "Καμένος",
   "catchrate.status.none": "Κανένα",
-
   "catchrate.hud.header": "Ποσοστό Σύλληψης",
   "catchrate.hud.guaranteed": "★ 100% ΣΥΛΛΗΨΗ ★",
   "catchrate.hud.guaranteed_short": "✓ ΕΓΓΥΗΜΕΝΟ",
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "ΑΓΡΙΟ",
   "catchrate.hud.unknown_percent": "??%",
-  "catchrate.hud.server_required": "Απαιτείται σερβερ",
   "catchrate.hud.out_of_combat_penalty": "⚠ Εκτός μάχης: 0.5x",
   "catchrate.hud.release_to_close": "Αφήστε %s για κλείσιμο",
   "catchrate.hud.ball_comparison": "⚔ Σύγκριση Μπαλών (Γύρος %d)",
-
-  "catchrate.ball.guaranteed_catch": "Εγγυημένη σύλληψη!",
-  "catchrate.ball.multiplier_always": "%sx πάντα",
+  "catchrate.ball.guaranteed_catch": "Εγγυημένη σύλληψη",
+  "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Ειδικό εφέ στη σύλληψη",
-  "catchrate.ball.ancient": "Αρχαία: μόνο δύναμη ρίψης (1x ποσοστό)",
-
+  "catchrate.ball.ancient": "Αρχαία (μόνο δύναμη ρίψης)",
   "catchrate.ball.quick.not_in_battle": "Λειτουργεί μόνο στον 1ο γύρο",
-  "catchrate.ball.quick.effective": "5x στον πρώτο γύρο!",
+  "catchrate.ball.quick.effective": "Στον πρώτο γύρο",
   "catchrate.ball.quick.ineffective": "Αποτελεσματικό μόνο στον 1ο γύρο",
-
-  "catchrate.ball.timer.turn_info": "Γύρος %d: %.1fx",
+  "catchrate.ball.timer.turn_info": "Γύρος %d",
   "catchrate.ball.timer.scales": "Κλιμακώνεται με γύρους",
-
   "catchrate.ball.dusk.dark_area": "Σκοτεινή περιοχή (L%d)",
   "catchrate.ball.dusk.need_darkness": "Χρειάζεται σκοτάδι",
-
-  "catchrate.ball.dive.underwater": "Υποβρύχια!",
+  "catchrate.ball.dive.underwater": "Υποβρύχια",
   "catchrate.ball.dive.need_underwater": "Πρέπει να είναι υποβρύχια",
-
   "catchrate.ball.moon.not_night": "Αποτελεσματικό μόνο τη νύχτα",
-  "catchrate.ball.moon.night_phase": "Νύχτα (φάση %d): %.0fx",
-
-  "catchrate.ball.net.effective": "Τύπος Έντομο/Νερό!",
+  "catchrate.ball.moon.night_phase": "Νύχτα (φάση %d)",
+  "catchrate.ball.net.effective": "Τύπος Έντομο/Νερό",
   "catchrate.ball.net.ineffective": "Δεν είναι Έντομο/Νερό",
-
-  "catchrate.ball.nest.effective": "Lv%d: %.1fx",
+  "catchrate.ball.nest.effective": "Lv%d",
   "catchrate.ball.nest.ineffective": "Μόνο <Lv30",
-
-  "catchrate.ball.fast.effective": "Ταχύτητα %d!",
+  "catchrate.ball.fast.effective": "Ταχύτητα %d",
   "catchrate.ball.fast.ineffective": "Ταχύτητα <100",
-
   "catchrate.ball.heavy.weight": "%.1fkg",
-
-  "catchrate.ball.beast.ultra_beast": "Ultra Beast!",
-  "catchrate.ball.beast.penalty": "0.1x ποινή μη-UB",
-
-  "catchrate.ball.dream.sleeping": "Κοιμάται!",
+  "catchrate.ball.beast.ultra_beast": "Ultra Beast",
+  "catchrate.ball.beast.penalty": "Ποινή μη-UB",
+  "catchrate.ball.dream.sleeping": "Κοιμάται",
   "catchrate.ball.dream.need_sleep": "Χρειάζεται κατάσταση ύπνου",
-
   "catchrate.ball.love.no_battler": "Καμία πληροφορία μαχητή",
   "catchrate.ball.love.need_battler": "Χρειάζεται ενεργό μαχητή",
   "catchrate.ball.love.wild_genderless": "Άγριο χωρίς φύλο",
@@ -73,19 +57,12 @@
   "catchrate.ball.love.need_opposite": "Χρειάζεται αντίθετο φύλο",
   "catchrate.ball.love.same_species": "Ιδιο είδος + αντίθετο %s",
   "catchrate.ball.love.opposite_gender": "Αντίθετο φύλο %s",
-
-  "catchrate.ball.level.effective": "%.0fx πλεονέκτημα επιπέδου",
+  "catchrate.ball.level.effective": "Πλεονέκτημα επιπέδου",
   "catchrate.ball.level.ineffective": "Χρειάζεται υψηλότερο επίπεδο",
-  "catchrate.ball.level.requires_server": "Απαιτείται σύγκριση επιπέδου",
-
-  "catchrate.ball.repeat.effective": "3.5x - Ήδη πιάστηκε!",
+  "catchrate.ball.repeat.effective": "Ήδη πιάστηκε",
   "catchrate.ball.repeat.ineffective": "Πιάστε πρώτα αυτό το είδος",
-  "catchrate.ball.repeat.requires_server": "Απαιτείται Pokédex",
-
-  "catchrate.ball.lure.effective": "4x μπόνους ψαρέματος!",
+  "catchrate.ball.lure.effective": "Μπόνους ψαρέματος",
   "catchrate.ball.lure.ineffective": "Μόνο ψαρεμένα Pokémon",
-  "catchrate.ball.lure.requires_server": "Απαιτείται περιβάλλον ψαρέματος",
-
   "catchrate.message.enabled": "Ποσοστό Σύλληψης: §aΕνεργοποιημένο",
   "catchrate.message.disabled": "Ποσοστό Σύλληψης: §cΑπενεργοποιημένο",
   "catchrate.message.position_reset": "Θέση HUD επαναφέρθηκε",

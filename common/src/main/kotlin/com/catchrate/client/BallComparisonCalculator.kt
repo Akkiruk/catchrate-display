@@ -30,11 +30,6 @@ object BallComparisonCalculator {
         "heal_ball", "premier_ball", "poke_ball", "safari_ball", "sport_ball", "beast_ball"
     )
     
-    // Debug log throttling to prevent spam
-    private var lastDebugLogTime = 0L
-    private var lastDebugPokemon = ""
-    private const val DEBUG_LOG_COOLDOWN_MS = 2000L
-    
     // Pokemon lookup cache to avoid expensive entity queries every frame
     private var cachedLookedAtPokemon: PokemonEntity? = null
     private var lastPokemonLookupTick = 0L
@@ -129,18 +124,11 @@ object BallComparisonCalculator {
             inBattle = false
         )
         
-        // Throttled debug logging
-        val now = System.currentTimeMillis()
-        val pokemonKey = "${pokemon.species.name}_${ballId}"
-        if (now - lastDebugLogTime > DEBUG_LOG_COOLDOWN_MS || pokemonKey != lastDebugPokemon) {
-            lastDebugLogTime = now
-            lastDebugPokemon = pokemonKey
-            CatchRateMod.debug(
-                "World calc: ${pokemon.species.name} Lv${pokemon.level} | Ball: $ballId ${result.multiplier}x (${result.reason}) | " +
-                "Base: $baseCatchRate | HP: ${currentHp.toInt()}/${maxHp.toInt()} | Status: ${statusMult}x | " +
-                "Level bonus: ${levelBonus}x | Out-of-combat: 0.5x | Final: ${String.format("%.1f", catchChance)}%"
-            )
-        }
+        CatchRateMod.debugThrottled("WorldCalc",
+            "${pokemon.species.name} Lv${pokemon.level} | Ball: $ballId ${result.multiplier}x (${result.reason}) | " +
+            "Base: $baseCatchRate | HP: ${currentHp.toInt()}/${maxHp.toInt()} | Status: ${statusMult}x | " +
+            "Level bonus: ${levelBonus}x | Out-of-combat: 0.5x | Final: ${String.format("%.1f", catchChance)}%"
+        )
         
         return BallCatchRate(
             ballName = ballId,
@@ -184,7 +172,7 @@ object BallComparisonCalculator {
                 val pokemonOwner = entity.pokemon.getOwnerUUID()
                 val entityOwner = entity.ownerUUID
                 if (pokemonOwner == null && entityOwner == null) return entity
-                CatchRateMod.debug("Skipping owned Pokemon: ${entity.pokemon.species.name} (pokemonOwner: $pokemonOwner, entityOwner: $entityOwner)")
+                CatchRateMod.debug("WorldCalc", "Skipping owned Pokemon: ${entity.pokemon.species.name} (pokemonOwner: $pokemonOwner, entityOwner: $entityOwner)")
                 return null
             }
         }

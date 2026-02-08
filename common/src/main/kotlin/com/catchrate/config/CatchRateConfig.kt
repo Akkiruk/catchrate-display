@@ -13,7 +13,8 @@ data class CatchRateConfig(
     var hudEnabled: Boolean = true,
     var showOutOfCombat: Boolean = true,
     var compactMode: Boolean = false,
-    var showBallComparison: Boolean = false
+    var showBallComparison: Boolean = false,
+    var debugLogging: Boolean = false
 ) {
     @Transient private var pendingSave = false
     @Transient private var lastSaveRequest = 0L
@@ -49,6 +50,11 @@ data class CatchRateConfig(
             } catch (e: Exception) {
                 CatchRateMod.LOGGER.warn("Failed to load config, using defaults: ${e.message}")
                 CatchRateConfig().also { it.save() }
+            }.also { config ->
+                CatchRateMod.DEBUG_ENABLED = config.debugLogging
+                if (config.debugLogging) {
+                    CatchRateMod.LOGGER.info("[CatchRate] Debug logging enabled via config")
+                }
             }
         }
         

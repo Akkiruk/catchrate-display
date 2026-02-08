@@ -1,5 +1,70 @@
 # Changelog
 
+## [1.4.1] - 2026-02-07
+
+### Fixed
+- Lure Ball now works during battle — uses ClientBattlePokemon state aspects instead of entity UUID lookup (entity is despawned during battle)
+- Debug log spam reduced with per-category throttling (max once per 2 seconds)
+
+## [1.4.0] - 2026-02-07
+
+### 🎯 Pure Client-Side Rewrite
+**This is a major architectural change that completely removes the server component.**
+
+Previously, the mod had both client-side estimation and server-side accurate calculation modes. The mod now works **entirely client-side** using Cobblemon's synchronized data, eliminating the need for server installation while maintaining 100% accuracy.
+
+### ✨ Added
+- **Level Ball**: Now calculates client-side using active battler level from `ClientBattle.side1.activeClientBattlePokemon`
+  - Correctly implements Cobblemon's strict `>` comparisons (4x, 3x, 2x, 1x multipliers)
+  - Works both in-battle and out-of-combat
+- **Repeat Ball**: Now calculates client-side using synced Pokédex data via `CobblemonClient.clientPokedexData`
+  - Checks if species has been caught (`PokedexEntryProgress.CAUGHT`)
+  - 3.5x multiplier when species is in Pokédex, 1x otherwise
+- **Lure Ball**: Now calculates client-side using Pokemon entity aspects (synced via `SynchedEntityData`)
+  - Checks for `"fished"` aspect on the target Pokemon
+  - 4x multiplier for fishing encounters, 1x otherwise
+
+### 🗑️ Removed
+- **All server networking code** (3 files deleted):
+  - `CatchRateServerNetworking.kt` (~300 lines)
+  - `CatchRateClientNetworking.kt` (~130 lines)
+  - `CatchRatePackets.kt` (~130 lines)
+- **Dual-mode HUD rendering**: No more client/server mode switching
+- **Server detection**: Removed `isServerModPresent()` checks
+- **Network packet handlers**: All Fabric/NeoForge packet registration removed
+- **Platform networking methods**: `sendToServer()`, `sendToPlayer()` removed from PlatformHelper
+- **Server-side BallContext factory**: `fromServerPokemon()` method removed
+- **Translation keys**: Removed `server_required`, `level.requires_server`, `repeat.requires_server`, `lure.requires_server` from all 27+ language files
+
+### 🔧 Changed
+- **Fabric mod environment**: Changed from `*` (universal) to `client` (client-only)
+- **Mod descriptions**: Updated to "Pure client-side mod — no server installation needed"
+- **NeoForge networking**: Removed `onRegisterPayloadHandlers` event registration
+- **Fabric/NeoForge entrypoints**: Stripped to minimal client-only initialization
+- **HUD Renderer**: Unified to single client-side rendering path
+- **Ball multiplier calculations**: Simplified fallback logic (no more `requiresServer` flags)
+
+### 🐛 Fixes
+- Level Ball now uses correct battler level comparison (was previously using player's party max level)
+- Repeat Ball works in multiplayer without server mod
+- Lure Ball works for fishing encounters without server mod
+- Removed confusing "⚠ Shown as 1x (needs server mod)" messages
+
+### 📊 Technical Details
+- **Lines removed**: ~1000+ (entire networking layer)
+- **Files deleted**: 3 core networking files
+- **Files modified**: 40+ (entrypoints, platform layer, HUD, calculators, all lang files)
+- **Data classes cleaned**: Removed `requiresServer`, `apiMultiplier`, `apiIsValid` fields
+- **Build system**: Maintained Architectury multiloader (Fabric + NeoForge)
+
+### 🎮 User Impact
+- **No server installation needed**: Works on any server, even vanilla Cobblemon servers
+- **100% accurate calculations**: All balls now calculate correctly using Cobblemon's synced client data
+- **Cleaner UI**: No more server-related warning messages or dual-mode indicators
+- **Better multiplayer experience**: Same accurate catch rates whether playing single-player or multiplayer
+
+---
+
 ## [1.3.4] - 2026-02-07
 
 ### Fixed

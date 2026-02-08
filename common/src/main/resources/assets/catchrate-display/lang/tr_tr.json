@@ -8,7 +8,6 @@
   "key.catchrate.move_left": "HUD'u Sola Taşı",
   "key.catchrate.move_right": "HUD'u Sağa Taşı",
   "key.catchrate.cycle_anchor": "HUD Bağlantı Noktasını Değiştir",
-
   "catchrate.status.asleep": "Uyuyor",
   "catchrate.status.frozen": "Donmuş",
   "catchrate.status.paralyzed": "Felc",
@@ -16,56 +15,41 @@
   "catchrate.status.badly_poisoned": "Ağır Zehirli",
   "catchrate.status.burned": "Yanık",
   "catchrate.status.none": "Yok",
-
   "catchrate.hud.header": "Yakalama Oranı",
   "catchrate.hud.guaranteed": "★ %100 YAKALAMA ★",
   "catchrate.hud.guaranteed_short": "✓ GARANTİLİ",
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "VAHRŞİ",
   "catchrate.hud.unknown_percent": "??%",
-  "catchrate.hud.server_required": "Sunucu gerekli",
   "catchrate.hud.out_of_combat_penalty": "⚠ Savaş dışı: 0.5x",
   "catchrate.hud.release_to_close": "Kapatmak için %s bırak",
   "catchrate.hud.ball_comparison": "⚔ Top Karşılaştırması (Tur %d)",
-
-  "catchrate.ball.guaranteed_catch": "Garantili yakalama!",
-  "catchrate.ball.multiplier_always": "%sx her zaman",
+  "catchrate.ball.guaranteed_catch": "Garantili yakalama",
+  "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Yakalamada özel etki",
-  "catchrate.ball.ancient": "Antik: sadece atış gücü (1x oran)",
-
+  "catchrate.ball.ancient": "Antik (sadece atış gücü)",
   "catchrate.ball.quick.not_in_battle": "Sadece tur 1'de çalışır",
-  "catchrate.ball.quick.effective": "İlk turda 5x!",
+  "catchrate.ball.quick.effective": "İlk turda",
   "catchrate.ball.quick.ineffective": "Sadece tur 1'de etkili",
-
-  "catchrate.ball.timer.turn_info": "Tur %d: %.1fx",
+  "catchrate.ball.timer.turn_info": "Tur %d",
   "catchrate.ball.timer.scales": "Turlarla artar",
-
   "catchrate.ball.dusk.dark_area": "Karanlık alan (L%d)",
   "catchrate.ball.dusk.need_darkness": "Karanlık gerekli",
-
-  "catchrate.ball.dive.underwater": "Su altında!",
+  "catchrate.ball.dive.underwater": "Su altında",
   "catchrate.ball.dive.need_underwater": "Su altında olmalı",
-
   "catchrate.ball.moon.not_night": "Sadece gece etkili",
-  "catchrate.ball.moon.night_phase": "Gece (faz %d): %.0fx",
-
-  "catchrate.ball.net.effective": "Böcek/Su tipi!",
+  "catchrate.ball.moon.night_phase": "Gece (faz %d)",
+  "catchrate.ball.net.effective": "Böcek/Su tipi",
   "catchrate.ball.net.ineffective": "Böcek/Su değil",
-
-  "catchrate.ball.nest.effective": "Sv%d: %.1fx",
+  "catchrate.ball.nest.effective": "Sv%d",
   "catchrate.ball.nest.ineffective": "Sadece <Sv30",
-
-  "catchrate.ball.fast.effective": "Hız %d!",
+  "catchrate.ball.fast.effective": "Hız %d",
   "catchrate.ball.fast.ineffective": "Hız <100",
-
   "catchrate.ball.heavy.weight": "%.1fkg",
-
-  "catchrate.ball.beast.ultra_beast": "Ultra Canavar!",
-  "catchrate.ball.beast.penalty": "0.1x UC olmayan cezası",
-
-  "catchrate.ball.dream.sleeping": "Uyuyor!",
+  "catchrate.ball.beast.ultra_beast": "Ultra Canavar",
+  "catchrate.ball.beast.penalty": "UC olmayan cezası",
+  "catchrate.ball.dream.sleeping": "Uyuyor",
   "catchrate.ball.dream.need_sleep": "Uyku durumu gerekli",
-
   "catchrate.ball.love.no_battler": "Savaşçı bilgisi yok",
   "catchrate.ball.love.need_battler": "Aktif savaşçı gerekli",
   "catchrate.ball.love.wild_genderless": "Vahri cinsiyetsiz",
@@ -73,19 +57,12 @@
   "catchrate.ball.love.need_opposite": "Zıt cinsiyet gerekli",
   "catchrate.ball.love.same_species": "Aynı tür + zıt %s",
   "catchrate.ball.love.opposite_gender": "Zıt cinsiyet %s",
-
-  "catchrate.ball.level.effective": "%.0fx seviye avantajı",
+  "catchrate.ball.level.effective": "Seviye avantajı",
   "catchrate.ball.level.ineffective": "Daha yüksek seviye gerekli",
-  "catchrate.ball.level.requires_server": "Seviye karşılaştırması gerekli",
-
-  "catchrate.ball.repeat.effective": "3.5x - Zaten yakalandı!",
+  "catchrate.ball.repeat.effective": "Zaten yakalandı",
   "catchrate.ball.repeat.ineffective": "Önce bu türü yakala",
-  "catchrate.ball.repeat.requires_server": "Pokédex gerekli",
-
-  "catchrate.ball.lure.effective": "4x balıkçılık bonusu!",
+  "catchrate.ball.lure.effective": "Balıkçılık bonusu",
   "catchrate.ball.lure.ineffective": "Sadece olta ile yakalanan",
-  "catchrate.ball.lure.requires_server": "Balıkçılık bağlamı gerekli",
-
   "catchrate.message.enabled": "Yakalama Oranı: §aAçık",
   "catchrate.message.disabled": "Yakalama Oranı: §cKapalı",
   "catchrate.message.position_reset": "HUD konumu sıfırlandı",

@@ -11,7 +11,7 @@ import net.minecraft.resources.ResourceLocation
  */
 object BallTranslations {
     fun guaranteedCatch() = Component.translatable("catchrate.ball.guaranteed_catch").string
-    fun multiplierAlways(mult: String) = Component.translatable("catchrate.ball.multiplier_always", mult).string
+    fun multiplierAlways() = Component.translatable("catchrate.ball.multiplier_always").string
     fun specialEffect() = Component.translatable("catchrate.ball.special_effect").string
     fun ancient() = Component.translatable("catchrate.ball.ancient").string
     
@@ -19,7 +19,7 @@ object BallTranslations {
     fun quickEffective() = Component.translatable("catchrate.ball.quick.effective").string
     fun quickIneffective() = Component.translatable("catchrate.ball.quick.ineffective").string
     
-    fun timerTurnInfo(turn: Int, mult: Float) = Component.translatable("catchrate.ball.timer.turn_info", turn, mult).string
+    fun timerTurnInfo(turn: Int) = Component.translatable("catchrate.ball.timer.turn_info", turn).string
     fun timerScales() = Component.translatable("catchrate.ball.timer.scales").string
     
     fun duskDarkArea(level: Int) = Component.translatable("catchrate.ball.dusk.dark_area", level).string
@@ -29,12 +29,12 @@ object BallTranslations {
     fun diveNeedUnderwater() = Component.translatable("catchrate.ball.dive.need_underwater").string
     
     fun moonNotNight() = Component.translatable("catchrate.ball.moon.not_night").string
-    fun moonNightPhase(phase: Int, mult: Float) = Component.translatable("catchrate.ball.moon.night_phase", phase, mult).string
+    fun moonNightPhase(phase: Int) = Component.translatable("catchrate.ball.moon.night_phase", phase).string
     
     fun netEffective() = Component.translatable("catchrate.ball.net.effective").string
     fun netIneffective() = Component.translatable("catchrate.ball.net.ineffective").string
     
-    fun nestEffective(level: Int, mult: Float) = Component.translatable("catchrate.ball.nest.effective", level, mult).string
+    fun nestEffective(level: Int) = Component.translatable("catchrate.ball.nest.effective", level).string
     fun nestIneffective() = Component.translatable("catchrate.ball.nest.ineffective").string
     
     fun fastEffective(speed: Int) = Component.translatable("catchrate.ball.fast.effective", speed).string
@@ -56,17 +56,13 @@ object BallTranslations {
     fun loveSameSpecies(gender: String) = Component.translatable("catchrate.ball.love.same_species", gender).string
     fun loveOppositeGender(gender: String) = Component.translatable("catchrate.ball.love.opposite_gender", gender).string
     
-    fun levelEffective(mult: Float) = Component.translatable("catchrate.ball.level.effective", mult).string
+    fun levelEffective() = Component.translatable("catchrate.ball.level.effective").string
     fun levelIneffective() = Component.translatable("catchrate.ball.level.ineffective").string
-    fun levelRequiresServer() = Component.translatable("catchrate.ball.level.requires_server").string
-    
     fun repeatEffective() = Component.translatable("catchrate.ball.repeat.effective").string
     fun repeatIneffective() = Component.translatable("catchrate.ball.repeat.ineffective").string
-    fun repeatRequiresServer() = Component.translatable("catchrate.ball.repeat.requires_server").string
     
     fun lureEffective() = Component.translatable("catchrate.ball.lure.effective").string
     fun lureIneffective() = Component.translatable("catchrate.ball.lure.ineffective").string
-    fun lureRequiresServer() = Component.translatable("catchrate.ball.lure.requires_server").string
 }
 
 /**
@@ -92,21 +88,21 @@ object BallMultiplierCalculator {
         val inBattle: Boolean,
         val turnCount: Int,
         val activeBattler: PartyMember?,
-        val apiMultiplier: Float? = null,
-        val apiIsValid: Boolean? = null
+        val hasCaughtSpecies: Boolean? = null,
+        val pokemonAspects: Set<String> = emptySet()
     )
 
     data class PartyMember(
         val speciesId: String,
-        val gender: Gender?
+        val gender: Gender?,
+        val level: Int = 0
     )
 
     data class BallResult(
         val multiplier: Float,
         val conditionMet: Boolean,
         val reason: String,
-        val isGuaranteed: Boolean = false,
-        val requiresServer: Boolean = false
+        val isGuaranteed: Boolean = false
     )
 
     // Cache PokeBall lookups to avoid repeated ResourceLocation creation + registry lookups
@@ -132,12 +128,12 @@ object BallMultiplierCalculator {
         return when (lower) {
             "quick_ball" -> calculateQuickBall(ctx)
             "timer_ball" -> calculateTimerBall(ctx)
-            "ultra_ball" -> BallResult(2F, true, BallTranslations.multiplierAlways("2"))
-            "great_ball" -> BallResult(1.5F, true, BallTranslations.multiplierAlways("1.5"))
-            "poke_ball" -> BallResult(1F, true, BallTranslations.multiplierAlways("1"))
-            "premier_ball" -> BallResult(1F, true, BallTranslations.multiplierAlways("1"))
-            "safari_ball" -> BallResult(1.5F, true, BallTranslations.multiplierAlways("1.5"))
-            "sport_ball" -> BallResult(1.5F, true, BallTranslations.multiplierAlways("1.5"))
+            "ultra_ball" -> BallResult(2F, true, BallTranslations.multiplierAlways())
+            "great_ball" -> BallResult(1.5F, true, BallTranslations.multiplierAlways())
+            "poke_ball" -> BallResult(1F, true, BallTranslations.multiplierAlways())
+            "premier_ball" -> BallResult(1F, true, BallTranslations.multiplierAlways())
+            "safari_ball" -> BallResult(1.5F, true, BallTranslations.multiplierAlways())
+            "sport_ball" -> BallResult(1.5F, true, BallTranslations.multiplierAlways())
             "dusk_ball" -> calculateDuskBall(ctx)
             "dive_ball" -> calculateDiveBall(ctx)
             "moon_ball" -> calculateMoonBall(ctx)
@@ -171,7 +167,7 @@ object BallMultiplierCalculator {
     private fun calculateTimerBall(ctx: BallContext): BallResult {
         val mult = if (ctx.inBattle) (ctx.turnCount * (1229F / 4096F) + 1F).coerceAtMost(4F) else 1F
         val effective = mult > 1.01f
-        val reason = if (ctx.inBattle) BallTranslations.timerTurnInfo(ctx.turnCount, mult) else BallTranslations.timerScales()
+        val reason = if (ctx.inBattle) BallTranslations.timerTurnInfo(ctx.turnCount) else BallTranslations.timerScales()
         return BallResult(mult, effective, reason)
     }
     
@@ -199,7 +195,7 @@ object BallMultiplierCalculator {
             2, 6 -> 1.5F
             else -> 1F
         }
-        return BallResult(mult, mult > 1F, BallTranslations.moonNightPhase(ctx.moonPhase, mult))
+        return BallResult(mult, mult > 1F, BallTranslations.moonNightPhase(ctx.moonPhase))
     }
     
     private fun calculateNetBall(ctx: BallContext): BallResult {
@@ -211,7 +207,7 @@ object BallMultiplierCalculator {
     private fun calculateNestBall(ctx: BallContext): BallResult {
         val effective = ctx.level < 30
         val mult = if (effective) ((41 - ctx.level) / 10F).coerceAtLeast(1F) else 1F
-        return BallResult(mult, effective, if (effective) BallTranslations.nestEffective(ctx.level, mult) else BallTranslations.nestIneffective())
+        return BallResult(mult, effective, if (effective) BallTranslations.nestEffective(ctx.level) else BallTranslations.nestIneffective())
     }
     
     private fun calculateFastBall(ctx: BallContext): BallResult {
@@ -262,26 +258,43 @@ object BallMultiplierCalculator {
     }
     
     private fun calculateLevelBall(ctx: BallContext): BallResult {
-        ctx.apiMultiplier?.let { mult ->
+        // Use active battler's level (matches Cobblemon's BattleModifier which uses actor.activePokemon)
+        val battlerLevel = ctx.activeBattler?.level
+        if (battlerLevel != null && battlerLevel > 0) {
+            val mult = when {
+                battlerLevel > ctx.level * 4 -> 4F
+                battlerLevel > ctx.level * 2 -> 3F
+                battlerLevel > ctx.level -> 2F
+                else -> 1F
+            }
             val effective = mult > 1.01f
-            return BallResult(mult, effective, if (effective) BallTranslations.levelEffective(mult) else BallTranslations.levelIneffective())
+            return BallResult(mult, effective, if (effective) BallTranslations.levelEffective() else BallTranslations.levelIneffective())
         }
-        return BallResult(1F, false, BallTranslations.levelRequiresServer(), requiresServer = true)
+        // Out of battle or no battler data available
+        return BallResult(1F, false, BallTranslations.levelIneffective())
     }
     
     private fun calculateRepeatBall(ctx: BallContext): BallResult {
-        ctx.apiMultiplier?.let { mult ->
-            val effective = mult > 1.01f
-            return BallResult(mult, effective, if (effective) BallTranslations.repeatEffective() else BallTranslations.repeatIneffective())
+        // Client-side: check Pokédex synced data
+        ctx.hasCaughtSpecies?.let { caught ->
+            val mult = if (caught) 3.5F else 1F
+            return BallResult(mult, caught, if (caught) BallTranslations.repeatEffective() else BallTranslations.repeatIneffective())
         }
-        return BallResult(1F, false, BallTranslations.repeatRequiresServer(), requiresServer = true)
+        return BallResult(1F, false, BallTranslations.repeatIneffective())
     }
     
     private fun calculateLureBall(ctx: BallContext): BallResult {
-        ctx.apiMultiplier?.let { mult ->
-            val effective = mult > 1.01f
-            return BallResult(mult, effective, if (effective) BallTranslations.lureEffective() else BallTranslations.lureIneffective())
+        CatchRateMod.debugThrottled("LureBall", "${ctx.speciesId} | aspects(${ctx.pokemonAspects.size}): ${ctx.pokemonAspects} | caught=${ctx.hasCaughtSpecies} | inBattle=${ctx.inBattle}")
+
+        // Check "fished" aspect on the Pokemon entity
+        if (ctx.pokemonAspects.isNotEmpty() || ctx.hasCaughtSpecies != null) {
+            val fished = ctx.pokemonAspects.any { it.equals("fished", ignoreCase = true) }
+            CatchRateMod.debugThrottled("LureBall", "  -> fished=$fished")
+            val mult = if (fished) 4F else 1F
+            return BallResult(mult, fished, if (fished) BallTranslations.lureEffective() else BallTranslations.lureIneffective())
         }
-        return BallResult(1F, false, BallTranslations.lureRequiresServer(), requiresServer = true)
+
+        CatchRateMod.debug("LureBall", "  No client data available, defaulting to 1x")
+        return BallResult(1F, false, BallTranslations.lureIneffective())
     }
 }
