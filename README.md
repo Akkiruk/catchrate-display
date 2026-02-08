@@ -1,23 +1,41 @@
 # Cobblemon Catch Rate Display
 
-[![Minecraft Version](https://img.shields.io/badge/Minecraft-1.21.x-green.svg)](https://www.minecraft.net/)
+[![Minecraft Version](https://img.shields.io/badge/Minecraft-1.21.1-green.svg)](https://www.minecraft.net/)
 [![Fabric API](https://img.shields.io/badge/Fabric%20API-0.116%2B-orange.svg)](https://fabricmc.net/)
-[![Cobblemon](https://img.shields.io/badge/Cobblemon-1.6.0%2B-blue.svg)](https://cobblemon.com/)
+[![NeoForge](https://img.shields.io/badge/NeoForge-21.1%2B-red.svg)](https://neoforged.net/)
+[![Cobblemon](https://img.shields.io/badge/Cobblemon-1.7.1%2B-blue.svg)](https://cobblemon.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-A Fabric mod for Minecraft 1.21+ that displays real-time catch rates during Cobblemon battles.
+
+A **pure client-side** Architectury mod for Minecraft 1.21.1 that displays real-time catch rates during Cobblemon battles. Works on any Cobblemon server  — **no server installation required!**
 
 ## Compatibility
 
 | Component | Supported Versions |
 |-----------|-------------------|
-| Minecraft | 1.21, 1.21.1 |
-| Cobblemon | 1.6.0+ |
-| Fabric Loader | 0.15.0+ |
-| Fabric Language Kotlin | 1.10.0+ |
+| Minecraft | 1.21.1 |
+| Cobblemon | 1.7.1+ |
+| **Fabric** | |
+| Fabric Loader | 0.16.7+ |
+| Fabric API | 0.116.7+ |
+| Fabric Language Kotlin | 1.13.4+ |
+| **NeoForge** | |
+| NeoForge | 21.1.77+ |
+| Kotlin for Forge | 5.11.0+ |
 
 ## Features
 
-### Real-Time Catch Rate Display
+### 🎯 Pure Client-Side Operation
+- **No server mod required!** Works on any Cobblemon server
+- All calculations use Cobblemon's synced client data
+- 100% accurate catch rates without server installation
+- Supports all Pokéball types including:
+  - **Level Ball** (uses active battler level)
+  - **Repeat Ball** (uses synced Pokédex data)
+  - **Lure Ball** (detects fishing encounters)
+  - **Love Ball** (checks same species in party)
+  - And all other standard/special balls
+
+### 📊 Real-Time Catch Rate Display
 - Live percentage calculations during battle
 - Color-coded indicators based on success chance
 - HP visualization with percentage
@@ -36,7 +54,7 @@ A Fabric mod for Minecraft 1.21+ that displays real-time catch rates during Cobb
 - Toggle on/off with K key
 - Position saved to config
 
-### Keybinds
+### ⌨️ Keybinds & Commands
 | Key | Action |
 |-----|--------|
 | K | Toggle HUD visibility |
@@ -46,12 +64,11 @@ A Fabric mod for Minecraft 1.21+ that displays real-time catch rates during Cobb
 
 All keybinds configurable in Options → Controls → "Catch Rate Display".
 
-### Hybrid Client-Server Architecture
-- **With server mod**: 100% accurate calculations using Cobblemon's APIs
-- **Without server mod**: Intelligent fallback with estimates for most balls
-- Server-required balls show clear warnings when needed
+**Debug Commands:**
+- `/catchrate debug` — Toggle verbose logging (current session only)
+- `/catchrate info` — Show mod version, config, and environment details
 
-### Visual Design
+### 🎨 Visual Design
 - 🟢 Green: ≥75% (excellent)
 - 🟡 Yellow: 50-75% (good)
 - 🟠 Gold: 25-50% (fair)
@@ -60,19 +77,28 @@ All keybinds configurable in Options → Controls → "Catch Rate Display".
 ## Installation
 
 ### Requirements
-- Minecraft 1.21 or 1.21.1
-- Fabric Loader 0.15.0+
-- Fabric API
-- Fabric Language Kotlin 1.10.0+
-- Cobblemon 1.6.0+
+
+**For Fabric:**
+- Minecraft 1.21.1
+- Fabric Loader 0.16.7+
+- Fabric API 0.116.7+
+- Fabric Language Kotlin 1.13.4+
+- Cobblemon 1.7.1+
+
+**For NeoForge:**
+- Minecraft 1.21.1
+- NeoForge 21.1.77+
+- Kotlin for Forge 5.11.0+
+- Cobblemon 1.7.1+
 
 ### Client Installation
-1. Download from [Releases](https://github.com/Akkiruk/catchrate-display/releases)
+1. Download the appropriate version from [Modrinth](https://modrinth.com/mod/catchrate-display) or [CurseForge](https://www.curseforge.com/minecraft/mc-mods/catchrate-display)
+   - `catchrate-display-fabric-X.Y.Z.jar` for Fabric
+   - `catchrate-display-neoforge-X.Y.Z.jar` for NeoForge
 2. Place in your `mods/` folder
-3. Launch Minecraft with Fabric
+3. Launch Minecraft
 
-### Server Installation (Optional)
-Installing on the server provides 100% accuracy for all ball types including Love Ball, Level Ball, Repeat Ball, and Lure Ball.
+**No server installation needed!** This mod is pure client-side and works on any Cobblemon server.
 
 ## Usage
 
@@ -82,19 +108,38 @@ Installing on the server provides 100% accuracy for all ball types including Lov
 
 ## Building from Source
 
+This mod uses Architectury to support both Fabric and NeoForge from a single codebase.
+
 ```bash
 git clone https://github.com/Akkiruk/catchrate-display.git
 cd catchrate-display
+
+# Build both loaders
 ./gradlew build
+
+# Or build specific loaders
+./gradlew :fabric:build
+./gradlew :neoforge:build
 ```
 
-Output jar will be in `build/libs/`.
+Output jars will be in:
+- `fabric/build/libs/catchrate-display-fabric-X.Y.Z.jar`
+- `neoforge/build/libs/catchrate-display-neoforge-X.Y.Z.jar`
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
+## Links
+
+- [Modrinth](https://modrinth.com/mod/catchrate-display)
+- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/catchrate-display)
+- [GitHub Issues](https://github.com/Akkiruk/catchrate-display/issues)
+- [Discord Support](https://discord.gg/cobblemon) (Cobblemon Discord)
+
 ## Acknowledgments
 
-- Cobblemon Team for the amazing mod
-- Fabric Team for the modding framework
+- [Cobblemon Team](https://cobblemon.com/) for the amazing Pokémon mod
+- [Fabric Team](https://fabricmc.net/) for the modding framework
+- [NeoForge Team](https://neoforged.net/) for the forge continuation
+- [Architectury](https://github.com/architectury/architectury-api) for multiloader support
