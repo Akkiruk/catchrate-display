@@ -63,6 +63,9 @@ object BallTranslations {
     
     fun lureEffective() = Component.translatable("catchrate.ball.lure.effective").string
     fun lureIneffective() = Component.translatable("catchrate.ball.lure.ineffective").string
+    
+    fun safariOutOfCombat() = Component.translatable("catchrate.ball.safari.out_of_combat").string
+    fun safariInBattle() = Component.translatable("catchrate.ball.safari.in_battle").string
 }
 
 /**
@@ -142,7 +145,7 @@ object BallMultiplierCalculator {
             "great_ball" -> BallResult(1.5F, true, BallTranslations.multiplierAlways())
             "poke_ball" -> BallResult(1F, true, BallTranslations.multiplierAlways())
             "premier_ball" -> BallResult(1F, true, BallTranslations.multiplierAlways())
-            "safari_ball" -> BallResult(1.5F, true, BallTranslations.multiplierAlways())
+            "safari_ball" -> calculateSafariBall(ctx)
             "sport_ball" -> BallResult(1.5F, true, BallTranslations.multiplierAlways())
             "dusk_ball" -> calculateDuskBall(ctx)
             "dive_ball" -> calculateDiveBall(ctx)
@@ -170,6 +173,11 @@ object BallMultiplierCalculator {
         return BallResult(1F, true, BallTranslations.ancient())
     }
     
+    private fun calculateSafariBall(ctx: BallContext): BallResult {
+        if (ctx.inBattle) return BallResult(1F, false, BallTranslations.safariInBattle())
+        return BallResult(1.5F, true, BallTranslations.safariOutOfCombat())
+    }
+
     private fun calculateQuickBall(ctx: BallContext): BallResult {
         if (!ctx.inBattle) return BallResult(1F, false, BallTranslations.quickNotInBattle())
         val effective = ctx.turnCount == 1
@@ -298,10 +306,9 @@ object BallMultiplierCalculator {
     }
     
     private fun calculateLureBall(ctx: BallContext): BallResult {
-        CatchRateMod.debugThrottled("LureBall", "${ctx.speciesId} | aspects(${ctx.pokemonAspects.size}): ${ctx.pokemonAspects} | inBattle=${ctx.inBattle}")
-
         val fished = ctx.pokemonAspects.any { it.equals("fished", ignoreCase = true) }
-        CatchRateMod.debugThrottled("LureBall", "  -> fished=$fished")
+        CatchRateMod.debugOnChange("LureBall", "${ctx.speciesId}_${fished}",
+            "${ctx.speciesId} | aspects: ${ctx.pokemonAspects} | fished=$fished")
         val mult = if (fished) 4F else 1F
         return BallResult(mult, fished, if (fished) BallTranslations.lureEffective() else BallTranslations.lureIneffective())
     }

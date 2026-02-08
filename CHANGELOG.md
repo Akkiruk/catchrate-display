@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.4.2] - 2026-02-08
+
+### Fixed
+- Safari Ball no longer gives 1.5x multiplier during battle (out-of-combat only)
+- Debug logger now only logs on state changes instead of on a timer
+
+### Removed
+- Time-throttled debug logging (replaced with change-based logging)
+
+---
+
 ## [2.4.1] - 2026-02-08
 
 ### Fixed

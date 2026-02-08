@@ -72,7 +72,8 @@ object BallContextFactory {
         level: Level
     ): BallContext {
         val pokemon = entity.pokemon
-        CatchRateMod.debugThrottled("Context", "fromWorldPokemon: ${pokemon.species.name} UUID=${entity.uuid} | entity.aspects=${entity.aspects}")
+        CatchRateMod.debugOnChange("Context", "${entity.uuid}_${entity.aspects}",
+            "fromWorldPokemon: ${pokemon.species.name} UUID=${entity.uuid} | entity.aspects=${entity.aspects}")
         return fromPokemon(
             pokemon, player, level,
             inBattle = false, turnCount = 0, activeBattler = null,
@@ -132,7 +133,8 @@ object BallContextFactory {
         return try {
             val knowledge = CobblemonClient.clientPokedexData.getHighestKnowledgeForSpecies(speciesId)
             val caught = knowledge == PokedexEntryProgress.CAUGHT
-            CatchRateMod.debugThrottled("Pokedex", "$speciesId -> knowledge=$knowledge, caught=$caught")
+            CatchRateMod.debugOnChange("Pokedex", "${speciesId}_${caught}",
+                "$speciesId -> knowledge=$knowledge, caught=$caught")
             caught
         } catch (e: Throwable) {
             CatchRateMod.debug("Pokedex", "Could not check Pokédex for $speciesId: ${e.message}")
@@ -161,7 +163,8 @@ object BallContextFactory {
     private fun getPokemonAspectsFromBattle(pokemon: ClientBattlePokemon): Set<String> {
         return try {
             val aspects = pokemon.state.currentAspects
-            CatchRateMod.debugThrottled("Aspects", "${pokemon.species.name} battle aspects: $aspects")
+            CatchRateMod.debugOnChange("Aspects", "${pokemon.species.name}_${aspects}",
+                "${pokemon.species.name} battle aspects: $aspects")
             aspects
         } catch (e: Throwable) {
             CatchRateMod.debug("Aspects", "Could not get battle pokemon aspects: ${e.message}")

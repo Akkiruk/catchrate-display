@@ -21,9 +21,6 @@ object CatchRateMod {
     val isDebugActive: Boolean
         get() = sessionDebugOverride ?: DEBUG_ENABLED
 
-    private val lastDebugTimes = mutableMapOf<String, Long>()
-    private const val DEBUG_THROTTLE_MS = 2000L
-    
     private val lastStateValues = mutableMapOf<String, String>()
 
     /** Log a debug message. */
@@ -36,16 +33,6 @@ object CatchRateMod {
         if (isDebugActive) LOGGER.info("[CatchRate DEBUG/$category] $message")
     }
 
-    /** Throttled debug: logs at most once per 2 seconds per category. */
-    fun debugThrottled(category: String, message: String) {
-        if (!isDebugActive) return
-        val now = System.currentTimeMillis()
-        val last = lastDebugTimes[category] ?: 0
-        if (now - last < DEBUG_THROTTLE_MS) return
-        lastDebugTimes[category] = now
-        LOGGER.info("[CatchRate DEBUG/$category] $message")
-    }
-    
     /** Log only when value changes (for state tracking). */
     fun debugOnChange(key: String, value: String, message: String) {
         if (!isDebugActive) return

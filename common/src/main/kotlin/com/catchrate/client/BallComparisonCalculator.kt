@@ -142,7 +142,8 @@ object BallComparisonCalculator {
             inBattle = false
         )
         
-        CatchRateMod.debugThrottled("WorldCalc",
+        CatchRateMod.debugOnChange("WorldCalc",
+            "${pokemon.species.name}_${ballId}_${currentHp.toInt()}_${statusMult}",
             "${pokemon.species.name} Lv${pokemon.level} | Ball: $ballId ${result.multiplier}x (${result.reason}) | " +
             "Base: $baseCatchRate | HP: ${currentHp.toInt()}/${maxHp.toInt()} | Status: ${statusMult}x | " +
             "Level bonus: ${levelBonus}x | Out-of-combat: 0.5x | Final: ${String.format("%.1f", catchChance)}%"
