@@ -50,6 +50,15 @@ object BallComparisonCalculator {
      * Calculate catch rates for all balls during battle.
      */
     fun calculateAllBalls(pokemon: ClientBattlePokemon, turnCount: Int, battle: ClientBattle?): List<BallCatchRate> {
+        return try {
+            calculateAllBallsInternal(pokemon, turnCount, battle)
+        } catch (e: Throwable) {
+            CatchRateMod.debug("Comparison", "calculateAllBalls failed: ${e.javaClass.simpleName}: ${e.message}")
+            emptyList()
+        }
+    }
+    
+    private fun calculateAllBallsInternal(pokemon: ClientBattlePokemon, turnCount: Int, battle: ClientBattle?): List<BallCatchRate> {
         val minecraft = Minecraft.getInstance()
         val player = minecraft.player ?: return emptyList()
         val level = minecraft.level ?: return emptyList()
@@ -98,6 +107,15 @@ object BallComparisonCalculator {
      * Calculate catch rate for a world Pokemon (out of combat).
      */
     fun calculateForWorldPokemon(entity: PokemonEntity, ballId: String): BallCatchRate? {
+        return try {
+            calculateForWorldPokemonInternal(entity, ballId)
+        } catch (e: Throwable) {
+            CatchRateMod.debug("WorldCalc", "calculateForWorldPokemon failed: ${e.javaClass.simpleName}: ${e.message}")
+            null
+        }
+    }
+    
+    private fun calculateForWorldPokemonInternal(entity: PokemonEntity, ballId: String): BallCatchRate? {
         val minecraft = Minecraft.getInstance()
         val player = minecraft.player ?: return null
         val level = minecraft.level ?: return null

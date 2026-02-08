@@ -117,12 +117,20 @@ object BallMultiplierCalculator {
             } catch (e: Throwable) { null }
         }
         
-        if (pokeBall?.catchRateModifier?.isGuaranteed() == true || lower.contains("master")) {
+        val isGuaranteed = try {
+            pokeBall?.catchRateModifier?.isGuaranteed() == true
+        } catch (e: Throwable) { false }
+        
+        if (isGuaranteed || lower.contains("master")) {
             CatchRateMod.debugBall(lower, "guaranteed catch", 255F, true)
             return BallResult(255F, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
         }
         
-        if (pokeBall?.ancient == true) {
+        val isAncient = try {
+            pokeBall?.ancient == true
+        } catch (e: Throwable) { false }
+        
+        if (isAncient) {
             CatchRateMod.debugBall(lower, "ancient ball", 1F, true)
             return calculateAncientBall(lower)
         }

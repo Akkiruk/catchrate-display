@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.3.2] - 2026-02-08
+
+### Fixed
+- All catch(Exception) blocks now catch(Throwable) to handle Cobblemon API version mismatches
+- Guarded catchRateModifier.isGuaranteed() calls against IncompatibleClassChangeError
+- Added top-level safety nets to HUD renderer and ball comparison calculator
+- Eliminated force-unwrap race condition in cached result access
+
+---
+
 ## [2.3.1] - 2026-02-08
 
 ### Fixed

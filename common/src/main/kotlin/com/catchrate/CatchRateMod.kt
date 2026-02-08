@@ -94,24 +94,24 @@ object CatchRateMod {
     private fun getMinecraftVersion(): String {
         return try {
             net.minecraft.SharedConstants.getCurrentVersion().name
-        } catch (e: Exception) { "unknown" }
+        } catch (e: Throwable) { "unknown" }
     }
     
     private fun getLoaderInfo(): String {
         return try {
             if (Class.forName("net.fabricmc.loader.api.FabricLoader") != null) "Fabric"
             else "Unknown"
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             try {
                 if (Class.forName("net.neoforged.fml.loading.FMLLoader") != null) "NeoForge"
                 else "Unknown"
-            } catch (e2: Exception) { "Unknown" }
+            } catch (e2: Throwable) { "Unknown" }
         }
     }
     
     private fun getCobblemonVersion(): String {
         return try {
             com.cobblemon.mod.common.Cobblemon.VERSION
-        } catch (e: Exception) { "unknown" }
+        } catch (e: Throwable) { "unknown" }
     }
 }

@@ -35,7 +35,11 @@ object CatchRateCalculator {
         val ballName = pokeBall?.name?.path ?: itemStack.item.toString().substringAfter(":").substringBefore("}")
         
         // Check for guaranteed catch via API
-        if (pokeBall?.catchRateModifier?.isGuaranteed() == true) {
+        val isGuaranteed = try {
+            pokeBall?.catchRateModifier?.isGuaranteed() == true
+        } catch (e: Throwable) { false }
+        
+        if (isGuaranteed) {
             return CatchRateResult(
                 percentage = 100.0,
                 hpPercentage = getHpPercentage(pokemon),
@@ -130,7 +134,10 @@ object CatchRateCalculator {
         val level = minecraft.level
             ?: return BallMultiplierCalculator.BallResult(CatchRateConstants.BALL_STANDARD_MULT, false, "")
         
-        if (pokeBall?.catchRateModifier?.isGuaranteed() == true) {
+        val guaranteed = try {
+            pokeBall?.catchRateModifier?.isGuaranteed() == true
+        } catch (e: Throwable) { false }
+        if (guaranteed) {
             return BallMultiplierCalculator.BallResult(
                 CatchRateConstants.BALL_GUARANTEED_MULT, true,
                 BallTranslations.guaranteedCatch(), isGuaranteed = true

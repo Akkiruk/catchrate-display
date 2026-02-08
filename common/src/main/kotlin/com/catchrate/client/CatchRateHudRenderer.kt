@@ -69,6 +69,14 @@ class CatchRateHudRenderer {
      * Main render method. Called by platform-specific HUD render events.
      */
     fun render(guiGraphics: GuiGraphics, deltaTracker: DeltaTracker) {
+        try {
+            renderInternal(guiGraphics, deltaTracker)
+        } catch (e: Throwable) {
+            CatchRateMod.debug("HUD", "Render error: ${e.javaClass.simpleName}: ${e.message}")
+        }
+    }
+    
+    private fun renderInternal(guiGraphics: GuiGraphics, deltaTracker: DeltaTracker) {
         val minecraft = Minecraft.getInstance()
         val player = minecraft.player ?: return
         val config = CatchRateConfig.get()
@@ -125,7 +133,7 @@ class CatchRateHudRenderer {
             return
         }
         
-        val result = getClientCalculation(opponentPokemon, heldItem)
+        val result = getClientCalculation(opponentPokemon, heldItem) ?: return
         renderClientModeHud(guiGraphics, minecraft, result, ballName)
     }
     
@@ -180,12 +188,17 @@ class CatchRateHudRenderer {
         cachedComparison = null
     }
     
-    private fun getClientCalculation(pokemon: ClientBattlePokemon, heldItem: ItemStack): CatchRateResult {
+    private fun getClientCalculation(pokemon: ClientBattlePokemon, heldItem: ItemStack): CatchRateResult? {
         if (cachedClientResult == null || (tickCounter - lastClientCalcTick) > CLIENT_CALC_INTERVAL_TICKS) {
-            cachedClientResult = CatchRateCalculator.calculateCatchRate(pokemon, heldItem, turnCount, null, true)
+            cachedClientResult = try {
+                CatchRateCalculator.calculateCatchRate(pokemon, heldItem, turnCount, null, true)
+            } catch (e: Throwable) {
+                CatchRateMod.debug("HUD", "Calculation failed: ${e.message}")
+                null
+            }
             lastClientCalcTick = tickCounter
         }
-        return cachedClientResult!!
+        return cachedClientResult
     }
     
     
@@ -447,7 +460,7 @@ class CatchRateHudRenderer {
     // ==================== HELPER METHODS ====================
     
     private fun getOpponentPokemon(battle: ClientBattle): ClientBattlePokemon? {
-        return try { battle.side2.activeClientBattlePokemon.firstOrNull()?.battlePokemon } catch (e: Exception) { null }
+        return try { battle.side2.activeClientBattlePokemon.firstOrNull()?.battlePokemon } catch (e: Throwable) { null }
     }
     
     private fun isPokeball(itemStack: ItemStack): Boolean {

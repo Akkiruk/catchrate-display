@@ -134,7 +134,7 @@ object BallContextFactory {
             val caught = knowledge == PokedexEntryProgress.CAUGHT
             CatchRateMod.debugThrottled("Pokedex", "$speciesId -> knowledge=$knowledge, caught=$caught")
             caught
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             CatchRateMod.debug("Pokedex", "Could not check Pokédex for $speciesId: ${e.message}")
             null
         }
@@ -148,7 +148,7 @@ object BallContextFactory {
         return try {
             val knowledge = CobblemonClient.clientPokedexData.getHighestKnowledgeForSpecies(speciesId)
             knowledge != PokedexEntryProgress.NONE
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             null
         }
     }
@@ -163,7 +163,7 @@ object BallContextFactory {
             val aspects = pokemon.state.currentAspects
             CatchRateMod.debugThrottled("Aspects", "${pokemon.species.name} battle aspects: $aspects")
             aspects
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             CatchRateMod.debug("Aspects", "Could not get battle pokemon aspects: ${e.message}")
             emptySet()
         }
@@ -180,7 +180,7 @@ object BallContextFactory {
                     level = activePokemon.level
                 )
             } else null
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             CatchRateMod.debug("Battle", "Could not access active battler: ${e.message}")
             null
         }
@@ -189,7 +189,7 @@ object BallContextFactory {
     private fun safeParseGender(genderName: String): Gender? {
         return try {
             Gender.valueOf(genderName)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             null
         }
     }
@@ -197,7 +197,7 @@ object BallContextFactory {
     private fun safeGetLabels(species: com.cobblemon.mod.common.pokemon.Species): List<String> {
         return try {
             species.labels.toList()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             emptyList()
         }
     }
@@ -207,7 +207,7 @@ object BallContextFactory {
         try {
             val speedStat = com.cobblemon.mod.common.api.pokemon.stats.Stats.SPEED
             baseStats[speedStat]?.let { return it }
-        } catch (_: Exception) { /* Fall through to string-based lookup */ }
+        } catch (_: Throwable) { /* Fall through to string-based lookup */ }
         // Fallback for compatibility
         return baseStats.entries.find { entry ->
             entry.key.toString().let { k ->
