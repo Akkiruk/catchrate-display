@@ -66,5 +66,15 @@
   "catchrate.message.enabled": "Elkapási Arány: §aBekapcsolva",
   "catchrate.message.disabled": "Elkapási Arány: §cKikapcsolva",
   "catchrate.message.position_reset": "HUD pozíció visszaállítva",
-  "catchrate.message.anchor": "Horgony: %s"
+  "catchrate.message.anchor": "Horgony: %s",
+  "catchrate.command.debug.enabled": "§a[CatchRate] Debug logging §2ENABLED§a for this session. Check latest.log for detailed output.",
+  "catchrate.command.debug.disabled": "§c[CatchRate] Debug logging §4DISABLED§c for this session.",
+  "catchrate.command.info.header": "§6========== CatchRateDisplay Info ==========",
+  "catchrate.command.info.version": "§7  Version: §f%s",
+  "catchrate.command.info.debug_config": "§7  Debug (config): §f%s",
+  "catchrate.command.info.debug_session": "§7  Debug (session): §f%s",
+  "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
+  "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
+  "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.footer": "§6============================================"
 }

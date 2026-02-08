@@ -28,9 +28,9 @@ object DebugCommands {
     private fun toggleDebug(ctx: CommandContext<CommandSourceStack>): Int {
         val newState = CatchRateMod.toggleSessionDebug()
         val message = if (newState) {
-            Component.literal("§a[CatchRate] Debug logging §2ENABLED§a for this session. Check latest.log for detailed output.")
+            Component.translatable("catchrate.command.debug.enabled")
         } else {
-            Component.literal("§c[CatchRate] Debug logging §4DISABLED§c for this session.")
+            Component.translatable("catchrate.command.debug.disabled")
         }
         ctx.source.sendSuccess({ message }, false)
         return 1
@@ -38,19 +38,16 @@ object DebugCommands {
     
     private fun showInfo(ctx: CommandContext<CommandSourceStack>): Int {
         val config = CatchRateConfig.get()
-        val lines = listOf(
-            "§6========== CatchRateDisplay Info ==========",
-            "§7  Version: §f${CatchRateMod.VERSION}",
-            "§7  Debug (config): §f${CatchRateMod.DEBUG_ENABLED}",
-            "§7  Debug (session): §f${CatchRateMod.sessionDebugOverride ?: "not set"}",
-            "§7  Debug active: §f${CatchRateMod.isDebugActive}",
-            "§7  HUD enabled: §f${config.hudEnabled}",
-            "§7  Show out of combat: §f${config.showOutOfCombat}",
-            "§6============================================"
-        )
-        lines.forEach { line ->
-            ctx.source.sendSuccess({ Component.literal(line) }, false)
-        }
+        
+        ctx.source.sendSuccess({ Component.translatable("catchrate.command.info.header") }, false)
+        ctx.source.sendSuccess({ Component.translatable("catchrate.command.info.version", CatchRateMod.VERSION) }, false)
+        ctx.source.sendSuccess({ Component.translatable("catchrate.command.info.debug_config", CatchRateMod.DEBUG_ENABLED.toString()) }, false)
+        ctx.source.sendSuccess({ Component.translatable("catchrate.command.info.debug_session", (CatchRateMod.sessionDebugOverride?.toString() ?: "not set")) }, false)
+        ctx.source.sendSuccess({ Component.translatable("catchrate.command.info.debug_active", CatchRateMod.isDebugActive.toString()) }, false)
+        ctx.source.sendSuccess({ Component.translatable("catchrate.command.info.hud_enabled", config.hudEnabled.toString()) }, false)
+        ctx.source.sendSuccess({ Component.translatable("catchrate.command.info.show_ooc", config.showOutOfCombat.toString()) }, false)
+        ctx.source.sendSuccess({ Component.translatable("catchrate.command.info.footer") }, false)
+        
         CatchRateMod.logEnvironmentInfo()
         return 1
     }

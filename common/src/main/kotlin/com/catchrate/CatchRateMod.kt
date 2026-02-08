@@ -9,7 +9,7 @@ object CatchRateMod {
     const val MOD_ID = "catchrate-display"
     /** NeoForge requires mod IDs with only [a-z0-9_], no hyphens */
     const val NEOFORGE_MOD_ID = "catchrate_display"
-    const val VERSION = "2.1.0"
+    const val VERSION = "2.1.1"
     val LOGGER = LoggerFactory.getLogger(MOD_ID)
 
     /** Controlled by `debugLogging` in config OR by /catchrate debug command. */

@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.1] - 2026-02-08
+
+### Fixed
+- /catchrate commands now use proper Fabric client command API (fixes potential crashes)
+- Command messages are now fully localized (translation keys in all 28 languages)
+
+---
+
 ## [2.1.0] - 2026-02-08
 
 ### Enhanced Debug Logging
