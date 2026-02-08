@@ -1,0 +1,42 @@
+name: Stale Issues
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it has not had recent activity.
+            It will be closed in 14 days if no further activity occurs.
+            
+            If this issue is still relevant, please comment or add the `pinned` label to keep it open.
+          
+          stale-pr-message: |
+            This pull request has been automatically marked as stale because it has not had recent activity.
+            It will be closed in 14 days if no further activity occurs.
+            
+            Please rebase and address any review comments to keep this PR active.
+          
+          close-issue-message: 'This issue was closed due to inactivity. Feel free to reopen if still relevant.'
+          close-pr-message: 'This PR was closed due to inactivity. Feel free to reopen if you want to continue.'
+          
+          days-before-stale: 60
+          days-before-close: 14
+          
+          stale-issue-label: 'stale'
+          stale-pr-label: 'stale'
+          
+          exempt-issue-labels: 'pinned,awaiting-response,in-progress'
+          exempt-pr-labels: 'pinned,awaiting-review,work-in-progress'
+          
+          operations-per-run: 30

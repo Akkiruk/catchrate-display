@@ -1,0 +1,37 @@
+name: Question / Help
+description: Ask a question about using the mod
+title: "[Q] "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question? We're happy to help!
+        
+        **Consider using [Discussions](https://github.com/Akkiruk/catchrate-display/discussions) instead** for general questions — issues are best for bugs and feature requests.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: "How do I configure the HUD position?"
+    validations:
+      required: true
+
+  - type: input
+    id: mod-version
+    attributes:
+      label: CatchRateDisplay Version
+      description: "Optional: which version are you using?"
+      placeholder: "2.4.1"
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other details that might help us answer your question
+    validations:
+      required: false

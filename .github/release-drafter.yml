@@ -1,0 +1,79 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'enhancement'
+      - 'feature'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'bug'
+      - 'fix'
+  - title: '🧮 Calculation Changes'
+    labels:
+      - 'calculation'
+  - title: '🎨 HUD / UI'
+    labels:
+      - 'hud'
+      - 'ui'
+  - title: '📦 Dependencies'
+    labels:
+      - 'dependencies'
+  - title: '🔧 Maintenance'
+    labels:
+      - 'chore'
+      - 'maintenance'
+      - 'ci'
+
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_&'
+
+version-resolver:
+  major:
+    labels:
+      - 'major'
+      - 'breaking'
+  minor:
+    labels:
+      - 'minor'
+      - 'enhancement'
+      - 'feature'
+  patch:
+    labels:
+      - 'patch'
+      - 'bug'
+      - 'fix'
+  default: patch
+
+autolabeler:
+  - label: 'documentation'
+    files:
+      - '*.md'
+      - '.github/**/*'
+  - label: 'bug'
+    title:
+      - '/fix/i'
+      - '/bug/i'
+      - '/crash/i'
+  - label: 'enhancement'
+    title:
+      - '/feat/i'
+      - '/add/i'
+      - '/feature/i'
+  - label: 'calculation'
+    files:
+      - '**/CatchRate*.kt'
+      - '**/BallMultiplier*.kt'
+  - label: 'hud'
+    files:
+      - '**/client/**/*'
+      - '**/*Hud*.kt'
+      - '**/*Renderer*.kt'
+
+template: |
+  ## Changes
+
+  $CHANGES
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION

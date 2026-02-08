@@ -1,0 +1,47 @@
+# PR Labeler Configuration
+# Labels PRs based on changed file paths
+
+common:
+  - changed-files:
+    - any-glob-to-any-file: 'common/**/*'
+
+fabric:
+  - changed-files:
+    - any-glob-to-any-file: 'fabric/**/*'
+
+neoforge:
+  - changed-files:
+    - any-glob-to-any-file: 'neoforge/**/*'
+
+hud:
+  - changed-files:
+    - any-glob-to-any-file: '**/client/**/*'
+    - any-glob-to-any-file: '**/*Hud*'
+    - any-glob-to-any-file: '**/*Renderer*'
+
+calculation:
+  - changed-files:
+    - any-glob-to-any-file: '**/CatchRate*.kt'
+    - any-glob-to-any-file: '**/BallMultiplier*.kt'
+    - any-glob-to-any-file: '**/BallContext*.kt'
+
+config:
+  - changed-files:
+    - any-glob-to-any-file: '**/config/**/*'
+    - any-glob-to-any-file: '**/CatchRateConfig.kt'
+
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: '**/*.md'
+    - any-glob-to-any-file: '.github/**/*'
+
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file: 'gradle.properties'
+    - any-glob-to-any-file: 'build.gradle.kts'
+    - any-glob-to-any-file: '**/build.gradle.kts'
+    - any-glob-to-any-file: 'gradle/**/*'
+
+ci:
+  - changed-files:
+    - any-glob-to-any-file: '.github/workflows/**/*'

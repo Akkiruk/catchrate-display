@@ -1,0 +1,46 @@
+name: Welcome New Contributors
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  welcome-issue:
+    if: github.event_name == 'issues'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            👋 Thanks for opening your first issue!
+            
+            We'll take a look as soon as possible. In the meantime, please make sure you've:
+            - Included your mod version (check mods menu or run `/catchrate info`)
+            - Specified whether you're using Fabric or NeoForge
+            - Added debug logs if this is a calculation bug (`/catchrate debug`)
+            
+            If you need immediate help, check out our [Discussions](https://github.com/Akkiruk/catchrate-display/discussions).
+
+  welcome-pr:
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          pr-message: |
+            🎉 Thanks for your first contribution!
+            
+            Please make sure:
+            - [ ] Code builds successfully (`./gradlew clean build`)
+            - [ ] Tested with both Fabric and NeoForge
+            - [ ] Updated CHANGELOG.md if adding features or fixing bugs
+            
+            We'll review your PR as soon as we can!

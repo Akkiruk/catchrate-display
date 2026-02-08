@@ -1,5 +1,11 @@
 # Cobblemon Catch Rate Display
 
+[![Build](https://github.com/Akkiruk/catchrate-display/actions/workflows/build.yml/badge.svg)](https://github.com/Akkiruk/catchrate-display/actions/workflows/build.yml)
+[![CodeQL](https://github.com/Akkiruk/catchrate-display/actions/workflows/codeql.yml/badge.svg)](https://github.com/Akkiruk/catchrate-display/security/code-scanning)
+[![GitHub Release](https://img.shields.io/github/v/release/Akkiruk/catchrate-display?logo=github)](https://github.com/Akkiruk/catchrate-display/releases/latest)
+[![CurseForge Downloads](https://img.shields.io/curseforge/dt/catchrate-display?logo=curseforge&color=F16436)](https://www.curseforge.com/minecraft/mc-mods/catchrate-display)
+[![Modrinth Downloads](https://img.shields.io/modrinth/dt/catchrate-display?logo=modrinth&color=00AF5C)](https://modrinth.com/mod/catchrate-display)
+
 [![Minecraft Version](https://img.shields.io/badge/Minecraft-1.21.1-green.svg)](https://www.minecraft.net/)
 [![Fabric API](https://img.shields.io/badge/Fabric%20API-0.116%2B-orange.svg)](https://fabricmc.net/)
 [![NeoForge](https://img.shields.io/badge/NeoForge-21.1%2B-red.svg)](https://neoforged.net/)
