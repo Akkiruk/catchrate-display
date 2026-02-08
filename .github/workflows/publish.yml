@@ -68,7 +68,6 @@ jobs:
           
           files: |
             fabric/build/libs/!(*-@(dev|shadow|sources|javadoc)).jar
-            fabric/build/libs/*-sources.jar
           
           name: "[Fabric] v${{ steps.get_version.outputs.VERSION }}"
           version: ${{ steps.get_version.outputs.VERSION }}+fabric
@@ -101,7 +100,6 @@ jobs:
           
           files: |
             neoforge/build/libs/!(*-@(dev|shadow|sources|javadoc)).jar
-            neoforge/build/libs/*-sources.jar
           
           name: "[NeoForge] v${{ steps.get_version.outputs.VERSION }}"
           version: ${{ steps.get_version.outputs.VERSION }}+neoforge
@@ -125,10 +123,16 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: catchrate-display-fabric-${{ steps.get_version.outputs.VERSION }}
-          path: fabric/build/libs/*.jar
+          path: |
+            fabric/build/libs/catchrate-display-fabric-*.jar
+            !fabric/build/libs/*-dev*.jar
+            !fabric/build/libs/*-sources.jar
           
       - name: Upload NeoForge artifacts
         uses: actions/upload-artifact@v4
         with:
           name: catchrate-display-neoforge-${{ steps.get_version.outputs.VERSION }}
-          path: neoforge/build/libs/*.jar
+          path: |
+            neoforge/build/libs/catchrate-display-neoforge-*.jar
+            !neoforge/build/libs/*-dev*.jar
+            !neoforge/build/libs/*-sources.jar
