@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discord Support
+    url: https://discord.gg/cobblemon
+    about: For quick questions, join the Cobblemon Discord
+  - name: CurseForge Page
+    url: https://www.curseforge.com/minecraft/mc-mods/catchrate-display
+    about: Download the mod, read the description, and see FAQs
+  - name: Documentation
+    url: https://github.com/Akkiruk/catchrate-display/blob/main/README.md
+    about: Read the mod documentation and feature list

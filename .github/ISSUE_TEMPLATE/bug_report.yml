@@ -1,0 +1,133 @@
+name: Bug Report
+description: Report a bug or incorrect catch rate calculation
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please fill out the sections below to help us fix it.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Before submitting, please verify these items
+      options:
+        - label: I'm using the latest version of CatchRateDisplay
+          required: true
+        - label: I've searched existing issues and this isn't a duplicate
+          required: true
+        - label: This is a client-side mod - I understand it works on any Cobblemon server
+          required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: What's broken? Be specific.
+      placeholder: "Example: Dusk Ball shows 1x during night instead of 3x"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Join server at night
+        2. Hold Dusk Ball
+        3. Encounter wild Pokemon
+        4. HUD shows incorrect multiplier
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+      placeholder: "Dusk Ball should show 3x at night (light level 0-7)"
+    validations:
+      required: true
+
+  - type: input
+    id: mod-version
+    attributes:
+      label: CatchRateDisplay Version
+      description: "Run `/catchrate info` in-game or check mods menu"
+      placeholder: "2.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: minecraft-version
+    attributes:
+      label: Minecraft Version
+      placeholder: "1.21.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: loader
+    attributes:
+      label: Mod Loader
+      options:
+        - Fabric
+        - NeoForge
+    validations:
+      required: true
+
+  - type: input
+    id: cobblemon-version
+    attributes:
+      label: Cobblemon Version
+      description: "Check mods menu"
+      placeholder: "1.7.1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: debug-logs
+    attributes:
+      label: Debug Logs
+      description: |
+        **Run `/catchrate debug` in-game, reproduce the issue, then paste logs here.**
+        Look for lines with `[CatchRate CALC]`, `[CatchRate BALL]`, etc.
+        
+        Logs are in `.minecraft/logs/latest.log` or the CurseForge logs folder.
+      placeholder: |
+        [CatchRate DEBUG] Environment info...
+        [CatchRate CALC] Pokemon: Pidgey Lv5 | Ball=dusk_ball...
+        [CatchRate BALL] dusk_ball: Light level: 3 -> 3.0x [✓]
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: other-mods
+    attributes:
+      label: Other Mods Installed
+      description: List any other mods that might be relevant
+      placeholder: |
+        - BetterCombat 1.2.3
+        - FancyMenu 3.4.5
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag and drop images here if helpful
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Anything else we should know?
+    validations:
+      required: false
