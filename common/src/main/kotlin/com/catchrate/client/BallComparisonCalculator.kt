@@ -130,6 +130,8 @@ object BallComparisonCalculator {
             "Level bonus: ${levelBonus}x | Out-of-combat: 0.5x | Final: ${String.format("%.1f", catchChance)}%"
         )
         
+        val isFormulaGuaranteed = result.isGuaranteed || catchChance >= 100F
+
         return BallCatchRate(
             ballName = ballId,
             displayName = CatchRateFormula.formatBallName(ballId),
@@ -137,7 +139,7 @@ object BallComparisonCalculator {
             multiplier = result.multiplier.toDouble(),
             conditionMet = result.conditionMet,
             reason = result.reason,
-            isGuaranteed = result.isGuaranteed
+            isGuaranteed = isFormulaGuaranteed
         )
     }
     

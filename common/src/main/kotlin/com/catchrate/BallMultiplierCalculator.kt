@@ -289,17 +289,11 @@ object BallMultiplierCalculator {
     }
     
     private fun calculateLureBall(ctx: BallContext): BallResult {
-        CatchRateMod.debugThrottled("LureBall", "${ctx.speciesId} | aspects(${ctx.pokemonAspects.size}): ${ctx.pokemonAspects} | caught=${ctx.hasCaughtSpecies} | inBattle=${ctx.inBattle}")
+        CatchRateMod.debugThrottled("LureBall", "${ctx.speciesId} | aspects(${ctx.pokemonAspects.size}): ${ctx.pokemonAspects} | inBattle=${ctx.inBattle}")
 
-        // Check "fished" aspect on the Pokemon entity
-        if (ctx.pokemonAspects.isNotEmpty() || ctx.hasCaughtSpecies != null) {
-            val fished = ctx.pokemonAspects.any { it.equals("fished", ignoreCase = true) }
-            CatchRateMod.debugThrottled("LureBall", "  -> fished=$fished")
-            val mult = if (fished) 4F else 1F
-            return BallResult(mult, fished, if (fished) BallTranslations.lureEffective() else BallTranslations.lureIneffective())
-        }
-
-        CatchRateMod.debug("LureBall", "  No client data available, defaulting to 1x")
-        return BallResult(1F, false, BallTranslations.lureIneffective())
+        val fished = ctx.pokemonAspects.any { it.equals("fished", ignoreCase = true) }
+        CatchRateMod.debugThrottled("LureBall", "  -> fished=$fished")
+        val mult = if (fished) 4F else 1F
+        return BallResult(mult, fished, if (fished) BallTranslations.lureEffective() else BallTranslations.lureIneffective())
     }
 }

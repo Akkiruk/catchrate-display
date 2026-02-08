@@ -42,7 +42,8 @@ class CatchRateHudRenderer {
     
     private var lastBattleId: java.util.UUID? = null
     private var turnCount = 1
-    private var lastActionRequestCount = 0
+    private var lastMustChoose = false
+    private var mustChooseTransitions = 0
     
     private var lastPokemonUuid: java.util.UUID? = null
     private var lastBallItem: String? = null
@@ -130,21 +131,23 @@ class CatchRateHudRenderer {
     private fun onBattleStart(battle: ClientBattle) {
         lastBattleId = battle.battleId
         turnCount = 1
-        lastActionRequestCount = 0
+        lastMustChoose = false
+        mustChooseTransitions = 0
         cachedClientResult = null
         cachedComparison = null
     }
     
     private fun updateTurnCount(battle: ClientBattle) {
-        val currentRequestCount = battle.pendingActionRequests.size
-        if (currentRequestCount > 0 && currentRequestCount != lastActionRequestCount) {
-            if (lastActionRequestCount > 0) {
+        val nowMustChoose = battle.mustChoose
+        if (nowMustChoose && !lastMustChoose) {
+            mustChooseTransitions++
+            if (mustChooseTransitions > 1) {
                 turnCount++
                 cachedClientResult = null
                 cachedComparison = null
             }
-            lastActionRequestCount = currentRequestCount
         }
+        lastMustChoose = nowMustChoose
     }
     
     private fun checkCacheInvalidation(pokemon: ClientBattlePokemon, heldItem: ItemStack) {
@@ -165,6 +168,9 @@ class CatchRateHudRenderer {
     
     private fun resetState() {
         lastBattleId = null
+        turnCount = 1
+        lastMustChoose = false
+        mustChooseTransitions = 0
         lastPokemonUuid = null
         lastBallItem = null
         lastHpValue = -1F

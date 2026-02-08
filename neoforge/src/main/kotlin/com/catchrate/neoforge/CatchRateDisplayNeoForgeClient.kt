@@ -36,7 +36,7 @@ object CatchRateDisplayNeoForgeClient {
             CatchRateMod.logEnvironmentInfo()
         }
         event.registerAboveAll(
-            net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(CatchRateMod.MOD_ID, "catch_rate_hud")
+            net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(CatchRateMod.NEOFORGE_MOD_ID, "catch_rate_hud")
         ) { guiGraphics, deltaTracker ->
             hudRenderer.render(guiGraphics, deltaTracker)
         }

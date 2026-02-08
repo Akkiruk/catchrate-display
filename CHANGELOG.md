@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.2] - 2026-02-08
+
+### Fixed
+- Turn count tracking now uses mustChoose transitions instead of pendingActionRequests size comparison (fixes Timer Ball/Quick Ball showing wrong multiplier after turn 1)
+- Out-of-combat guaranteed catch detection now checks formula result, not just ball flag
+- NeoForge GUI layer namespace now uses underscore mod ID for consistency
+- Ball multiplier color tiers in comparison panel now match main HUD (distinguishes 1.5x/2.0x/3.0x)
+- Lure Ball no longer uses unrelated Pokédex data as a proxy for aspect availability
+- resetState() now fully resets turn tracking fields
+
+---
+
 ## [2.1.1] - 2026-02-08
 
 ### Fixed

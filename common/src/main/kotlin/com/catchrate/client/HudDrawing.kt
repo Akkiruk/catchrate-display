@@ -179,7 +179,8 @@ object HudDrawing {
     fun getBallMultiplierFormatting(multiplier: Double): ChatFormatting {
         return when {
             multiplier >= 3.0 -> ChatFormatting.GREEN
-            multiplier >= 1.5 -> ChatFormatting.AQUA
+            multiplier >= 2.0 -> ChatFormatting.AQUA
+            multiplier >= 1.5 -> ChatFormatting.YELLOW
             multiplier < 1.0 -> ChatFormatting.RED
             else -> ChatFormatting.GRAY
         }
