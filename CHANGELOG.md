@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.3.0] - 2026-02-08
+
+### Added
+- Unknown Pokémon obfuscation: name, catch rate, and HP multiplier show as "???" for species not yet in your Pokédex
+- New `obfuscateUnknown` config option (default: true) to toggle obfuscation
+- `BallContextFactory.isSpeciesKnown()` public API for Pokédex encounter checks
+
+---
+
 ## [2.2.0] - 2026-02-08
 
 ### Changed

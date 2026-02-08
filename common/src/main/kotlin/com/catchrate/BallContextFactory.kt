@@ -141,6 +141,19 @@ object BallContextFactory {
     }
     
     /**
+     * Check if the player has encountered (or caught) this species.
+     * Returns true if knowledge >= ENCOUNTERED, false if NONE, null on error.
+     */
+    fun isSpeciesKnown(speciesId: ResourceLocation): Boolean? {
+        return try {
+            val knowledge = CobblemonClient.clientPokedexData.getHighestKnowledgeForSpecies(speciesId)
+            knowledge != PokedexEntryProgress.NONE
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    /**
      * Get Pokemon aspects from ClientBattlePokemon via its FloatingState.
      * The private `aspects` field is mirrored to `state.currentAspects` which is accessible.
      * This includes persistent aspects like "fished" from fishing encounters.
