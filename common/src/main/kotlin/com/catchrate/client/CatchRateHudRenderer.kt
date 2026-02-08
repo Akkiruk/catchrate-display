@@ -4,6 +4,7 @@ import com.catchrate.CatchRateCalculator
 import com.catchrate.CatchRateConstants.Colors
 import com.catchrate.CatchRateFormula
 import com.catchrate.CatchRateKeybinds
+import com.catchrate.CatchRateMod
 import com.catchrate.CatchRateResult
 import com.catchrate.config.CatchRateConfig
 import com.cobblemon.mod.common.client.CobblemonClient
@@ -88,19 +89,34 @@ class CatchRateHudRenderer {
             return
         }
         
-        if (battle.battleId != lastBattleId) onBattleStart(battle)
-        if (!battle.isPvW) return
+        if (battle.battleId != lastBattleId) {
+            CatchRateMod.debug("HUD", "Battle started: ${battle.battleId} isPvW=${battle.isPvW}")
+            onBattleStart(battle)
+        }
+        if (!battle.isPvW) {
+            CatchRateMod.debugOnChange("battleType", "pvp", "Not PvW battle, HUD hidden")
+            return
+        }
         
         updateTurnCount(battle)
         
         val heldItem = player.mainHandItem
-        if (!isPokeball(heldItem)) return
+        if (!isPokeball(heldItem)) {
+            CatchRateMod.debugOnChange("heldItem", "not_pokeball", "Not holding Pokeball: ${heldItem.item}")
+            return
+        }
         
-        val opponentPokemon = getOpponentPokemon(battle) ?: return
+        val opponentPokemon = getOpponentPokemon(battle)
+        if (opponentPokemon == null) {
+            CatchRateMod.debugOnChange("opponent", "none", "No opponent Pokemon found")
+            return
+        }
         
         checkCacheInvalidation(opponentPokemon, heldItem)
         
         val ballName = getBallId(heldItem).lowercase()
+        CatchRateMod.debugOnChange("target", "${opponentPokemon.species.name}_${ballName}", 
+            "Target: ${opponentPokemon.species.name} Lv${opponentPokemon.level} with $ballName")
         
         if (config.showBallComparison) {
             renderBallComparisonPanel(guiGraphics, minecraft, opponentPokemon, battle)

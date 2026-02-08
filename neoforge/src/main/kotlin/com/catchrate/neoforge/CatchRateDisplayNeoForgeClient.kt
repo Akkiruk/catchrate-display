@@ -2,12 +2,14 @@ package com.catchrate.neoforge
 
 import com.catchrate.CatchRateKeybinds
 import com.catchrate.CatchRateMod
+import com.catchrate.DebugCommands
 import com.catchrate.client.CatchRateHudRenderer
 import net.minecraft.client.Minecraft
 import net.neoforged.api.distmarker.Dist
 import net.neoforged.bus.api.SubscribeEvent
 import net.neoforged.fml.common.EventBusSubscriber
 import net.neoforged.neoforge.client.event.ClientTickEvent
+import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent
 
@@ -29,7 +31,10 @@ object CatchRateDisplayNeoForgeClient {
     
     @SubscribeEvent
     fun onRegisterGuiLayers(event: RegisterGuiLayersEvent) {
-        CatchRateMod.LOGGER.info("[CatchRateDisplay] NeoForge registering GUI layer")
+        CatchRateMod.LOGGER.info("[CatchRateDisplay] NeoForge registering GUI layer v${CatchRateMod.VERSION}")
+        if (CatchRateMod.isDebugActive) {
+            CatchRateMod.logEnvironmentInfo()
+        }
         event.registerAboveAll(
             net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(CatchRateMod.MOD_ID, "catch_rate_hud")
         ) { guiGraphics, deltaTracker ->
@@ -50,5 +55,11 @@ object CatchRateDisplayNeoForgeClientEvents {
         if (minecraft.player != null) {
             CatchRateKeybinds.tick(minecraft)
         }
+    }
+    
+    @SubscribeEvent
+    fun onRegisterClientCommands(event: RegisterClientCommandsEvent) {
+        DebugCommands.register(event.dispatcher)
+        CatchRateMod.LOGGER.info("[CatchRateDisplay] Registered /catchrate command")
     }
 }

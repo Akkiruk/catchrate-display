@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.1.0] - 2026-02-08
+
+### Enhanced Debug Logging
+
+Makes troubleshooting easier for players and developers.
+
+### Added
+- `/catchrate debug` command — toggles verbose logging for current session
+- `/catchrate info` command — shows mod version, config, and environment info
+- Calculation trace logging showing Pokemon, ball, HP, status, and result
+- Ball multiplier logging for every ball type with condition status
+- HUD decision logging (why HUD is/isn't showing)
+- State-change logging (target changed, ball changed, etc.)
+- Environment dump on debug enable (Minecraft version, Cobblemon version, loader)
+- Session-based debug override (toggle without editing config file)
+
+### Changed
+- Debug system now uses `isDebugActive` which respects both config and session toggle
+- Startup logging now includes mod version
+
+---
+
 ## [2.0.0] - 2026-02-07
 
 ### Pure Client-Side Rewrite

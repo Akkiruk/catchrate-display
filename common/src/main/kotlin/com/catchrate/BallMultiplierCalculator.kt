@@ -118,14 +118,16 @@ object BallMultiplierCalculator {
         }
         
         if (pokeBall?.catchRateModifier?.isGuaranteed() == true || lower.contains("master")) {
+            CatchRateMod.debugBall(lower, "guaranteed catch", 255F, true)
             return BallResult(255F, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
         }
         
         if (pokeBall?.ancient == true) {
+            CatchRateMod.debugBall(lower, "ancient ball", 1F, true)
             return calculateAncientBall(lower)
         }
         
-        return when (lower) {
+        val result = when (lower) {
             "quick_ball" -> calculateQuickBall(ctx)
             "timer_ball" -> calculateTimerBall(ctx)
             "ultra_ball" -> BallResult(2F, true, BallTranslations.multiplierAlways())
@@ -151,6 +153,9 @@ object BallMultiplierCalculator {
                 BallResult(1F, true, BallTranslations.specialEffect())
             else -> BallResult(1F, true, "")
         }
+        
+        CatchRateMod.debugBall(lower, result.reason, result.multiplier, result.conditionMet)
+        return result
     }
     
     private fun calculateAncientBall(lower: String): BallResult {

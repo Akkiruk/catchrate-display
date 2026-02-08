@@ -78,6 +78,14 @@ object CatchRateCalculator {
         val isFormulaGuaranteed = CatchRateFormula.isGuaranteedByFormula(modifiedCatchRate)
         val captureChance = CatchRateFormula.modifiedRateToPercentage(modifiedCatchRate)
         
+        CatchRateMod.debugCalc(
+            pokemon = "${pokemon.species.name} Lv${level}",
+            ball = "$ballName ${ballBonus}x${if (ballResult.conditionMet) " (met)" else ""}",
+            hp = "${String.format("%.1f", hpInfo.percentage)}% (${hpInfo.currentHp.toInt()}/${hpInfo.maxHp.toInt()})",
+            status = "${CatchRateFormula.getStatusDisplayName(statusPath)} ${bonusStatus}x",
+            result = "${String.format("%.2f", captureChance)}% (mod=${String.format("%.1f", modifiedCatchRate)}, base=$catchRate)"
+        )
+        
         return CatchRateResult(
             percentage = captureChance.toDouble().coerceIn(0.0, 100.0),
             hpPercentage = hpInfo.percentage,
