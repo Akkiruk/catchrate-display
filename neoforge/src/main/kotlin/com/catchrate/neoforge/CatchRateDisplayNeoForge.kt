@@ -14,7 +14,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext
  * NeoForge main mod entrypoint.
  * Registers packet payloads and server-side handlers.
  */
-@Mod(CatchRateMod.MOD_ID)
+@Mod(CatchRateMod.NEOFORGE_MOD_ID)
 class CatchRateDisplayNeoForge(modBus: IEventBus) {
     
     init {

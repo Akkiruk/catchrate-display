@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.3.4] - 2026-02-07
+
+### Fixed
+- **NeoForge crash on startup: "Expected @SubscribeEvent method to NOT be static"**
+  - Removed `@JvmStatic` from all `@SubscribeEvent` methods in NeoForge client event handlers
+  - KotlinForForge registers Kotlin `object` singletons as instances, which requires non-static methods
+  - `@JvmStatic` caused NeoForge's event bus to reject the registration
+
+## [1.3.3] - 2026-02-07
+
+### Fixed
+- **NeoForge jar now loads correctly!**
+  - NeoForge mod ID changed from `catchrate-display` to `catchrate_display` (hyphens not allowed in NeoForge mod IDs)
+  - Added `NEOFORGE_MOD_ID` constant for platform-specific mod ID handling
+  - NeoForge requires mod IDs matching `^[a-z][a-z0-9_]{1,63}$` (only lowercase letters, numbers, underscores)
+  - Fabric version keeps hyphenated ID for compatibility
+  - Fixed "File catchrate-display-neoforge-*.jar is not a valid mod file" error
+
 ## [1.3.2] - 2026-02-07
 
 ### Fixed

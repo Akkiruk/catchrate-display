@@ -19,13 +19,12 @@ import net.neoforged.neoforge.client.gui.GuiLayerManager
  * Uses @EventBusSubscriber for mod bus events (keymappings, GUI layers)
  * and manual registration for game bus events (tick, connection).
  */
-@EventBusSubscriber(modid = CatchRateMod.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = [Dist.CLIENT])
+@EventBusSubscriber(modid = CatchRateMod.NEOFORGE_MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = [Dist.CLIENT])
 object CatchRateDisplayNeoForgeClient {
     
     private val hudRenderer = CatchRateHudRenderer()
     
     @SubscribeEvent
-    @JvmStatic
     fun onRegisterKeyMappings(event: RegisterKeyMappingsEvent) {
         CatchRateMod.LOGGER.info("[CatchRateDisplay] NeoForge registering key mappings")
         val keyMappings = CatchRateKeybinds.createKeyMappings()
@@ -33,7 +32,6 @@ object CatchRateDisplayNeoForgeClient {
     }
     
     @SubscribeEvent
-    @JvmStatic
     fun onRegisterGuiLayers(event: RegisterGuiLayersEvent) {
         CatchRateMod.LOGGER.info("[CatchRateDisplay] NeoForge registering GUI layer")
         event.registerAboveAll(
@@ -47,11 +45,10 @@ object CatchRateDisplayNeoForgeClient {
 /**
  * NeoForge game bus event subscriber for client-side runtime events.
  */
-@EventBusSubscriber(modid = CatchRateMod.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = [Dist.CLIENT])
+@EventBusSubscriber(modid = CatchRateMod.NEOFORGE_MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = [Dist.CLIENT])
 object CatchRateDisplayNeoForgeClientEvents {
     
     @SubscribeEvent
-    @JvmStatic
     fun onClientTick(event: ClientTickEvent.Post) {
         val minecraft = Minecraft.getInstance()
         if (minecraft.player != null) {
@@ -60,13 +57,11 @@ object CatchRateDisplayNeoForgeClientEvents {
     }
     
     @SubscribeEvent
-    @JvmStatic
     fun onClientConnect(event: ClientPlayerNetworkEvent.LoggingIn) {
         CatchRateClientNetworking.onConnect()
     }
     
     @SubscribeEvent
-    @JvmStatic
     fun onClientDisconnect(event: ClientPlayerNetworkEvent.LoggingOut) {
         CatchRateClientNetworking.onDisconnect()
     }
