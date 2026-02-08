@@ -31,6 +31,33 @@ object CatchRateCalculator {
         playerHighestLevel: Int? = null,
         inBattle: Boolean = true
     ): CatchRateResult {
+        return try {
+            calculateCatchRateInternal(pokemon, itemStack, turnCount, playerHighestLevel, inBattle)
+        } catch (e: Throwable) {
+            CatchRateMod.debug("Calc", "calculateCatchRate failed, returning base-only fallback: ${e.javaClass.simpleName}: ${e.message}")
+            val baseCatchRate = try { pokemon.species.catchRate } catch (_: Throwable) { 45 }
+            val ballName = try { getPokeBallFromItem(itemStack)?.name?.path } catch (_: Throwable) { null }
+                ?: itemStack.item.toString().substringAfter(":").substringBefore("}")
+            CatchRateResult(
+                percentage = CatchRateFormula.modifiedRateToPercentage(baseCatchRate.toFloat()).toDouble().coerceIn(0.0, 100.0),
+                hpPercentage = 100.0,
+                statusMultiplier = 1.0,
+                ballMultiplier = 1.0,
+                baseCatchRate = baseCatchRate,
+                statusName = "",
+                ballName = ballName,
+                turnCount = turnCount
+            )
+        }
+    }
+
+    private fun calculateCatchRateInternal(
+        pokemon: ClientBattlePokemon,
+        itemStack: ItemStack,
+        turnCount: Int = 1,
+        playerHighestLevel: Int? = null,
+        inBattle: Boolean = true
+    ): CatchRateResult {
         val pokeBall = getPokeBallFromItem(itemStack)
         val ballName = pokeBall?.name?.path ?: itemStack.item.toString().substringAfter(":").substringBefore("}")
         

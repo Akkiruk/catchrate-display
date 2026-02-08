@@ -94,7 +94,11 @@ class CatchRateHudRenderer {
         if (battle == null) {
             resetState()
             if (config.showOutOfCombat) {
-                renderOutOfCombatHud(guiGraphics, minecraft, player)
+                try {
+                    renderOutOfCombatHud(guiGraphics, minecraft, player)
+                } catch (e: Throwable) {
+                    CatchRateMod.debug("HUD", "Out-of-combat render failed: ${e.javaClass.simpleName}")
+                }
             }
             return
         }
@@ -129,8 +133,13 @@ class CatchRateHudRenderer {
             "Target: ${opponentPokemon.species.name} Lv${opponentPokemon.level} with $ballName")
         
         if (config.showBallComparison) {
-            renderBallComparisonPanel(guiGraphics, minecraft, opponentPokemon, battle)
-            return
+            try {
+                renderBallComparisonPanel(guiGraphics, minecraft, opponentPokemon, battle)
+                return
+            } catch (e: Throwable) {
+                CatchRateMod.debug("HUD", "Comparison panel failed, falling back: ${e.javaClass.simpleName}")
+                // Fall through to single-ball HUD
+            }
         }
         
         val result = getClientCalculation(opponentPokemon, heldItem) ?: return

@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.4.0] - 2026-02-08
+
+### Changed
+- Compile against Cobblemon 1.6.0 to catch API breaks at build time
+- Lower Fabric Loader minimum to 0.15.0
+- Fix fabric.mod.json FLK requirement to match actual Kotlin 2.2.0 dependency
+
+### Added
+- CI compatibility matrix: builds verified against Cobblemon 1.6.0 through 1.7.3
+- Graceful feature degradation: catch rate displays base-only fallback if ball calculations fail
+- Comparison panel falls back to single-ball HUD on error
+- Out-of-combat HUD silently recovers from API failures
+
+---
+
 ## [2.3.2] - 2026-02-08
 
 ### Fixed
