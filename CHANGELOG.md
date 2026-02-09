@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.1] - 2026-02-08
+
+### Fixed
+- VERSION constant stuck at 2.1.2 for 12 releases (now auto-injected from gradle.properties at build time)
+
+---
+
 ## [2.5.0] - 2026-02-08
 
 ### Added
