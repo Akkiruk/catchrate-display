@@ -30,8 +30,12 @@ logs/
 *.log
 build-log.txt
 
-# Temporary files
+# Temporary / one-off files
 *.tmp
 *.bak
 *.swp
 *~
+fix_lang_files.py
+
+# Stale root artifacts
+META-INF/
