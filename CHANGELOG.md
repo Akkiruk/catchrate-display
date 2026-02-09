@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.5.3] - 2026-02-09
+
+### Fixed
+- Ball names in comparison panel and single-ball HUD now use Cobblemon's localized item names instead of hardcoded English
+- Comparison panel width now accounts for header and footer text length, preventing overflow in languages with longer translations
+- Key name in "Release to close" footer wrapped in brackets for clarity
+
+---
+
 ## [2.5.2] - 2026-02-09
 
 ### Fixed

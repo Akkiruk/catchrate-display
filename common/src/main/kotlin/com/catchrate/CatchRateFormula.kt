@@ -10,6 +10,7 @@ import com.catchrate.CatchRateConstants.SHAKE_RANDOM_BOUND
 import com.catchrate.CatchRateConstants.STATUS_NONE_MULT
 import com.catchrate.CatchRateConstants.STATUS_PARA_BURN_POISON_MULT
 import com.catchrate.CatchRateConstants.STATUS_SLEEP_FROZEN_MULT
+import net.minecraft.network.chat.Component
 import java.util.Locale
 import kotlin.math.max
 import kotlin.math.pow
@@ -280,19 +281,22 @@ object CatchRateFormula {
     // ==================== FORMATTING UTILITIES ====================
     
     /**
-     * Format a ball name for display (e.g., "ultra_ball" -> "Ultra Ball").
+     * Format a ball name using Cobblemon's item translations for proper localization.
      */
     fun formatBallName(name: String): String {
-        return name.replace("cobblemon:", "")
-            .replace("_", " ")
+        val cleanName = name.replace("cobblemon:", "")
+        val translated = Component.translatable("item.cobblemon.$cleanName").string
+        if (translated != "item.cobblemon.$cleanName") return translated
+        return cleanName.replace("_", " ")
             .split(" ")
             .joinToString(" ") { it.replaceFirstChar { c -> c.uppercaseChar() } }
     }
     
     /**
-     * Format a ball name without "Ball" suffix for compact display.
+     * Compact ball name for single-ball HUD. Uses full localized name
+     * since suffix stripping doesn't work across languages.
      */
     fun formatBallNameCompact(name: String): String {
-        return formatBallName(name).replace(" Ball", "")
+        return formatBallName(name)
     }
 }

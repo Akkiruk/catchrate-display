@@ -442,7 +442,13 @@ class CatchRateHudRenderer {
         val col1Width = lines.maxOfOrNull { font.width(it.first) } ?: 100
         val col2Width = 45
         val col3Width = 35
-        val boxWidth = col1Width + col2Width + col3Width + padding * 4
+        val contentWidth = col1Width + col2Width + col3Width + padding * 4
+        val keyName = CatchRateKeybinds.comparisonKeyName
+        val header = Component.literal(HudTranslations.ballComparison(turnCount)).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+        val headerWidth = font.width(header) + padding * 2
+        val footerText = HudTranslations.releaseToClose("[${keyName}]")
+        val footerWidth = font.width(footerText) + padding * 2
+        val boxWidth = maxOf(contentWidth, headerWidth, footerWidth)
         val footerHeight = 18
         val boxHeight = headerHeight + lines.size * lineHeight + footerHeight + padding * 2
         
@@ -451,7 +457,6 @@ class CatchRateHudRenderer {
         
         HudDrawing.drawComparisonPanel(guiGraphics, x, y, boxWidth, boxHeight, headerHeight)
         
-        val header = Component.literal(HudTranslations.ballComparison(turnCount)).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
         guiGraphics.drawString(font, header, x + padding, y + padding, 0xFFFFFF)
         
         guiGraphics.hLine(x + padding, x + boxWidth - padding, y + headerHeight, 0xFF444455.toInt())
@@ -472,8 +477,7 @@ class CatchRateHudRenderer {
         
         val footerY = y + boxHeight - padding - 9
         guiGraphics.hLine(x + padding, x + boxWidth - padding, footerY - 4, Colors.BAR_BORDER)
-        val keyName = CatchRateKeybinds.comparisonKeyName
-        guiGraphics.drawString(font, HudTranslations.releaseToClose(keyName), x + padding, footerY, Colors.TEXT_DARK_GRAY)
+        guiGraphics.drawString(font, footerText, x + padding, footerY, Colors.TEXT_DARK_GRAY)
     }
     
     // ==================== HELPER METHODS ====================
