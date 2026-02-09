@@ -34,7 +34,7 @@ object CatchRateCalculator {
         return try {
             calculateCatchRateInternal(pokemon, itemStack, turnCount, playerHighestLevel, inBattle)
         } catch (e: Throwable) {
-            CatchRateMod.debug("Calc", "calculateCatchRate failed, returning base-only fallback: ${e.javaClass.simpleName}: ${e.message}")
+            CatchRateMod.debugOnChange("CalcErr", "fallback", "calculateCatchRate failed: ${e.javaClass.simpleName}: ${e.message}")
             val baseCatchRate = try { pokemon.species.catchRate } catch (_: Throwable) { 45 }
             val ballName = try { getPokeBallFromItem(itemStack)?.name?.path } catch (_: Throwable) { null }
                 ?: itemStack.item.toString().substringAfter(":").substringBefore("}")
@@ -109,12 +109,12 @@ object CatchRateCalculator {
         val isFormulaGuaranteed = CatchRateFormula.isGuaranteedByFormula(modifiedCatchRate)
         val captureChance = CatchRateFormula.modifiedRateToPercentage(modifiedCatchRate)
         
-        CatchRateMod.debugCalc(
-            pokemon = "${pokemon.species.name} Lv${level}",
-            ball = "$ballName ${ballBonus}x${if (ballResult.conditionMet) " (met)" else ""}",
-            hp = "${String.format("%.1f", hpInfo.percentage)}% (${hpInfo.currentHp.toInt()}/${hpInfo.maxHp.toInt()})",
-            status = "${CatchRateFormula.getStatusDisplayName(statusPath)} ${bonusStatus}x",
-            result = "${String.format("%.2f", captureChance)}% (mod=${String.format("%.1f", modifiedCatchRate)}, base=$catchRate)"
+        CatchRateMod.debugOnChange("Calc",
+            "${pokemon.species.name}_${ballName}_${hpInfo.currentHp.toInt()}_${statusPath}_${bonusStatus}",
+            "${pokemon.species.name} Lv${level} | Ball=$ballName ${ballBonus}x${if (ballResult.conditionMet) " (met)" else ""} | " +
+            "HP=${String.format("%.1f", hpInfo.percentage)}% (${hpInfo.currentHp.toInt()}/${hpInfo.maxHp.toInt()}) | " +
+            "Status=${CatchRateFormula.getStatusDisplayName(statusPath)} ${bonusStatus}x | " +
+            "Result=${String.format("%.2f", captureChance)}% (mod=${String.format("%.1f", modifiedCatchRate)}, base=$catchRate)"
         )
         
         return CatchRateResult(

@@ -53,7 +53,7 @@ object BallComparisonCalculator {
         return try {
             calculateAllBallsInternal(pokemon, turnCount, battle)
         } catch (e: Throwable) {
-            CatchRateMod.debug("Comparison", "calculateAllBalls failed: ${e.javaClass.simpleName}: ${e.message}")
+            CatchRateMod.debugOnChange("CompErr", "allBalls", "calculateAllBalls failed: ${e.javaClass.simpleName}: ${e.message}")
             emptyList()
         }
     }
@@ -110,7 +110,7 @@ object BallComparisonCalculator {
         return try {
             calculateForWorldPokemonInternal(entity, ballId)
         } catch (e: Throwable) {
-            CatchRateMod.debug("WorldCalc", "calculateForWorldPokemon failed: ${e.javaClass.simpleName}: ${e.message}")
+            CatchRateMod.debugOnChange("WorldCalcErr", "worldPokemon", "calculateForWorldPokemon failed: ${e.javaClass.simpleName}: ${e.message}")
             null
         }
     }
@@ -193,7 +193,8 @@ object BallComparisonCalculator {
                 val pokemonOwner = entity.pokemon.getOwnerUUID()
                 val entityOwner = entity.ownerUUID
                 if (pokemonOwner == null && entityOwner == null) return entity
-                CatchRateMod.debug("WorldCalc", "Skipping owned Pokemon: ${entity.pokemon.species.name} (pokemonOwner: $pokemonOwner, entityOwner: $entityOwner)")
+                CatchRateMod.debugOnChange("OwnedSkip", "${entity.uuid}",
+                    "Skipping owned Pokemon: ${entity.pokemon.species.name}")
                 return null
             }
         }

@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.5.2] - 2026-02-09
+
+### Fixed
+- Debug logging no longer spams logs every tick — all per-frame logging now uses change-detection
+- Consolidated 5 separate debug methods into 2 (one-shot events + change-only)
+- Ball multiplier checks, catch rate calculations, and owned-pokemon skips only log when values actually change
+
+---
+
 ## [2.5.1] - 2026-02-08
 
 ### Fixed

@@ -23,37 +23,19 @@ object CatchRateMod {
 
     private val lastStateValues = mutableMapOf<String, String>()
 
-    /** Log a debug message. */
-    fun debug(message: String) {
-        if (isDebugActive) LOGGER.info("[CatchRate DEBUG] $message")
-    }
-
-    /** Log a debug message with a category tag. */
+    /** Log a one-shot debug event (battle start, toggle, error). Not for loops. */
     fun debug(category: String, message: String) {
-        if (isDebugActive) LOGGER.info("[CatchRate DEBUG/$category] $message")
+        if (isDebugActive) LOGGER.info("[CatchRate/$category] $message")
     }
 
-    /** Log only when value changes (for state tracking). */
+    /** Log only when value changes. Use this for anything called in a render/tick loop. */
     fun debugOnChange(key: String, value: String, message: String) {
         if (!isDebugActive) return
         val last = lastStateValues[key]
         if (last != value) {
             lastStateValues[key] = value
-            LOGGER.info("[CatchRate CHANGE/$key] $message")
+            LOGGER.info("[CatchRate/$key] $message")
         }
-    }
-    
-    /** Log a calculation breakdown. */
-    fun debugCalc(pokemon: String, ball: String, hp: String, status: String, result: String) {
-        if (!isDebugActive) return
-        LOGGER.info("[CatchRate CALC] $pokemon | Ball=$ball | HP=$hp | Status=$status | Result=$result")
-    }
-    
-    /** Log ball multiplier check. */
-    fun debugBall(ballName: String, condition: String, multiplier: Float, met: Boolean) {
-        if (!isDebugActive) return
-        val status = if (met) "✓" else "✗"
-        LOGGER.info("[CatchRate BALL] $ballName: $condition -> ${multiplier}x [$status]")
     }
     
     /** Toggle debug mode for this session. Returns new state. */

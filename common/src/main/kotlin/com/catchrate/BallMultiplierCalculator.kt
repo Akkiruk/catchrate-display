@@ -125,7 +125,7 @@ object BallMultiplierCalculator {
         } catch (e: Throwable) { false }
         
         if (isGuaranteed || lower.contains("master")) {
-            CatchRateMod.debugBall(lower, "guaranteed catch", 255F, true)
+            CatchRateMod.debugOnChange("Ball/$lower", "guaranteed", "$lower: guaranteed catch -> 255x")
             return BallResult(255F, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
         }
         
@@ -134,7 +134,7 @@ object BallMultiplierCalculator {
         } catch (e: Throwable) { false }
         
         if (isAncient) {
-            CatchRateMod.debugBall(lower, "ancient ball", 1F, true)
+            CatchRateMod.debugOnChange("Ball/$lower", "ancient", "$lower: ancient ball -> 1x")
             return calculateAncientBall(lower)
         }
         
@@ -165,7 +165,8 @@ object BallMultiplierCalculator {
             else -> BallResult(1F, true, "")
         }
         
-        CatchRateMod.debugBall(lower, result.reason, result.multiplier, result.conditionMet)
+        CatchRateMod.debugOnChange("Ball/$lower", "${result.multiplier}_${result.conditionMet}",
+            "$lower: ${result.reason} -> ${result.multiplier}x [${if (result.conditionMet) "✓" else "✗"}]")
         return result
     }
     

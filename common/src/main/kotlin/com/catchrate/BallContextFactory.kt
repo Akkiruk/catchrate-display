@@ -137,7 +137,7 @@ object BallContextFactory {
                 "$speciesId -> knowledge=$knowledge, caught=$caught")
             caught
         } catch (e: Throwable) {
-            CatchRateMod.debug("Pokedex", "Could not check Pokédex for $speciesId: ${e.message}")
+            CatchRateMod.debugOnChange("PokedexErr", speciesId.toString(), "Could not check Pokédex for $speciesId: ${e.message}")
             null
         }
     }
@@ -167,7 +167,7 @@ object BallContextFactory {
                 "${pokemon.species.name} battle aspects: $aspects")
             aspects
         } catch (e: Throwable) {
-            CatchRateMod.debug("Aspects", "Could not get battle pokemon aspects: ${e.message}")
+            CatchRateMod.debugOnChange("AspectsErr", pokemon.species.name, "Could not get battle pokemon aspects: ${e.message}")
             emptySet()
         }
     }
@@ -184,7 +184,7 @@ object BallContextFactory {
                 )
             } else null
         } catch (e: Throwable) {
-            CatchRateMod.debug("Battle", "Could not access active battler: ${e.message}")
+            CatchRateMod.debugOnChange("BattleErr", "activeBattler", "Could not access active battler: ${e.message}")
             null
         }
     }

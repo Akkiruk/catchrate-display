@@ -74,7 +74,7 @@ class CatchRateHudRenderer {
         try {
             renderInternal(guiGraphics, deltaTracker)
         } catch (e: Throwable) {
-            CatchRateMod.debug("HUD", "Render error: ${e.javaClass.simpleName}: ${e.message}")
+            CatchRateMod.debugOnChange("HudErr", "render", "Render error: ${e.javaClass.simpleName}: ${e.message}")
         }
     }
     
@@ -100,7 +100,7 @@ class CatchRateHudRenderer {
                 try {
                     renderOutOfCombatHud(guiGraphics, minecraft, player)
                 } catch (e: Throwable) {
-                    CatchRateMod.debug("HUD", "Out-of-combat render failed: ${e.javaClass.simpleName}")
+                    CatchRateMod.debugOnChange("HudErr", "ooc", "Out-of-combat render failed: ${e.javaClass.simpleName}")
                 }
             }
             return
@@ -145,7 +145,7 @@ class CatchRateHudRenderer {
                 return
             } catch (e: Throwable) {
                 showCursor()
-                CatchRateMod.debug("HUD", "Comparison panel failed, falling back: ${e.javaClass.simpleName}")
+                CatchRateMod.debugOnChange("HudErr", "comparison", "Comparison panel failed, falling back: ${e.javaClass.simpleName}")
                 // Fall through to single-ball HUD
             }
         }
@@ -212,7 +212,7 @@ class CatchRateHudRenderer {
             cachedClientResult = try {
                 CatchRateCalculator.calculateCatchRate(pokemon, heldItem, turnCount, null, true)
             } catch (e: Throwable) {
-                CatchRateMod.debug("HUD", "Calculation failed: ${e.message}")
+                CatchRateMod.debugOnChange("HudErr", "calc", "Calculation failed: ${e.message}")
                 null
             }
             lastClientCalcTick = tickCounter
