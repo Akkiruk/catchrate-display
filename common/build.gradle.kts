@@ -11,7 +11,7 @@ dependencies {
     modCompileOnly("com.cobblemon:mod:$cobblemonVersion")
 
     // Architectury injectables for @ExpectPlatform
-    compileOnly("dev.architectury:architectury-injectables:1.0.10")
+    compileOnly("dev.architectury:architectury-injectables:1.0.13")
 }
 
 val generateBuildInfo by tasks.registering {
