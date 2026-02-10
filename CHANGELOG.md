@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.5] - 2026-02-10
+
+### Fixed
+- NeoForge mod loading crash caused by @JvmStatic on @SubscribeEvent methods (Kotlin objects require non-static methods for instance-based event bus registration)
+
+---
+
 ## [2.5.4] - 2026-02-09
 
 ### Fixed

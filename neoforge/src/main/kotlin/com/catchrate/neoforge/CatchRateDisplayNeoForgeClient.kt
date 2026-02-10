@@ -22,7 +22,6 @@ object CatchRateDisplayNeoForgeClient {
     
     private val hudRenderer = CatchRateHudRenderer()
     
-    @JvmStatic
     @SubscribeEvent
     fun onRegisterKeyMappings(event: RegisterKeyMappingsEvent) {
         CatchRateMod.LOGGER.info("[CatchRateDisplay] NeoForge registering key mappings")
@@ -30,7 +29,6 @@ object CatchRateDisplayNeoForgeClient {
         keyMappings.forEach { event.register(it) }
     }
     
-    @JvmStatic
     @SubscribeEvent
     fun onRegisterGuiLayers(event: RegisterGuiLayersEvent) {
         CatchRateMod.LOGGER.info("[CatchRateDisplay] NeoForge registering GUI layer v${CatchRateMod.VERSION}")
@@ -51,7 +49,6 @@ object CatchRateDisplayNeoForgeClient {
 @EventBusSubscriber(modid = CatchRateMod.NEOFORGE_MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = [Dist.CLIENT])
 object CatchRateDisplayNeoForgeClientEvents {
     
-    @JvmStatic
     @SubscribeEvent
     fun onClientTick(event: ClientTickEvent.Post) {
         val minecraft = Minecraft.getInstance()
@@ -60,7 +57,6 @@ object CatchRateDisplayNeoForgeClientEvents {
         }
     }
     
-    @JvmStatic
     @SubscribeEvent
     fun onRegisterClientCommands(event: RegisterClientCommandsEvent) {
         DebugCommands.register(event.dispatcher)
