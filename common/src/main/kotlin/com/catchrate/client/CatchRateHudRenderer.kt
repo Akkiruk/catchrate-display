@@ -315,8 +315,6 @@ class CatchRateHudRenderer {
         val wildText = if (data.isWild) HudTranslations.wild() else null
         val hpText = if (obfuscate) {
             "${HudTranslations.hp()} ???"
-        } else if (data.isWild && data.hpMultiplier < 0.34) {
-            "${HudTranslations.hp()} ${String.format("%.2f", data.hpMultiplier)}x (full)"
         } else {
             "${HudTranslations.hp()} ${String.format("%.2f", data.hpMultiplier)}x"
         }

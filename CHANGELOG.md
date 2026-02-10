@@ -8,7 +8,6 @@
 - Night start tick corrected from 12000 to 13000 to match Minecraft's actual mob-spawning threshold
 - Cursor restoration: hideCursor/showCursor now saves and restores the previous GLFW cursor mode instead of assuming NORMAL
 - PokeBall cache upgraded from HashMap to ConcurrentHashMap to prevent corruption under concurrent access
-- HP display shows "(full)" qualifier when displaying full-HP multiplier for wild Pokemon
 
 ### Changed
 - BallComparisonCalculator: renamed tick-based counter fields to frame-based (lookupFrameCounter, etc.)
