@@ -1,11 +1,9 @@
 # Changelog
 
-## [2.5.4] - 2026-02-10
+## [2.5.4] - 2026-02-09
 
 ### Fixed
 - Nest Ball off-by-one: level 30 now correctly gets 1.1x instead of falling through to 1x
-- Love Ball: different-species opposite-gender no longer gives 2.5x (only same-species opposite-gender gets 8x)
-- Quick Ball out-of-combat: now predicts 5x first-throw bonus instead of showing misleading 1x
 - NeoForge @SubscribeEvent methods annotated with @JvmStatic for proper event bus registration
 - Night start tick corrected from 12000 to 13000 to match Minecraft's actual mob-spawning threshold
 - Cursor restoration: hideCursor/showCursor now saves and restores the previous GLFW cursor mode instead of assuming NORMAL

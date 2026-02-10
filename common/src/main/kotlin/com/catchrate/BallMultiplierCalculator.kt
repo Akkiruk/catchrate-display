@@ -179,7 +179,7 @@ object BallMultiplierCalculator {
     }
 
     private fun calculateQuickBall(ctx: BallContext): BallResult {
-        if (!ctx.inBattle) return BallResult(5F, true, BallTranslations.quickEffective())
+        if (!ctx.inBattle) return BallResult(1F, false, BallTranslations.quickNotInBattle())
         val effective = ctx.turnCount == 1
         val mult = if (effective) 5F else 1F
         return BallResult(mult, effective, if (effective) BallTranslations.quickEffective() else BallTranslations.quickIneffective())
@@ -276,7 +276,7 @@ object BallMultiplierCalculator {
         val sameSpecies = ctx.speciesId == activeBattler.speciesId
         val genderDesc = if (wildGender == Gender.MALE) "♂" else "♀"
         return if (sameSpecies) BallResult(8F, true, BallTranslations.loveSameSpecies(genderDesc))
-        else BallResult(1F, false, BallTranslations.loveOppositeGender(genderDesc))
+        else BallResult(2.5F, true, BallTranslations.loveOppositeGender(genderDesc))
     }
     
     private fun calculateLevelBall(ctx: BallContext): BallResult {
