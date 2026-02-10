@@ -32,9 +32,9 @@ object BallComparisonCalculator {
     
     // Pokemon lookup cache to avoid expensive entity queries every frame
     private var cachedLookedAtPokemon: PokemonEntity? = null
-    private var lastPokemonLookupTick = 0L
-    private const val POKEMON_LOOKUP_INTERVAL_TICKS = 3L
-    private var lookupTickCounter = 0L
+    private var lastPokemonLookupFrame = 0L
+    private const val POKEMON_LOOKUP_INTERVAL_FRAMES = 3L
+    private var lookupFrameCounter = 0L
     
     data class BallCatchRate(
         val ballName: String,
@@ -167,14 +167,14 @@ object BallComparisonCalculator {
      * Cached to avoid expensive entity queries every frame.
      */
     fun getLookedAtPokemon(): PokemonEntity? {
-        lookupTickCounter++
+        lookupFrameCounter++
         
-        if ((lookupTickCounter - lastPokemonLookupTick) < POKEMON_LOOKUP_INTERVAL_TICKS) {
+        if ((lookupFrameCounter - lastPokemonLookupFrame) < POKEMON_LOOKUP_INTERVAL_FRAMES) {
             val cached = cachedLookedAtPokemon
             if (cached != null && cached.isAlive) return cached
         }
         
-        lastPokemonLookupTick = lookupTickCounter
+        lastPokemonLookupFrame = lookupFrameCounter
         cachedLookedAtPokemon = findLookedAtPokemon()
         return cachedLookedAtPokemon
     }

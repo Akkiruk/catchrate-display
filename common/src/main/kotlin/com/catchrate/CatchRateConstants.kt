@@ -54,7 +54,7 @@ object CatchRateConstants {
     // ==================== ENVIRONMENT CONSTANTS ====================
     
     /** Time of day range for night (in ticks) */
-    const val NIGHT_START_TICK = 12000L
+    const val NIGHT_START_TICK = 13000L
     const val NIGHT_END_TICK = 24000L
     
     // ==================== UI COLORS ====================

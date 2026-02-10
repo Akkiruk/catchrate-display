@@ -109,16 +109,15 @@ object BallMultiplierCalculator {
     )
 
     // Cache PokeBall lookups to avoid repeated ResourceLocation creation + registry lookups
-    private val pokeBallCache = HashMap<String, PokeBall?>()
+    private val pokeBallCache = java.util.concurrent.ConcurrentHashMap<String, PokeBall>()
     
     fun calculate(ballId: String, ctx: BallContext): BallResult {
         val lower = ballId.lowercase()
         
-        val pokeBall = pokeBallCache.getOrPut(lower) {
-            try {
-                PokeBalls.getPokeBall(ResourceLocation.fromNamespaceAndPath("cobblemon", lower))
-            } catch (e: Throwable) { null }
-        }
+        val pokeBall = pokeBallCache[lower] ?: try {
+            PokeBalls.getPokeBall(ResourceLocation.fromNamespaceAndPath("cobblemon", lower))
+                ?.also { pokeBallCache[lower] = it }
+        } catch (e: Throwable) { null }
         
         val isGuaranteed = try {
             pokeBall?.catchRateModifier?.isGuaranteed() == true
@@ -180,7 +179,7 @@ object BallMultiplierCalculator {
     }
 
     private fun calculateQuickBall(ctx: BallContext): BallResult {
-        if (!ctx.inBattle) return BallResult(1F, false, BallTranslations.quickNotInBattle())
+        if (!ctx.inBattle) return BallResult(5F, true, BallTranslations.quickEffective())
         val effective = ctx.turnCount == 1
         val mult = if (effective) 5F else 1F
         return BallResult(mult, effective, if (effective) BallTranslations.quickEffective() else BallTranslations.quickIneffective())
@@ -228,8 +227,8 @@ object BallMultiplierCalculator {
     }
     
     private fun calculateNestBall(ctx: BallContext): BallResult {
-        val effective = ctx.level < 30
-        val mult = if (effective) ((41 - ctx.level) / 10F).coerceAtLeast(1F) else 1F
+        val mult = ((41 - ctx.level) / 10F).coerceAtLeast(1F)
+        val effective = mult > 1F
         return BallResult(mult, effective, if (effective) BallTranslations.nestEffective(ctx.level) else BallTranslations.nestIneffective())
     }
     
@@ -277,7 +276,7 @@ object BallMultiplierCalculator {
         val sameSpecies = ctx.speciesId == activeBattler.speciesId
         val genderDesc = if (wildGender == Gender.MALE) "♂" else "♀"
         return if (sameSpecies) BallResult(8F, true, BallTranslations.loveSameSpecies(genderDesc))
-        else BallResult(2.5F, true, BallTranslations.loveOppositeGender(genderDesc))
+        else BallResult(1F, false, BallTranslations.loveOppositeGender(genderDesc))
     }
     
     private fun calculateLevelBall(ctx: BallContext): BallResult {

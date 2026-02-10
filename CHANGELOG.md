@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.5.4] - 2026-02-10
+
+### Fixed
+- Nest Ball off-by-one: level 30 now correctly gets 1.1x instead of falling through to 1x
+- Love Ball: different-species opposite-gender no longer gives 2.5x (only same-species opposite-gender gets 8x)
+- Quick Ball out-of-combat: now predicts 5x first-throw bonus instead of showing misleading 1x
+- NeoForge @SubscribeEvent methods annotated with @JvmStatic for proper event bus registration
+- Night start tick corrected from 12000 to 13000 to match Minecraft's actual mob-spawning threshold
+- Cursor restoration: hideCursor/showCursor now saves and restores the previous GLFW cursor mode instead of assuming NORMAL
+- PokeBall cache upgraded from HashMap to ConcurrentHashMap to prevent corruption under concurrent access
+- HP display shows "(full)" qualifier when displaying full-HP multiplier for wild Pokemon
+
+### Changed
+- BallComparisonCalculator: renamed tick-based counter fields to frame-based (lookupFrameCounter, etc.)
+
+---
+
 ## [2.5.3] - 2026-02-09
 
 ### Fixed

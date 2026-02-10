@@ -61,6 +61,7 @@ class CatchRateHudRenderer {
     
     private var tickCounter = 0L
     private var cursorHidden = false
+    private var previousCursorMode = -1
     
     companion object {
         private const val CLIENT_CALC_INTERVAL_TICKS = 5L
@@ -312,7 +313,13 @@ class CatchRateHudRenderer {
         val obfuscate = config.obfuscateUnknown && !data.isKnownSpecies
         val nameText = if (obfuscate) "??? Lv${data.level}" else "${data.pokemonName} Lv${data.level}"
         val wildText = if (data.isWild) HudTranslations.wild() else null
-        val hpText = if (obfuscate) "${HudTranslations.hp()} ???" else "${HudTranslations.hp()} ${String.format("%.2f", data.hpMultiplier)}x"
+        val hpText = if (obfuscate) {
+            "${HudTranslations.hp()} ???"
+        } else if (data.isWild && data.hpMultiplier < 0.34) {
+            "${HudTranslations.hp()} ${String.format("%.2f", data.hpMultiplier)}x (full)"
+        } else {
+            "${HudTranslations.hp()} ${String.format("%.2f", data.hpMultiplier)}x"
+        }
         
         val percentText = if (obfuscate) {
             "???"
@@ -498,6 +505,7 @@ class CatchRateHudRenderer {
         if (!cursorHidden) {
             val minecraft = Minecraft.getInstance()
             val window = minecraft.window.window
+            previousCursorMode = GLFW.glfwGetInputMode(window, GLFW.GLFW_CURSOR)
             GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_HIDDEN)
             cursorHidden = true
         }
@@ -507,8 +515,10 @@ class CatchRateHudRenderer {
         if (cursorHidden) {
             val minecraft = Minecraft.getInstance()
             val window = minecraft.window.window
-            GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL)
+            val restoreMode = if (previousCursorMode >= 0) previousCursorMode else GLFW.GLFW_CURSOR_NORMAL
+            GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, restoreMode)
             cursorHidden = false
+            previousCursorMode = -1
         }
     }
 }
