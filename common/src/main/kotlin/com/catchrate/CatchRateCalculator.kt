@@ -161,15 +161,18 @@ object CatchRateCalculator {
      * Works with any mod that stores pokéballs in CONTAINER and tracks selection via CUSTOM_DATA.
      */
     private fun getSelectedBallFromContainer(itemStack: ItemStack): PokeBall? {
-        val customData = itemStack.get(DataComponents.CUSTOM_DATA) ?: return null
         val container = itemStack.get(DataComponents.CONTAINER) ?: return null
-        
-        val tag = customData.copyTag()
-        if (!tag.contains("SelectedIndex")) return null
-        val selectedIndex = tag.getInt("SelectedIndex")
         
         val items = NonNullList.withSize(9, ItemStack.EMPTY)
         container.copyInto(items)
+        
+        // Get selected index from custom data, defaulting to first ball if not set
+        val selectedIndex = itemStack.get(DataComponents.CUSTOM_DATA)
+            ?.copyTag()
+            ?.takeIf { it.contains("SelectedIndex") }
+            ?.getInt("SelectedIndex")
+            ?: items.indexOfFirst { (it.item as? PokeBallItem) != null }.takeIf { it >= 0 }
+            ?: return null
         
         if (selectedIndex < 0 || selectedIndex >= items.size) return null
         val selected = items[selectedIndex]

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.7] - 2026-02-11
+
+### Fixed
+- Pokéball Launcher catch rate now appears immediately when equipping (previously required pressing ball swap hotkey first)
+
+---
+
 ## [2.5.6] - 2026-02-10
 
 ### Added
