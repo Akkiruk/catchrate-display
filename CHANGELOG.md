@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.6] - 2026-02-10
+
+### Added
+- Berry Pouch Pokéball Launcher support — catch rates now display for the selected ball inside the launcher
+- Generic container-item ball detection via vanilla DataComponents (works with any mod that stores pokéballs in CONTAINER + CUSTOM_DATA)
+
+---
+
 ## [2.5.5] - 2026-02-10
 
 ### Fixed

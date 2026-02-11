@@ -6,6 +6,8 @@ import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
 import com.cobblemon.mod.common.item.PokeBallItem
 import com.cobblemon.mod.common.pokeball.PokeBall
 import net.minecraft.client.Minecraft
+import net.minecraft.core.NonNullList
+import net.minecraft.core.component.DataComponents
 import net.minecraft.world.item.ItemStack
 import net.minecraft.resources.ResourceLocation
 
@@ -136,10 +138,15 @@ object CatchRateCalculator {
     
     /**
      * Get the PokeBall object from an ItemStack using Cobblemon's API.
+     * Also checks inside container items (e.g., Berry Pouch Pokéball Launcher)
+     * for a selected pokéball using vanilla DataComponents.
      */
     fun getPokeBallFromItem(itemStack: ItemStack): PokeBall? {
         val item = itemStack.item
         if (item is PokeBallItem) return item.pokeBall
+        
+        // Check for a selected pokéball in the item's container (Pokéball Launcher, etc.)
+        getSelectedBallFromContainer(itemStack)?.let { return it }
         
         val ballName = itemStack.item.toString().substringAfter(":").substringBefore("}").trim()
         return try {
@@ -147,6 +154,28 @@ object CatchRateCalculator {
         } catch (e: Throwable) { 
             null 
         }
+    }
+    
+    /**
+     * Try to extract the selected PokeBall from a container item's data components.
+     * Works with any mod that stores pokéballs in CONTAINER and tracks selection via CUSTOM_DATA.
+     */
+    private fun getSelectedBallFromContainer(itemStack: ItemStack): PokeBall? {
+        val customData = itemStack.get(DataComponents.CUSTOM_DATA) ?: return null
+        val container = itemStack.get(DataComponents.CONTAINER) ?: return null
+        
+        val tag = customData.copyTag()
+        if (!tag.contains("SelectedIndex")) return null
+        val selectedIndex = tag.getInt("SelectedIndex")
+        
+        val items = NonNullList.withSize(9, ItemStack.EMPTY)
+        container.copyInto(items)
+        
+        if (selectedIndex < 0 || selectedIndex >= items.size) return null
+        val selected = items[selectedIndex]
+        if (selected.isEmpty) return null
+        
+        return (selected.item as? PokeBallItem)?.pokeBall
     }
     
     private fun getBallResult(
