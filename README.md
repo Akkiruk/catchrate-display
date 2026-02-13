@@ -19,7 +19,7 @@ A **pure client-side** Architectury mod for Minecraft 1.21.1 that displays real-
 | Component | Supported Versions |
 |-----------|-------------------|
 | Minecraft | 1.21.1 |
-| Cobblemon | 1.7.1+ |
+| Cobblemon | 1.6.0+ |
 | **Fabric** | |
 | Fabric Loader | 0.16.7+ |
 | Fabric API | 0.116.7+ |
