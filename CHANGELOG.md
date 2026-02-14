@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.8] - 2026-02-14
+
+### Fixed
+- All Pokémon showing "???" on multiplayer servers due to unsynced Pokédex data
+
+---
+
 ## [2.5.7] - 2026-02-11
 
 ### Fixed

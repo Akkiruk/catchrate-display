@@ -126,11 +126,28 @@ object BallContextFactory {
     // ==================== HELPER METHODS ====================
     
     /**
+     * Check if the client Pokédex data has actually been synced from the server.
+     * Empty speciesRecords indicates data hasn't arrived yet (common on multiplayer servers).
+     */
+    private fun isPokedexSynced(): Boolean {
+        return try {
+            val records = CobblemonClient.clientPokedexData.speciesRecords
+            val synced = records.isNotEmpty()
+            CatchRateMod.debugOnChange("PokedexSync", synced.toString(),
+                "Pokédex synced=$synced (${records.size} species records)")
+            synced
+        } catch (e: Throwable) {
+            false
+        }
+    }
+
+    /**
      * Check if the player has caught this species using the client-synced Pokédex.
-     * Returns null if the check fails (e.g., Pokédex not yet synced).
+     * Returns null if the Pokédex isn't synced or the check fails.
      */
     private fun checkHasCaughtSpecies(speciesId: ResourceLocation): Boolean? {
         return try {
+            if (!isPokedexSynced()) return null
             val knowledge = CobblemonClient.clientPokedexData.getHighestKnowledgeForSpecies(speciesId)
             val caught = knowledge == PokedexEntryProgress.CAUGHT
             CatchRateMod.debugOnChange("Pokedex", "${speciesId}_${caught}",
@@ -144,10 +161,11 @@ object BallContextFactory {
     
     /**
      * Check if the player has encountered (or caught) this species.
-     * Returns true if knowledge >= ENCOUNTERED, false if NONE, null on error.
+     * Returns true if the Pokédex isn't synced (assume known rather than hiding info).
      */
     fun isSpeciesKnown(speciesId: ResourceLocation): Boolean? {
         return try {
+            if (!isPokedexSynced()) return true
             val knowledge = CobblemonClient.clientPokedexData.getHighestKnowledgeForSpecies(speciesId)
             knowledge != PokedexEntryProgress.NONE
         } catch (e: Throwable) {
