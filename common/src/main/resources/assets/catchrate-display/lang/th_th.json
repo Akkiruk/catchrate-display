@@ -20,7 +20,6 @@
   "catchrate.hud.guaranteed_short": "✓ รับประกัน",
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "ป่า",
-  "catchrate.hud.unknown_percent": "??%",
   "catchrate.hud.out_of_combat_penalty": "⚠ นอกการต่อสู้: 0.5x",
   "catchrate.hud.release_to_close": "ปล่อย %s เพื่อปิด",
   "catchrate.hud.ball_comparison": "⚔ เปรียบเทียบบอล (เทิร์น %d)",

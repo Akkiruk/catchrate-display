@@ -20,7 +20,6 @@
   "catchrate.hud.guaranteed_short": "✓ ГАРАНТИЯ",
   "catchrate.hud.hp": "ОЗ",
   "catchrate.hud.wild": "ДИКИЙ",
-  "catchrate.hud.unknown_percent": "??%",
   "catchrate.hud.out_of_combat_penalty": "⚠ Вне боя: 0.5x",
   "catchrate.hud.release_to_close": "Отпустите %s для закрытия",
   "catchrate.hud.ball_comparison": "⚔ Сравнение Шаров (Ход %d)",

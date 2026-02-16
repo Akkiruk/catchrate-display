@@ -20,7 +20,6 @@
   "catchrate.hud.guaranteed_short": "✓ GEGARANDEERD",
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "WILD",
-  "catchrate.hud.unknown_percent": "??%",
   "catchrate.hud.out_of_combat_penalty": "⚠ Buiten gevecht: 0.5x",
   "catchrate.hud.release_to_close": "Laat %s los om te sluiten",
   "catchrate.hud.ball_comparison": "⚔ Bal Vergelijking (Beurt %d)",

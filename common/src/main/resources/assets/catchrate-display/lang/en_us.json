@@ -22,7 +22,6 @@
   "catchrate.hud.guaranteed_short": "✓ GUARANTEED",
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "WILD",
-  "catchrate.hud.unknown_percent": "??%",
   "catchrate.hud.out_of_combat_penalty": "⚠ Out of combat: 0.5x",
   "catchrate.hud.release_to_close": "Release %s to close",
   "catchrate.hud.ball_comparison": "⚔ Ball Comparison (Turn %d)",

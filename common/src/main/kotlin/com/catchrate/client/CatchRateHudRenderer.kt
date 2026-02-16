@@ -6,7 +6,6 @@ import com.catchrate.CatchRateFormula
 import com.catchrate.CatchRateKeybinds
 import com.catchrate.CatchRateMod
 import com.catchrate.CatchRateResult
-import com.catchrate.BallContextFactory
 import com.catchrate.config.CatchRateConfig
 import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.client.battle.ClientBattle
@@ -29,7 +28,6 @@ object HudTranslations {
     fun guaranteedShort() = Component.translatable("catchrate.hud.guaranteed_short").string
     fun hp() = Component.translatable("catchrate.hud.hp").string
     fun wild() = Component.translatable("catchrate.hud.wild").string
-    fun unknownPercent() = Component.translatable("catchrate.hud.unknown_percent").string
     fun outOfCombatPenalty() = Component.translatable("catchrate.hud.out_of_combat_penalty").string
     fun releaseToClose(key: String) = Component.translatable("catchrate.hud.release_to_close", key).string
     fun ballComparison(turn: Int) = Component.translatable("catchrate.hud.ball_comparison", turn).string
@@ -239,8 +237,7 @@ class CatchRateHudRenderer {
         val ballConditionMet: Boolean,
         val ballConditionReason: String,
         val turnCount: Int,
-        val isWild: Boolean,
-        val isKnownSpecies: Boolean
+        val isWild: Boolean
     )
     
     private fun renderClientModeHud(guiGraphics: GuiGraphics, minecraft: Minecraft, result: CatchRateResult, ballName: String) {
@@ -248,7 +245,6 @@ class CatchRateHudRenderer {
             CobblemonClient.battle?.side2?.activeClientBattlePokemon?.firstOrNull()?.battlePokemon
         }
         val species = opponent?.species
-        val known = species?.let { BallContextFactory.isSpeciesKnown(it.resourceIdentifier) } ?: true
         val hpMult = (3.0 - 2.0 * result.hpPercentage / 100.0) / 3.0
         renderUnifiedHud(guiGraphics, minecraft, HudData(
             pokemonName = species?.name ?: "???",
@@ -264,8 +260,7 @@ class CatchRateHudRenderer {
             ballConditionMet = result.ballConditionMet,
             ballConditionReason = result.ballConditionReason,
             turnCount = turnCount,
-            isWild = false,
-            isKnownSpecies = known
+            isWild = false
         ))
     }
     
@@ -278,7 +273,6 @@ class CatchRateHudRenderer {
         val ballName = getBallId(heldItem).lowercase()
         val result = BallComparisonCalculator.calculateForWorldPokemon(pokemonEntity, ballName) ?: return
         
-        val known = BallContextFactory.isSpeciesKnown(pokemon.species.resourceIdentifier) ?: true
         val hpPercent = if (pokemon.maxHealth > 0) (pokemon.currentHealth.toDouble() / pokemon.maxHealth.toDouble()) * 100.0 else 100.0
         val statusPath = pokemon.status?.status?.name?.path ?: ""
         
@@ -296,8 +290,7 @@ class CatchRateHudRenderer {
             ballConditionMet = result.conditionMet,
             ballConditionReason = result.reason,
             turnCount = 0,
-            isWild = true,
-            isKnownSpecies = known
+            isWild = true
         ))
     }
     
@@ -310,18 +303,11 @@ class CatchRateHudRenderer {
         val screenWidth = minecraft.window.guiScaledWidth
         val screenHeight = minecraft.window.guiScaledHeight
         
-        val obfuscate = config.obfuscateUnknown && !data.isKnownSpecies
-        val nameText = if (obfuscate) "??? Lv${data.level}" else "${data.pokemonName} Lv${data.level}"
+        val nameText = "${data.pokemonName} Lv${data.level}"
         val wildText = if (data.isWild) HudTranslations.wild() else null
-        val hpText = if (obfuscate) {
-            "${HudTranslations.hp()} ???"
-        } else {
-            "${HudTranslations.hp()} ${String.format("%.2f", data.hpMultiplier)}x"
-        }
+        val hpText = "${HudTranslations.hp()} ${String.format("%.2f", data.hpMultiplier)}x"
         
-        val percentText = if (obfuscate) {
-            "???"
-        } else if (data.isGuaranteed) {
+        val percentText = if (data.isGuaranteed) {
             HudTranslations.guaranteedShort()
         } else {
             "${CatchRateFormula.formatCatchPercentage(data.catchPercentage, data.isGuaranteed)}%"
@@ -358,22 +344,17 @@ class CatchRateHudRenderer {
         val boxHeight = 40 + detailRows * 10 + 6
         val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
         
-        val panelCatchRate = if (obfuscate) 50.0 else data.catchPercentage
-        HudDrawing.drawStyledPanel(guiGraphics, x, y, boxWidth, boxHeight, panelCatchRate, isWild = data.isWild)
+        HudDrawing.drawStyledPanel(guiGraphics, x, y, boxWidth, boxHeight, data.catchPercentage, isWild = data.isWild)
         
         // Header: Pokemon name + level, optional WILD tag
-        val nameColor = if (obfuscate) Colors.TEXT_DARK_GRAY else Colors.TEXT_WHITE
-        guiGraphics.drawString(font, nameText, x + 6, y + 4, nameColor)
+        guiGraphics.drawString(font, nameText, x + 6, y + 4, Colors.TEXT_WHITE)
         if (wildText != null) {
             guiGraphics.drawString(font, wildText, x + boxWidth - font.width(wildText) - 6, y + 4, Colors.TEXT_WILD_RED)
         }
         
         // Catch bar + percentage
         val barY = y + 16
-        if (obfuscate) {
-            HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, 0.0, false)
-            guiGraphics.drawString(font, percentText, x + 6, barY + 12, Colors.TEXT_DARK_GRAY)
-        } else if (data.isGuaranteed) {
+        if (data.isGuaranteed) {
             HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, 100.0, true)
             guiGraphics.drawString(font, percentText, x + 6, barY + 12, Colors.TEXT_GREEN)
         } else {
@@ -384,7 +365,7 @@ class CatchRateHudRenderer {
         // Detail rows
         var currentY = barY + 26
         
-        val hpColor = if (obfuscate) Colors.TEXT_DARK_GRAY else HudDrawing.getHpMultiplierColor(data.hpMultiplier)
+        val hpColor = HudDrawing.getHpMultiplierColor(data.hpMultiplier)
         guiGraphics.drawString(font, hpText, x + 6, currentY, hpColor)
         currentY += 10
         

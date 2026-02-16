@@ -20,7 +20,6 @@
   "catchrate.hud.guaranteed_short": "✓ ĐẢM BẢO",
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "HOANG DÃ",
-  "catchrate.hud.unknown_percent": "??%",
   "catchrate.hud.out_of_combat_penalty": "⚠ Ngoài chiến: 0.5x",
   "catchrate.hud.release_to_close": "Thả %s để đóng",
   "catchrate.hud.ball_comparison": "⚔ So Sánh Bóng (Lượt %d)",

@@ -20,7 +20,6 @@
   "catchrate.hud.guaranteed_short": "✓ 확정",
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "야생",
-  "catchrate.hud.unknown_percent": "??%",
   "catchrate.hud.out_of_combat_penalty": "⚠ 전투 밖: 0.5x",
   "catchrate.hud.release_to_close": "%s 놓아서 닫기",
   "catchrate.hud.ball_comparison": "⚔ 볼 비교 (턴 %d)",

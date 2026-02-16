@@ -20,7 +20,6 @@
   "catchrate.hud.guaranteed_short": "✓ ZARUČENÉ",
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "DIVOKÝ",
-  "catchrate.hud.unknown_percent": "??%",
   "catchrate.hud.out_of_combat_penalty": "⚠ Mimo boj: 0.5x",
   "catchrate.hud.release_to_close": "Uvolněte %s pro zavření",
   "catchrate.hud.ball_comparison": "⚔ Porovnání Míčů (Kolo %d)",

@@ -20,7 +20,6 @@
   "catchrate.hud.guaranteed_short": "✓ ГАРАНТІЯ",
   "catchrate.hud.hp": "ОЗ",
   "catchrate.hud.wild": "ДИКИЙ",
-  "catchrate.hud.unknown_percent": "??%",
   "catchrate.hud.out_of_combat_penalty": "⚠ Поза боєм: 0.5x",
   "catchrate.hud.release_to_close": "Відпустіть %s щоб закрити",
   "catchrate.hud.ball_comparison": "⚔ Порівняння М'ячів (Хід %d)",

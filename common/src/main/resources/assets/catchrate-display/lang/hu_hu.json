@@ -20,7 +20,6 @@
   "catchrate.hud.guaranteed_short": "✓ GARANTÁLT",
   "catchrate.hud.hp": "ÉP",
   "catchrate.hud.wild": "VAD",
-  "catchrate.hud.unknown_percent": "??%",
   "catchrate.hud.out_of_combat_penalty": "⚠ Harcon kívül: 0.5x",
   "catchrate.hud.release_to_close": "Engedd el %s-t a bezáráshoz",
   "catchrate.hud.ball_comparison": "⚔ Labda Összehasonlítás (Kör %d)",

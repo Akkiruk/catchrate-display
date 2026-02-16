@@ -20,7 +20,6 @@
   "catchrate.hud.guaranteed_short": "✓ 必定",
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "野生",
-  "catchrate.hud.unknown_percent": "??%",
   "catchrate.hud.out_of_combat_penalty": "⚠ 非战斗: 0.5x",
   "catchrate.hud.release_to_close": "松开 %s 关闭",
   "catchrate.hud.ball_comparison": "⚔ 球类比较 (回合 %d)",

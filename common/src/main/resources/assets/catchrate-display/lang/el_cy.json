@@ -20,7 +20,6 @@
   "catchrate.hud.guaranteed_short": "✓ ΕΓΓΥΗΜΕΝΟ",
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "ΑΓΡΙΟ",
-  "catchrate.hud.unknown_percent": "??%",
   "catchrate.hud.out_of_combat_penalty": "⚠ Εκτός μάχης: 0.5x",
   "catchrate.hud.release_to_close": "Αφήστε %s για κλείσιμο",
   "catchrate.hud.ball_comparison": "⚔ Σύγκριση Μπαλών (Γύρος %d)",

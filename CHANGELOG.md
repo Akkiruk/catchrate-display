@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.9] - 2026-02-16
+
+### Removed
+- Removed "obfuscate unknown Pokémon" feature entirely — all Pokémon info is now always visible regardless of Pokédex status
+
+---
+
 ## [2.5.8] - 2026-02-14
 
 ### Fixed

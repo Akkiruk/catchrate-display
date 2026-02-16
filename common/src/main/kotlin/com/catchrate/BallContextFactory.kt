@@ -160,20 +160,6 @@ object BallContextFactory {
     }
     
     /**
-     * Check if the player has encountered (or caught) this species.
-     * Returns true if the Pokédex isn't synced (assume known rather than hiding info).
-     */
-    fun isSpeciesKnown(speciesId: ResourceLocation): Boolean? {
-        return try {
-            if (!isPokedexSynced()) return true
-            val knowledge = CobblemonClient.clientPokedexData.getHighestKnowledgeForSpecies(speciesId)
-            knowledge != PokedexEntryProgress.NONE
-        } catch (e: Throwable) {
-            null
-        }
-    }
-    
-    /**
      * Get Pokemon aspects from ClientBattlePokemon via its FloatingState.
      * The private `aspects` field is mirrored to `state.currentAspects` which is accessible.
      * This includes persistent aspects like "fished" from fishing encounters.

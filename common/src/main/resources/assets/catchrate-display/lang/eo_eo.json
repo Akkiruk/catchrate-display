@@ -20,7 +20,6 @@
   "catchrate.hud.guaranteed_short": "✓ GARANTIITA",
   "catchrate.hud.hp": "VP",
   "catchrate.hud.wild": "SOVAĜA",
-  "catchrate.hud.unknown_percent": "??%",
   "catchrate.hud.out_of_combat_penalty": "⚠ Ekster batalo: 0.5x",
   "catchrate.hud.release_to_close": "Liberigu %s por fermi",
   "catchrate.hud.ball_comparison": "⚔ Pilko-Komparo (Turno %d)",
