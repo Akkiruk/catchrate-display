@@ -420,75 +420,8 @@ class CatchRateHudRenderer {
             lastComparisonTick = tickCounter
             lastComparisonTurnCount = turnCount
         }
-        
         val comparison = cachedComparison ?: return
-        val font = minecraft.font
-        val screenWidth = minecraft.window.guiScaledWidth
-        val screenHeight = minecraft.window.guiScaledHeight
-        
-        val lineHeight = 10
-        val padding = 6
-        val headerHeight = 20
-        
-        val lines = mutableListOf<Triple<Component, Component, Component>>()
-        
-        for ((index, ball) in comparison.take(12).withIndex()) {
-            val medal = when (index) {
-                0 -> "§6★ "
-                1 -> "§f◆ "
-                2 -> "§c◆ "
-                else -> "   "
-            }
-            
-            val ballText = Component.literal("$medal${ball.displayName}")
-            val rateColor = HudDrawing.getChanceFormatting(ball.catchRate)
-            val rateText = Component.literal("${CatchRateFormula.formatCatchPercentage(ball.catchRate, ball.isGuaranteed)}%").withStyle(rateColor)
-            
-            val multColor = HudDrawing.getBallMultiplierFormatting(ball.multiplier)
-            val multText = Component.literal("${String.format("%.1f", ball.multiplier)}x").withStyle(multColor)
-            
-            lines.add(Triple(ballText, rateText, multText))
-        }
-        
-        val col1Width = lines.maxOfOrNull { font.width(it.first) } ?: 100
-        val col2Width = 45
-        val col3Width = 35
-        val contentWidth = col1Width + col2Width + col3Width + padding * 4
-        val keyName = CatchRateKeybinds.comparisonKeyName
-        val header = Component.literal(HudTranslations.ballComparison(turnCount)).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
-        val headerWidth = font.width(header) + padding * 2
-        val footerText = HudTranslations.releaseToClose("[${keyName}]")
-        val footerWidth = font.width(footerText) + padding * 2
-        val boxWidth = maxOf(contentWidth, headerWidth, footerWidth)
-        val footerHeight = 18
-        val boxHeight = headerHeight + lines.size * lineHeight + footerHeight + padding * 2
-        
-        val x = (screenWidth - boxWidth) / 2
-        val y = (screenHeight - boxHeight) / 2
-        
-        HudDrawing.drawComparisonPanel(guiGraphics, x, y, boxWidth, boxHeight, headerHeight)
-        
-        guiGraphics.drawString(font, header, x + padding, y + padding, 0xFFFFFF)
-        
-        guiGraphics.hLine(x + padding, x + boxWidth - padding, y + headerHeight, 0xFF444455.toInt())
-        
-        var lineY = y + headerHeight + padding
-        for ((index, triple) in lines.withIndex()) {
-            val (ballText, rateText, multText) = triple
-            
-            if (index % 2 == 0) {
-                guiGraphics.fill(x + 2, lineY - 1, x + boxWidth - 2, lineY + 9, 0x15FFFFFF)
-            }
-            
-            guiGraphics.drawString(font, ballText, x + padding, lineY, 0xFFFFFF)
-            guiGraphics.drawString(font, rateText, x + col1Width + padding * 2, lineY, 0xFFFFFF)
-            guiGraphics.drawString(font, multText, x + col1Width + col2Width + padding * 3, lineY, 0xFFFFFF)
-            lineY += lineHeight
-        }
-        
-        val footerY = y + boxHeight - padding - 9
-        guiGraphics.hLine(x + padding, x + boxWidth - padding, footerY - 4, Colors.BAR_BORDER)
-        guiGraphics.drawString(font, footerText, x + padding, footerY, Colors.TEXT_DARK_GRAY)
+        renderComparisonPanelContent(guiGraphics, minecraft, comparison, HudTranslations.ballComparison(turnCount), showPenaltyNote = false)
     }
     
     private fun renderWorldComparisonPanel(guiGraphics: GuiGraphics, minecraft: Minecraft, entity: com.cobblemon.mod.common.entity.pokemon.PokemonEntity) {
@@ -497,13 +430,21 @@ class CatchRateHudRenderer {
             cachedWorldComparison = null
             lastWorldPokemonUuid = entityUuid
         }
-        
         if (cachedWorldComparison == null || (tickCounter - lastWorldComparisonTick) > COMPARISON_CALC_INTERVAL_TICKS) {
             cachedWorldComparison = BallComparisonCalculator.calculateAllBallsForWorld(entity)
             lastWorldComparisonTick = tickCounter
         }
-        
         val comparison = cachedWorldComparison ?: return
+        renderComparisonPanelContent(guiGraphics, minecraft, comparison, HudTranslations.ballComparisonWild(), showPenaltyNote = true)
+    }
+    
+    private fun renderComparisonPanelContent(
+        guiGraphics: GuiGraphics,
+        minecraft: Minecraft,
+        comparison: List<BallComparisonCalculator.BallCatchRate>,
+        headerText: String,
+        showPenaltyNote: Boolean
+    ) {
         val font = minecraft.font
         val screenWidth = minecraft.window.guiScaledWidth
         val screenHeight = minecraft.window.guiScaledHeight
@@ -537,14 +478,14 @@ class CatchRateHudRenderer {
         val col3Width = 35
         val contentWidth = col1Width + col2Width + col3Width + padding * 4
         val keyName = CatchRateKeybinds.comparisonKeyName
-        val header = Component.literal(HudTranslations.ballComparisonWild()).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+        val header = Component.literal(headerText).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
         val headerWidth = font.width(header) + padding * 2
         val footerText = HudTranslations.releaseToClose("[${keyName}]")
-        val penaltyNote = HudTranslations.outOfCombatPenaltyNote()
+        val penaltyNote = if (showPenaltyNote) HudTranslations.outOfCombatPenaltyNote() else null
         val footerWidth = font.width(footerText) + padding * 2
-        val penaltyWidth = font.width(penaltyNote) + padding * 2
+        val penaltyWidth = if (penaltyNote != null) font.width(penaltyNote) + padding * 2 else 0
         val boxWidth = maxOf(contentWidth, headerWidth, footerWidth, penaltyWidth)
-        val footerHeight = 28
+        val footerHeight = if (showPenaltyNote) 28 else 18
         val boxHeight = headerHeight + lines.size * lineHeight + footerHeight + padding * 2
         
         val x = (screenWidth - boxWidth) / 2
@@ -570,10 +511,16 @@ class CatchRateHudRenderer {
             lineY += lineHeight
         }
         
-        val footerY = y + boxHeight - padding - 19
-        guiGraphics.hLine(x + padding, x + boxWidth - padding, footerY - 4, Colors.BAR_BORDER)
-        guiGraphics.drawString(font, penaltyNote, x + padding, footerY, Colors.TEXT_ORANGE)
-        guiGraphics.drawString(font, footerText, x + padding, footerY + 10, Colors.TEXT_DARK_GRAY)
+        if (penaltyNote != null) {
+            val footerY = y + boxHeight - padding - 19
+            guiGraphics.hLine(x + padding, x + boxWidth - padding, footerY - 4, Colors.BAR_BORDER)
+            guiGraphics.drawString(font, penaltyNote, x + padding, footerY, Colors.TEXT_ORANGE)
+            guiGraphics.drawString(font, footerText, x + padding, footerY + 10, Colors.TEXT_DARK_GRAY)
+        } else {
+            val footerY = y + boxHeight - padding - 9
+            guiGraphics.hLine(x + padding, x + boxWidth - padding, footerY - 4, Colors.BAR_BORDER)
+            guiGraphics.drawString(font, footerText, x + padding, footerY, Colors.TEXT_DARK_GRAY)
+        }
     }
     
     // ==================== HELPER METHODS ====================

@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.6.1] - 2026-02-18
+
+### Changed
+- Unified in-battle and out-of-combat ball comparison panel rendering into a single system
+
 ## [2.6.0] - 2026-02-18
 
 ### Added
