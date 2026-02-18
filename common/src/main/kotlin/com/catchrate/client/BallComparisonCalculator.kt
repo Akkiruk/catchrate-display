@@ -163,6 +163,60 @@ object BallComparisonCalculator {
     }
     
     /**
+     * Calculate catch rates for all balls for a world Pokemon (out of combat).
+     * Uses party lead as the "active battler" for Love Ball / Level Ball relevance.
+     */
+    fun calculateAllBallsForWorld(entity: PokemonEntity): List<BallCatchRate> {
+        return try {
+            calculateAllBallsForWorldInternal(entity)
+        } catch (e: Throwable) {
+            CatchRateMod.debugOnChange("CompErr", "worldAllBalls", "calculateAllBallsForWorld failed: ${e.javaClass.simpleName}: ${e.message}")
+            emptyList()
+        }
+    }
+    
+    private fun calculateAllBallsForWorldInternal(entity: PokemonEntity): List<BallCatchRate> {
+        val minecraft = Minecraft.getInstance()
+        val player = minecraft.player ?: return emptyList()
+        val level = minecraft.level ?: return emptyList()
+        
+        val pokemon = entity.pokemon
+        val ctx = BallContextFactory.fromWorldPokemon(entity, player, level)
+        
+        val baseCatchRate = pokemon.species.catchRate.toFloat()
+        val maxHp = pokemon.maxHealth.toFloat()
+        val currentHp = pokemon.currentHealth.toFloat()
+        val statusMult = CatchRateFormula.getStatusMultiplier(pokemon.status?.status?.name?.path)
+        val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
+        
+        return comparableBalls.map { ballId ->
+            val result = BallMultiplierCalculator.calculate(ballId, ctx)
+            
+            val catchChance = CatchRateFormula.calculateCatchPercentage(
+                baseCatchRate = baseCatchRate,
+                maxHp = maxHp,
+                currentHp = currentHp,
+                ballMultiplier = result.multiplier,
+                statusMultiplier = statusMult,
+                levelBonus = levelBonus,
+                inBattle = false
+            )
+            
+            val isFormulaGuaranteed = result.isGuaranteed || catchChance >= 100F
+            
+            BallCatchRate(
+                ballName = ballId,
+                displayName = CatchRateFormula.formatBallName(ballId),
+                catchRate = catchChance.toDouble().coerceIn(0.0, 100.0),
+                multiplier = result.multiplier.toDouble(),
+                conditionMet = result.conditionMet,
+                reason = result.reason,
+                isGuaranteed = isFormulaGuaranteed
+            )
+        }.sortedByDescending { it.catchRate }
+    }
+    
+    /**
      * Get a WILD Pokemon entity the player is looking at.
      * Cached to avoid expensive entity queries every frame.
      */

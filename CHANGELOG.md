@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.6.0] - 2026-02-18
+
+### Added
+- Ball comparison panel (G key) now works out of combat while looking at a wild Pokémon with a ball in hand
+- Panel header distinguishes "Wild" vs "Turn X" context
+- Footer shows 0.5x out-of-combat penalty reminder
+- Balls that require combat context (Quick Ball, Timer Ball, Love Ball, Level Ball) correctly show 1x with explanatory text
+
+---
+
 ## [2.5.9] - 2026-02-16
 
 ### Removed
