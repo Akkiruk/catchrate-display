@@ -17,7 +17,6 @@ import net.minecraft.client.player.LocalPlayer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
-import org.lwjgl.glfw.GLFW
 
 /**
  * Translation key helper object for HUD strings.
@@ -64,8 +63,6 @@ class CatchRateHudRenderer {
     private var lastWorldPokemonUuid: java.util.UUID? = null
     
     private var tickCounter = 0L
-    private var cursorHidden = false
-    private var previousCursorMode = -1
     
     companion object {
         private const val CLIENT_CALC_INTERVAL_TICKS = 5L
@@ -104,11 +101,8 @@ class CatchRateHudRenderer {
                 try {
                     renderOutOfCombatHud(guiGraphics, minecraft, player)
                 } catch (e: Throwable) {
-                    showCursor()
                     CatchRateMod.debugOnChange("HudErr", "ooc", "Out-of-combat render failed: ${e.javaClass.simpleName}")
                 }
-            } else {
-                showCursor()
             }
             return
         }
@@ -118,7 +112,6 @@ class CatchRateHudRenderer {
             onBattleStart(battle)
         }
         if (!battle.isPvW) {
-            showCursor()
             CatchRateMod.debugOnChange("battleType", "pvp", "Not PvW battle, HUD hidden")
             return
         }
@@ -127,14 +120,12 @@ class CatchRateHudRenderer {
         
         val heldItem = player.mainHandItem
         if (!isPokeball(heldItem)) {
-            showCursor()
             CatchRateMod.debugOnChange("heldItem", "not_pokeball", "Not holding Pokeball: ${heldItem.item}")
             return
         }
         
         val opponentPokemon = getOpponentPokemon(battle)
         if (opponentPokemon == null) {
-            showCursor()
             CatchRateMod.debugOnChange("opponent", "none", "No opponent Pokemon found")
             return
         }
@@ -147,17 +138,13 @@ class CatchRateHudRenderer {
         
         if (config.showBallComparison) {
             try {
-                hideCursor()
                 renderBallComparisonPanel(guiGraphics, minecraft, opponentPokemon, battle)
                 return
             } catch (e: Throwable) {
-                showCursor()
                 CatchRateMod.debugOnChange("HudErr", "comparison", "Comparison panel failed, falling back: ${e.javaClass.simpleName}")
-                // Fall through to single-ball HUD
             }
         }
         
-        showCursor()
         val result = getClientCalculation(opponentPokemon, heldItem) ?: return
         renderClientModeHud(guiGraphics, minecraft, result, ballName)
     }
@@ -201,7 +188,6 @@ class CatchRateHudRenderer {
     }
     
     private fun resetState() {
-        showCursor()
         lastBattleId = null
         turnCount = 1
         lastMustChoose = false
@@ -276,24 +262,20 @@ class CatchRateHudRenderer {
     
     private fun renderOutOfCombatHud(guiGraphics: GuiGraphics, minecraft: Minecraft, player: LocalPlayer) {
         val heldItem = player.mainHandItem
-        if (!isPokeball(heldItem)) { showCursor(); return }
+        if (!isPokeball(heldItem)) return
         
-        val pokemonEntity = BallComparisonCalculator.getLookedAtPokemon()
-        if (pokemonEntity == null) { showCursor(); return }
+        val pokemonEntity = BallComparisonCalculator.getLookedAtPokemon() ?: return
         
         val config = CatchRateConfig.get()
         if (config.showBallComparison) {
             try {
-                hideCursor()
                 renderWorldComparisonPanel(guiGraphics, minecraft, pokemonEntity)
                 return
             } catch (e: Throwable) {
-                showCursor()
                 CatchRateMod.debugOnChange("HudErr", "worldComparison", "World comparison panel failed: ${e.javaClass.simpleName}")
             }
         }
         
-        showCursor()
         val pokemon = pokemonEntity.pokemon
         val ballName = getBallId(heldItem).lowercase()
         val result = BallComparisonCalculator.calculateForWorldPokemon(pokemonEntity, ballName) ?: return
@@ -535,26 +517,5 @@ class CatchRateHudRenderer {
     
     private fun getBallId(itemStack: ItemStack): String {
         return CatchRateCalculator.getPokeBallFromItem(itemStack)?.name?.path ?: ""
-    }
-    
-    private fun hideCursor() {
-        if (!cursorHidden) {
-            val minecraft = Minecraft.getInstance()
-            val window = minecraft.window.window
-            previousCursorMode = GLFW.glfwGetInputMode(window, GLFW.GLFW_CURSOR)
-            GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_HIDDEN)
-            cursorHidden = true
-        }
-    }
-    
-    private fun showCursor() {
-        if (cursorHidden) {
-            val minecraft = Minecraft.getInstance()
-            val window = minecraft.window.window
-            val restoreMode = if (previousCursorMode >= 0) previousCursorMode else GLFW.GLFW_CURSOR_NORMAL
-            GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, restoreMode)
-            cursorHidden = false
-            previousCursorMode = -1
-        }
     }
 }

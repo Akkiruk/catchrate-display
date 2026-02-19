@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.6.2] - 2026-02-18
+
+### Fixed
+- Ball comparison panel (G key) no longer jerks the camera when opened or closed
+
 ## [2.6.1] - 2026-02-18
 
 ### Changed
