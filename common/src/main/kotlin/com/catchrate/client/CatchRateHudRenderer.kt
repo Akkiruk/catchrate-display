@@ -7,6 +7,7 @@ import com.catchrate.CatchRateKeybinds
 import com.catchrate.CatchRateMod
 import com.catchrate.CatchRateResult
 import com.catchrate.config.CatchRateConfig
+import com.cobblemon.mod.common.api.pokedex.PokedexEntryProgress
 import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
@@ -33,6 +34,9 @@ object HudTranslations {
     fun ballComparisonWild() = Component.translatable("catchrate.hud.ball_comparison_wild").string
     fun outOfCombatPenaltyNote() = Component.translatable("catchrate.hud.out_of_combat_penalty_note").string
     fun status(statusPath: String?) = Component.translatable(CatchRateFormula.getStatusTranslationKey(statusPath)).string
+    fun unknownPokemon() = Component.translatable("catchrate.hud.unknown_pokemon").string
+    fun unknownRate() = Component.translatable("catchrate.hud.unknown_rate").string
+    fun notEncountered() = Component.translatable("catchrate.hud.not_encountered").string
 }
 
 /**
@@ -137,6 +141,12 @@ class CatchRateHudRenderer {
             "Target: ${opponentPokemon.species.name} Lv${opponentPokemon.level} with $ballName")
         
         if (config.showBallComparison) {
+            // Block comparison panel for unencountered Pokémon
+            if (!hasEncounteredSpecies(opponentPokemon.species.resourceIdentifier)) {
+                val result = getClientCalculation(opponentPokemon, heldItem) ?: return
+                renderClientModeHud(guiGraphics, minecraft, result, ballName)
+                return
+            }
             try {
                 renderBallComparisonPanel(guiGraphics, minecraft, opponentPokemon, battle)
                 return
@@ -202,6 +212,21 @@ class CatchRateHudRenderer {
         lastWorldPokemonUuid = null
     }
     
+    /**
+     * Check if a species has been at least encountered in the Pokédex.
+     * Returns true if the config is disabled, the Pokédex isn't synced, or the species has been encountered/caught.
+     */
+    private fun hasEncounteredSpecies(speciesId: net.minecraft.resources.ResourceLocation): Boolean {
+        val config = CatchRateConfig.get()
+        if (!config.hideUnencounteredInfo) return true
+        return try {
+            val knowledge = CobblemonClient.clientPokedexData.getHighestKnowledgeForSpecies(speciesId)
+            knowledge != PokedexEntryProgress.NONE
+        } catch (e: Throwable) {
+            true // fail open — don't block HUD if Pokédex check errors
+        }
+    }
+    
     private fun getClientCalculation(pokemon: ClientBattlePokemon, heldItem: ItemStack): CatchRateResult? {
         if (cachedClientResult == null || (tickCounter - lastClientCalcTick) > CLIENT_CALC_INTERVAL_TICKS) {
             cachedClientResult = try {
@@ -233,7 +258,8 @@ class CatchRateHudRenderer {
         val ballConditionMet: Boolean,
         val ballConditionReason: String,
         val turnCount: Int,
-        val isWild: Boolean
+        val isWild: Boolean,
+        val isEncountered: Boolean = true
     )
     
     private fun renderClientModeHud(guiGraphics: GuiGraphics, minecraft: Minecraft, result: CatchRateResult, ballName: String) {
@@ -241,6 +267,7 @@ class CatchRateHudRenderer {
             CobblemonClient.battle?.side2?.activeClientBattlePokemon?.firstOrNull()?.battlePokemon
         }
         val species = opponent?.species
+        val encountered = species?.let { hasEncounteredSpecies(it.resourceIdentifier) } ?: true
         val hpMult = (3.0 - 2.0 * result.hpPercentage / 100.0) / 3.0
         renderUnifiedHud(guiGraphics, minecraft, HudData(
             pokemonName = species?.translatedName?.string ?: "???",
@@ -256,7 +283,8 @@ class CatchRateHudRenderer {
             ballConditionMet = result.ballConditionMet,
             ballConditionReason = result.ballConditionReason,
             turnCount = turnCount,
-            isWild = false
+            isWild = false,
+            isEncountered = encountered
         ))
     }
     
@@ -267,7 +295,8 @@ class CatchRateHudRenderer {
         val pokemonEntity = BallComparisonCalculator.getLookedAtPokemon() ?: return
         
         val config = CatchRateConfig.get()
-        if (config.showBallComparison) {
+        val encountered = hasEncounteredSpecies(pokemonEntity.pokemon.species.resourceIdentifier)
+        if (config.showBallComparison && encountered) {
             try {
                 renderWorldComparisonPanel(guiGraphics, minecraft, pokemonEntity)
                 return
@@ -297,7 +326,8 @@ class CatchRateHudRenderer {
             ballConditionMet = result.conditionMet,
             ballConditionReason = result.reason,
             turnCount = 0,
-            isWild = true
+            isWild = true,
+            isEncountered = encountered
         ))
     }
     
@@ -309,6 +339,12 @@ class CatchRateHudRenderer {
         val font = minecraft.font
         val screenWidth = minecraft.window.guiScaledWidth
         val screenHeight = minecraft.window.guiScaledHeight
+        
+        // Obfuscated HUD for unencountered Pokémon
+        if (!data.isEncountered) {
+            renderObfuscatedHud(guiGraphics, minecraft, data)
+            return
+        }
         
         val nameText = "${data.pokemonName} Lv${data.level}"
         val wildText = if (data.isWild) HudTranslations.wild() else null
@@ -393,6 +429,48 @@ class CatchRateHudRenderer {
             currentY += 10
             guiGraphics.drawString(font, penaltyText, x + 6, currentY, Colors.TEXT_ORANGE)
         }
+    }
+    
+    /**
+     * Renders a minimal obfuscated HUD for Pokémon the player hasn't encountered yet.
+     * Shows "???" for name/level/catch rate and a "Not yet encountered" note.
+     */
+    private fun renderObfuscatedHud(guiGraphics: GuiGraphics, minecraft: Minecraft, data: HudData) {
+        val config = CatchRateConfig.get()
+        val font = minecraft.font
+        val screenWidth = minecraft.window.guiScaledWidth
+        val screenHeight = minecraft.window.guiScaledHeight
+        
+        val unknownName = "${HudTranslations.unknownPokemon()} Lv?"
+        val wildText = if (data.isWild) HudTranslations.wild() else null
+        val unknownRate = HudTranslations.unknownRate()
+        val encounterNote = HudTranslations.notEncountered()
+        
+        val textWidths = mutableListOf(
+            font.width(unknownName) + (if (wildText != null) font.width(" $wildText") + 8 else 0),
+            font.width(unknownRate),
+            font.width(encounterNote)
+        )
+        val boxWidth = (textWidths.maxOrNull() ?: 100) + 16
+        val boxHeight = 52
+        val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
+        
+        // Draw panel with 0% catch chance styling (unknown = red border)
+        HudDrawing.drawStyledPanel(guiGraphics, x, y, boxWidth, boxHeight, 0.0, isWild = data.isWild)
+        
+        // Header: ??? Lv?
+        guiGraphics.drawString(font, unknownName, x + 6, y + 4, Colors.TEXT_DARK_GRAY)
+        if (wildText != null) {
+            guiGraphics.drawString(font, wildText, x + boxWidth - font.width(wildText) - 6, y + 4, Colors.TEXT_WILD_RED)
+        }
+        
+        // Empty catch bar
+        val barY = y + 16
+        HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, 0.0, false)
+        guiGraphics.drawString(font, unknownRate, x + 6, barY + 12, Colors.TEXT_DARK_GRAY)
+        
+        // "Not yet encountered" note
+        guiGraphics.drawString(font, encounterNote, x + 6, barY + 26, Colors.TEXT_ORANGE)
     }
     
     private fun renderBallComparisonPanel(guiGraphics: GuiGraphics, minecraft: Minecraft, pokemon: ClientBattlePokemon, battle: ClientBattle) {

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.0] - 2026-02-21
+
+### Added
+- Unknown Pokémon obfuscation: Pokémon you haven't encountered yet show "???" for name, level, and catch rate instead of real data
+- Ball comparison panel is hidden for unencountered Pokémon (falls back to obfuscated single-ball HUD)
+- New config option `hideUnencounteredInfo` (default: true) to toggle the feature
+
 ## [2.6.3] - 2026-02-21
 
 ### Fixed

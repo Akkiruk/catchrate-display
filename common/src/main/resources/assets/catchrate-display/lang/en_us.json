@@ -27,6 +27,9 @@
   "catchrate.hud.ball_comparison": "⚔ Ball Comparison (Turn %d)",
   "catchrate.hud.ball_comparison_wild": "⚔ Ball Comparison (Wild)",
   "catchrate.hud.out_of_combat_penalty_note": "⚠ Rates include 0.5x out-of-combat penalty",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "Not yet encountered",
 
   "catchrate.ball.guaranteed_catch": "Guaranteed catch",
   "catchrate.ball.multiplier_always": "",
