@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.6.3] - 2026-02-21
+
+### Fixed
+- Pokémon names in the HUD now display in the player's game language instead of always showing English (#14)
+
 ## [2.6.2] - 2026-02-18
 
 ### Fixed

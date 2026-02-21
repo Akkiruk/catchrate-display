@@ -243,7 +243,7 @@ class CatchRateHudRenderer {
         val species = opponent?.species
         val hpMult = (3.0 - 2.0 * result.hpPercentage / 100.0) / 3.0
         renderUnifiedHud(guiGraphics, minecraft, HudData(
-            pokemonName = species?.name ?: "???",
+            pokemonName = species?.translatedName?.string ?: "???",
             level = opponent?.level ?: 0,
             catchPercentage = result.percentage,
             isGuaranteed = result.isGuaranteed,
@@ -284,7 +284,7 @@ class CatchRateHudRenderer {
         val statusPath = pokemon.status?.status?.name?.path ?: ""
         
         renderUnifiedHud(guiGraphics, minecraft, HudData(
-            pokemonName = pokemon.species.name,
+            pokemonName = pokemon.species.translatedName.string,
             level = pokemon.level,
             catchPercentage = result.catchRate,
             isGuaranteed = result.isGuaranteed,
