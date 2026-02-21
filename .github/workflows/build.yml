@@ -27,14 +27,9 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-overwrite-existing: true
 
-      - name: Build Fabric
-        run: ./gradlew :fabric:build
-
-      - name: Build NeoForge
-        run: ./gradlew :neoforge:build
+      - name: Build
+        run: ./gradlew :fabric:build :neoforge:build
 
       - name: Upload Fabric artifact
         uses: actions/upload-artifact@v4
