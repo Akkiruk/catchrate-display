@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.7.4] - 2026-02-22
+
+### Changed
+- `hideUnencounteredInfo` config option now defaults to `false` — catch rate info is shown for all Pokémon by default. Set to `true` in config to re-enable obfuscation for unencountered species.
+
 ## [2.7.3] - 2026-02-22
 
 ### Fixed
