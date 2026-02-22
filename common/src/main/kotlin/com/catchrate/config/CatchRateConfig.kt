@@ -14,7 +14,7 @@ data class CatchRateConfig(
     var showOutOfCombat: Boolean = true,
     var compactMode: Boolean = false,
     var showBallComparison: Boolean = false,
-    var hideUnencounteredInfo: Boolean = false,
+    var hideUnencounteredInfo: Boolean = true,
     var debugLogging: Boolean = false
 ) {
     @Transient private var pendingSave = false
