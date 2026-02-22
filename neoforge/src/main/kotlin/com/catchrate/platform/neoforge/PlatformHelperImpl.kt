@@ -14,4 +14,9 @@ object PlatformHelperImpl {
     fun getConfigDir(): Path {
         return FMLPaths.CONFIGDIR.get()
     }
+
+    @JvmStatic
+    fun getGameDir(): Path {
+        return FMLPaths.GAMEDIR.get()
+    }
 }

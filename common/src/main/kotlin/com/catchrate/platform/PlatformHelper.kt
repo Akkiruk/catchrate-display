@@ -13,4 +13,8 @@ object PlatformHelper {
     @JvmStatic
     @ExpectPlatform
     fun getConfigDir(): Path = throw AssertionError("@ExpectPlatform not replaced")
+
+    @JvmStatic
+    @ExpectPlatform
+    fun getGameDir(): Path = throw AssertionError("@ExpectPlatform not replaced")
 }

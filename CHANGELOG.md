@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.2] - 2026-02-22
+
+### Improved
+- Catch rate cache now scans local datapacks (ZIP and folder) and world save datapacks for species data, not just mod JARs on classpath. This means custom/modded Pokémon from datapacks get accurate catch rates too.
+- Added `getGameDir()` platform helper for datapack directory resolution.
+
 ## [2.7.1] - 2026-02-22
 
 ### Fixed

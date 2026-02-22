@@ -14,4 +14,9 @@ object PlatformHelperImpl {
     fun getConfigDir(): Path {
         return FabricLoader.getInstance().configDir
     }
+
+    @JvmStatic
+    fun getGameDir(): Path {
+        return FabricLoader.getInstance().gameDir
+    }
 }
