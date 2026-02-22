@@ -4,6 +4,7 @@ import com.catchrate.CatchRateMod
 import com.catchrate.platform.PlatformHelper
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonParser
 import java.io.File
 
 data class CatchRateConfig(
@@ -42,21 +43,44 @@ data class CatchRateConfig(
         }
         
         fun load(): CatchRateConfig {
-            return try {
+            val config = try {
                 if (configFile.exists()) {
-                    gson.fromJson(configFile.readText(), CatchRateConfig::class.java)
+                    loadFromJson(configFile.readText())
                 } else {
-                    CatchRateConfig().also { it.save() }
+                    CatchRateConfig()
                 }
             } catch (e: Exception) {
                 CatchRateMod.LOGGER.warn("Failed to load config, using defaults: ${e.message}")
-                CatchRateConfig().also { it.save() }
-            }.also { config ->
-                CatchRateMod.DEBUG_ENABLED = config.debugLogging
-                if (config.debugLogging) {
-                    CatchRateMod.LOGGER.info("[CatchRate] Debug logging enabled via config")
-                }
+                CatchRateConfig()
             }
+            // Always re-save so new fields get written to the file
+            config.save()
+            CatchRateMod.DEBUG_ENABLED = config.debugLogging
+            if (config.debugLogging) {
+                CatchRateMod.LOGGER.info("[CatchRate] Debug logging enabled via config")
+            }
+            return config
+        }
+
+        /**
+         * Parse config from JSON, using Kotlin defaults for any missing fields.
+         * Gson + Kotlin data classes don't reliably apply defaults for missing fields,
+         * so we parse the JsonObject manually.
+         */
+        private fun loadFromJson(jsonText: String): CatchRateConfig {
+            val json = JsonParser.parseString(jsonText).asJsonObject
+            return CatchRateConfig(
+                hudAnchor = json.get("hudAnchor")?.asString?.let {
+                    try { HudAnchor.valueOf(it) } catch (_: Exception) { null }
+                } ?: HudAnchor.BOTTOM_CENTER,
+                hudOffsetX = json.get("hudOffsetX")?.asInt ?: 0,
+                hudOffsetY = json.get("hudOffsetY")?.asInt ?: -50,
+                hudEnabled = json.get("hudEnabled")?.asBoolean ?: true,
+                showOutOfCombat = json.get("showOutOfCombat")?.asBoolean ?: true,
+                compactMode = json.get("compactMode")?.asBoolean ?: false,
+                hideUnencounteredInfo = json.get("hideUnencounteredInfo")?.asBoolean ?: true,
+                debugLogging = json.get("debugLogging")?.asBoolean ?: false
+            )
         }
         
         fun reload() {

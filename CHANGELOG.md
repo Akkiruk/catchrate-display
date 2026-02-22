@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.4] - 2026-02-22
+
+### Fixed
+- Fixed `hideUnencounteredInfo` config not loading correctly — Gson bypasses Kotlin constructor defaults, so the field was never persisted to the config file and its runtime value was unpredictable. Config now parses each field individually with proper defaults.
+- Config file is now re-saved on load so newly added fields get written automatically.
+- Added `hideUnencounteredInfo` to `/catchrate info` output (was missing entirely).
+
 ## [2.7.3] - 2026-02-22
 
 ### Fixed

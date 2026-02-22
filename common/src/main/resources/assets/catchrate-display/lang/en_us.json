@@ -103,5 +103,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

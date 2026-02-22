@@ -78,6 +78,7 @@ class CatchRateDisplayFabricClient : ClientModInitializer {
         source.sendFeedback(Component.translatable("catchrate.command.info.debug_active", CatchRateMod.isDebugActive.toString()))
         source.sendFeedback(Component.translatable("catchrate.command.info.hud_enabled", config.hudEnabled.toString()))
         source.sendFeedback(Component.translatable("catchrate.command.info.show_ooc", config.showOutOfCombat.toString()))
+        source.sendFeedback(Component.translatable("catchrate.command.info.hide_unencountered", config.hideUnencounteredInfo.toString()))
         source.sendFeedback(Component.translatable("catchrate.command.info.footer"))
         
         CatchRateMod.logEnvironmentInfo()

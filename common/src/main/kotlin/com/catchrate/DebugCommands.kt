@@ -46,6 +46,7 @@ object DebugCommands {
         ctx.source.sendSuccess({ Component.translatable("catchrate.command.info.debug_active", CatchRateMod.isDebugActive.toString()) }, false)
         ctx.source.sendSuccess({ Component.translatable("catchrate.command.info.hud_enabled", config.hudEnabled.toString()) }, false)
         ctx.source.sendSuccess({ Component.translatable("catchrate.command.info.show_ooc", config.showOutOfCombat.toString()) }, false)
+        ctx.source.sendSuccess({ Component.translatable("catchrate.command.info.hide_unencountered", config.hideUnencounteredInfo.toString()) }, false)
         ctx.source.sendSuccess({ Component.translatable("catchrate.command.info.footer") }, false)
         
         CatchRateMod.logEnvironmentInfo()
