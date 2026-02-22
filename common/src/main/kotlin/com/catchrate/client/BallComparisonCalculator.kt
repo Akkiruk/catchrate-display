@@ -4,6 +4,7 @@ import com.catchrate.BallContextFactory
 import com.catchrate.BallMultiplierCalculator
 import com.catchrate.CatchRateMod
 import com.catchrate.CatchRateFormula
+import com.catchrate.SpeciesCatchRateCache
 import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
@@ -71,7 +72,7 @@ object BallComparisonCalculator {
             isFlat = pokemon.isHpFlat
         )
         
-        val baseCatchRate = pokemon.species.catchRate.toFloat()
+        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species).toFloat()
         val statusMult = CatchRateFormula.getStatusMultiplier(pokemon.status?.name?.path)
         val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
         
@@ -126,7 +127,7 @@ object BallComparisonCalculator {
         
         val result = BallMultiplierCalculator.calculate(ballId, ctx)
         
-        val baseCatchRate = pokemon.species.catchRate.toFloat()
+        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species).toFloat()
         val maxHp = pokemon.maxHealth.toFloat()
         val currentHp = pokemon.currentHealth.toFloat()
         val statusMult = CatchRateFormula.getStatusMultiplier(pokemon.status?.status?.name?.path)
@@ -183,7 +184,7 @@ object BallComparisonCalculator {
         val pokemon = entity.pokemon
         val ctx = BallContextFactory.fromWorldPokemon(entity, player, level)
         
-        val baseCatchRate = pokemon.species.catchRate.toFloat()
+        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species).toFloat()
         val maxHp = pokemon.maxHealth.toFloat()
         val currentHp = pokemon.currentHealth.toFloat()
         val statusMult = CatchRateFormula.getStatusMultiplier(pokemon.status?.status?.name?.path)

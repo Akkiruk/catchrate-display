@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.7.1] - 2026-02-22
+
+### Fixed
+- Fixed catch rate displaying wildly wrong values on servers (e.g. "Guaranteed catch" for legendaries). Cobblemon's species sync doesn't include catchRate, so the client fell back to the default (45) for all species. The mod now reads correct catch rates directly from Cobblemon's species data files.
+
 ## [2.7.0] - 2026-02-21
 
 ### Added

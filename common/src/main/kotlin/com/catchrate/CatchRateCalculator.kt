@@ -37,7 +37,7 @@ object CatchRateCalculator {
             calculateCatchRateInternal(pokemon, itemStack, turnCount, playerHighestLevel, inBattle)
         } catch (e: Throwable) {
             CatchRateMod.debugOnChange("CalcErr", "fallback", "calculateCatchRate failed: ${e.javaClass.simpleName}: ${e.message}")
-            val baseCatchRate = try { pokemon.species.catchRate } catch (_: Throwable) { 45 }
+            val baseCatchRate = try { SpeciesCatchRateCache.getCatchRate(pokemon.species) } catch (_: Throwable) { 45 }
             val ballName = try { getPokeBallFromItem(itemStack)?.name?.path } catch (_: Throwable) { null }
                 ?: itemStack.item.toString().substringAfter(":").substringBefore("}")
             CatchRateResult(
@@ -63,6 +63,8 @@ object CatchRateCalculator {
         val pokeBall = getPokeBallFromItem(itemStack)
         val ballName = pokeBall?.name?.path ?: itemStack.item.toString().substringAfter(":").substringBefore("}")
         
+        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species)
+        
         // Check for guaranteed catch via API
         val isGuaranteed = try {
             pokeBall?.catchRateModifier?.isGuaranteed() == true
@@ -74,7 +76,7 @@ object CatchRateCalculator {
                 hpPercentage = getHpPercentage(pokemon),
                 statusMultiplier = 1.0,
                 ballMultiplier = CatchRateConstants.BALL_GUARANTEED_MULT.toDouble(),
-                baseCatchRate = pokemon.species.catchRate,
+                baseCatchRate = baseCatchRate,
                 statusName = pokemon.status?.name?.path ?: "",
                 ballName = ballName,
                 turnCount = turnCount,
@@ -89,7 +91,7 @@ object CatchRateCalculator {
             isFlat = pokemon.isHpFlat
         )
         
-        val catchRate = pokemon.species.catchRate.toFloat()
+        val catchRate = baseCatchRate.toFloat()
         val level = pokemon.level
         
         val statusPath = pokemon.status?.name?.path
