@@ -65,25 +65,6 @@ object CatchRateCalculator {
         
         val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species)
         
-        // Check for guaranteed catch via API
-        val isGuaranteed = try {
-            pokeBall?.catchRateModifier?.isGuaranteed() == true
-        } catch (e: Throwable) { false }
-        
-        if (isGuaranteed) {
-            return CatchRateResult(
-                percentage = 100.0,
-                hpPercentage = getHpPercentage(pokemon),
-                statusMultiplier = 1.0,
-                ballMultiplier = CatchRateConstants.BALL_GUARANTEED_MULT.toDouble(),
-                baseCatchRate = baseCatchRate,
-                statusName = pokemon.status?.name?.path ?: "",
-                ballName = ballName,
-                turnCount = turnCount,
-                isGuaranteed = true
-            )
-        }
-        
         // Calculate HP using shared formula
         val hpInfo = CatchRateFormula.calculateHpInfo(
             hpValue = pokemon.hpValue,
@@ -110,8 +91,8 @@ object CatchRateCalculator {
             levelBonus = bonusLevel,
             inBattle = inBattle
         )
-        val isFormulaGuaranteed = CatchRateFormula.isGuaranteedByFormula(modifiedCatchRate)
-        val captureChance = CatchRateFormula.modifiedRateToPercentage(modifiedCatchRate)
+        val isFormulaGuaranteed = ballResult.isGuaranteed || CatchRateFormula.isGuaranteedByFormula(modifiedCatchRate)
+        val captureChance = if (isFormulaGuaranteed) 100F else CatchRateFormula.modifiedRateToPercentage(modifiedCatchRate)
         
         CatchRateMod.debugOnChange("Calc",
             "${pokemon.species.name}_${ballName}_${hpInfo.currentHp.toInt()}_${statusPath}_${bonusStatus}",
@@ -195,16 +176,7 @@ object CatchRateCalculator {
         val level = minecraft.level
             ?: return BallMultiplierCalculator.BallResult(CatchRateConstants.BALL_STANDARD_MULT, false, "")
         
-        val guaranteed = try {
-            pokeBall?.catchRateModifier?.isGuaranteed() == true
-        } catch (e: Throwable) { false }
-        if (guaranteed) {
-            return BallMultiplierCalculator.BallResult(
-                CatchRateConstants.BALL_GUARANTEED_MULT, true,
-                BallTranslations.guaranteedCatch(), isGuaranteed = true
-            )
-        }
-        
+        // All guaranteed checks happen inside BallMultiplierCalculator.calculate()
         val battle = CobblemonClient.battle
         val ctx = BallContextFactory.fromBattlePokemon(pokemon, turnCount, player, level, battle)
         

@@ -90,7 +90,7 @@ object BallComparisonCalculator {
                 inBattle = true
             )
             val isFormulaGuaranteed = result.isGuaranteed || CatchRateFormula.isGuaranteedByFormula(modifiedRate)
-            val catchChance = CatchRateFormula.modifiedRateToPercentage(modifiedRate)
+            val catchChance = if (isFormulaGuaranteed) 100F else CatchRateFormula.modifiedRateToPercentage(modifiedRate)
             
             BallCatchRate(
                 ballName = ballId,
@@ -151,11 +151,12 @@ object BallComparisonCalculator {
         )
         
         val isFormulaGuaranteed = result.isGuaranteed || catchChance >= 100F
+        val finalChance = if (isFormulaGuaranteed) 100.0 else catchChance.toDouble().coerceIn(0.0, 100.0)
 
         return BallCatchRate(
             ballName = ballId,
             displayName = CatchRateFormula.formatBallName(ballId),
-            catchRate = catchChance.toDouble().coerceIn(0.0, 100.0),
+            catchRate = finalChance,
             multiplier = result.multiplier.toDouble(),
             conditionMet = result.conditionMet,
             reason = result.reason,
@@ -204,11 +205,12 @@ object BallComparisonCalculator {
             )
             
             val isFormulaGuaranteed = result.isGuaranteed || catchChance >= 100F
+            val finalChance = if (isFormulaGuaranteed) 100.0 else catchChance.toDouble().coerceIn(0.0, 100.0)
             
             BallCatchRate(
                 ballName = ballId,
                 displayName = CatchRateFormula.formatBallName(ballId),
-                catchRate = catchChance.toDouble().coerceIn(0.0, 100.0),
+                catchRate = finalChance,
                 multiplier = result.multiplier.toDouble(),
                 conditionMet = result.conditionMet,
                 reason = result.reason,

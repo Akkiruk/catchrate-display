@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.3] - 2026-02-22
+
+### Fixed
+- Unified guaranteed catch detection: removed 3 redundant `isGuaranteed()` checks that could disagree with each other. Now `BallMultiplierCalculator` is the single source of truth for ball behavior, and the formula result determines guaranteed status consistently across the single-ball HUD and comparison panel.
+- Fixed potential mismatch where debug logs showed one catch rate but the HUD displayed a different value (caused by separate code paths computing guaranteed status independently).
+
 ## [2.7.2] - 2026-02-22
 
 ### Improved
