@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.6] - 2026-02-23
+
+### Fixed
+- **Dream Ball now detects sleeping wild Pokémon.** Cobblemon sets the Sleep status server-side when Pokémon rest in the overworld, but doesn't sync it to clients. We now read the synced PoseType entity data (SLEEP pose) to detect sleeping, so both the Dream Ball 4x bonus and the 2.5x status multiplier are correctly shown for resting wild Pokémon.
+- **Status multiplier now works for out-of-combat sleeping Pokémon.** The 2.5x sleep status bonus was always showing 1.0x for wild Pokémon because the status field was null client-side. Now uses the same PoseType detection.
+- All out-of-combat status detection (single-ball HUD, ball comparison panel) uses the new unified `getEffectiveStatusPath()` utility.
+
 ## [2.7.5] - 2026-02-23
 
 ### Improved

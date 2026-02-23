@@ -49,7 +49,7 @@
   "catchrate.ball.beast.penalty": "Icke-UB straff",
   "catchrate.ball.dream.sleeping": "Sover",
   "catchrate.ball.dream.need_sleep": "Behöver sömnstatus",
-  "catchrate.ball.dream.need_sleep_wild": "Behöver Sömnstatus (stridsattack)",
+  "catchrate.ball.dream.need_sleep_wild": "Målet är vaket",
   "catchrate.ball.love.no_battler": "Ingen stridsinfo",
   "catchrate.ball.love.need_battler": "Behöver aktiv stridare",
   "catchrate.ball.love.wild_genderless": "Vilda könslös",

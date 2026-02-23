@@ -49,7 +49,7 @@
   "catchrate.ball.beast.penalty": "Ποινή μη-UB",
   "catchrate.ball.dream.sleeping": "Κοιμάται",
   "catchrate.ball.dream.need_sleep": "Χρειάζεται κατάσταση ύπνου",
-  "catchrate.ball.dream.need_sleep_wild": "Χρειάζεται κατάσταση Ύπνου (κίνηση μάχης)",
+  "catchrate.ball.dream.need_sleep_wild": "Ο στόχος είναι ξύπνιος",
   "catchrate.ball.love.no_battler": "Καμία πληροφορία μαχητή",
   "catchrate.ball.love.need_battler": "Χρειάζεται ενεργό μαχητή",
   "catchrate.ball.love.wild_genderless": "Άγριο χωρίς φύλο",

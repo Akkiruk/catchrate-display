@@ -49,7 +49,7 @@
   "catchrate.ball.beast.penalty": "Nem-UV büntetés",
   "catchrate.ball.dream.sleeping": "Alszik",
   "catchrate.ball.dream.need_sleep": "Alvás állapot szükséges",
-  "catchrate.ball.dream.need_sleep_wild": "Alvás státusz szükséges (harci mozdulat)",
+  "catchrate.ball.dream.need_sleep_wild": "A célpont ébren van",
   "catchrate.ball.love.no_battler": "Nincs harcos info",
   "catchrate.ball.love.need_battler": "Aktív harcos szükséges",
   "catchrate.ball.love.wild_genderless": "Vad nemtelen",

@@ -49,7 +49,7 @@
   "catchrate.ball.beast.penalty": "Penalización no-UE",
   "catchrate.ball.dream.sleeping": "Dormido",
   "catchrate.ball.dream.need_sleep": "Necesita estado dormido",
-  "catchrate.ball.dream.need_sleep_wild": "Necesita estado Dormido (mov. combate)",
+  "catchrate.ball.dream.need_sleep_wild": "El objetivo está despierto",
   "catchrate.ball.love.no_battler": "Sin info de luchador",
   "catchrate.ball.love.need_battler": "Necesita luchador activo",
   "catchrate.ball.love.wild_genderless": "Salvaje sin género",

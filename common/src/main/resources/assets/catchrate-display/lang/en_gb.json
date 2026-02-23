@@ -49,7 +49,7 @@
   "catchrate.ball.beast.penalty": "Non-UB penalty",
   "catchrate.ball.dream.sleeping": "Sleeping",
   "catchrate.ball.dream.need_sleep": "Needs sleep status",
-  "catchrate.ball.dream.need_sleep_wild": "Needs Sleep status (battle move)",
+  "catchrate.ball.dream.need_sleep_wild": "Target is awake",
   "catchrate.ball.love.no_battler": "No battler info",
   "catchrate.ball.love.need_battler": "Needs active battler",
   "catchrate.ball.love.wild_genderless": "Wild is genderless",

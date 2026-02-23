@@ -49,7 +49,7 @@
   "catchrate.ball.beast.penalty": "Penalidade não-UF",
   "catchrate.ball.dream.sleeping": "Dormindo",
   "catchrate.ball.dream.need_sleep": "Precisa status sono",
-  "catchrate.ball.dream.need_sleep_wild": "Precisa do status Sono (golpe de batalha)",
+  "catchrate.ball.dream.need_sleep_wild": "Alvo está acordado",
   "catchrate.ball.love.no_battler": "Sem info do lutador",
   "catchrate.ball.love.need_battler": "Precisa lutador ativo",
   "catchrate.ball.love.wild_genderless": "Selvagem sem gênero",

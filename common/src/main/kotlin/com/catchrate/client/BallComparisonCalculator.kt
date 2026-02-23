@@ -130,7 +130,7 @@ object BallComparisonCalculator {
         val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species).toFloat()
         val maxHp = pokemon.maxHealth.toFloat()
         val currentHp = pokemon.currentHealth.toFloat()
-        val statusMult = CatchRateFormula.getStatusMultiplier(pokemon.status?.status?.name?.path)
+        val statusMult = CatchRateFormula.getStatusMultiplier(BallContextFactory.getEffectiveStatusPath(entity))
         val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
         
         val catchChance = CatchRateFormula.calculateCatchPercentage(
@@ -188,7 +188,7 @@ object BallComparisonCalculator {
         val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species).toFloat()
         val maxHp = pokemon.maxHealth.toFloat()
         val currentHp = pokemon.currentHealth.toFloat()
-        val statusMult = CatchRateFormula.getStatusMultiplier(pokemon.status?.status?.name?.path)
+        val statusMult = CatchRateFormula.getStatusMultiplier(BallContextFactory.getEffectiveStatusPath(entity))
         val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
         
         return comparableBalls.map { ballId ->

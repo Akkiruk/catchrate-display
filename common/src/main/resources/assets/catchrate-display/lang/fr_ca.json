@@ -49,7 +49,7 @@
   "catchrate.ball.beast.penalty": "Pénalité non-UC",
   "catchrate.ball.dream.sleeping": "Endormi",
   "catchrate.ball.dream.need_sleep": "Nécessite statut sommeil",
-  "catchrate.ball.dream.need_sleep_wild": "Nécessite statut Sommeil (attaque)",
+  "catchrate.ball.dream.need_sleep_wild": "La cible est éveillée",
   "catchrate.ball.love.no_battler": "Pas d'info combattant",
   "catchrate.ball.love.need_battler": "Nécessite combattant actif",
   "catchrate.ball.love.wild_genderless": "Sauvage asexué",

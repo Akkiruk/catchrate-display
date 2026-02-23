@@ -49,7 +49,7 @@
   "catchrate.ball.beast.penalty": "비-UB 페널티",
   "catchrate.ball.dream.sleeping": "잠들었다",
   "catchrate.ball.dream.need_sleep": "잠들기 상태 필요",
-  "catchrate.ball.dream.need_sleep_wild": "잠듦 상태 필요 (배틀 기술)",
+  "catchrate.ball.dream.need_sleep_wild": "대상이 깨어 있음",
   "catchrate.ball.love.no_battler": "배틀러 정보 없음",
   "catchrate.ball.love.need_battler": "활성 배틀러 필요",
   "catchrate.ball.love.wild_genderless": "야생이 무성별",

@@ -49,7 +49,7 @@
   "catchrate.ball.beast.penalty": "Nicht-UB Strafe",
   "catchrate.ball.dream.sleeping": "Schläft",
   "catchrate.ball.dream.need_sleep": "Schlaf-Status nötig",
-  "catchrate.ball.dream.need_sleep_wild": "Schlaf-Status nötig (Kampfattacke)",
+  "catchrate.ball.dream.need_sleep_wild": "Ziel ist wach",
   "catchrate.ball.love.no_battler": "Keine Kämpfer-Info",
   "catchrate.ball.love.need_battler": "Aktiver Kämpfer nötig",
   "catchrate.ball.love.wild_genderless": "Wildes ist geschlechtslos",

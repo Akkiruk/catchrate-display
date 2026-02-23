@@ -49,7 +49,7 @@
   "catchrate.ball.beast.penalty": "Penalità non-UC",
   "catchrate.ball.dream.sleeping": "Addormentato",
   "catchrate.ball.dream.need_sleep": "Serve stato sonno",
-  "catchrate.ball.dream.need_sleep_wild": "Richiede stato Sonno (mossa lotta)",
+  "catchrate.ball.dream.need_sleep_wild": "Il bersaglio è sveglio",
   "catchrate.ball.love.no_battler": "Nessuna info combattente",
   "catchrate.ball.love.need_battler": "Serve combattente attivo",
   "catchrate.ball.love.wild_genderless": "Selvatico senza sesso",

@@ -8,6 +8,7 @@ import com.cobblemon.mod.common.api.pokedex.PokedexEntryProgress
 import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
+import com.cobblemon.mod.common.entity.PoseType
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Gender
 import com.cobblemon.mod.common.pokemon.Pokemon
@@ -65,6 +66,10 @@ object BallContextFactory {
     /**
      * Create a BallContext from a PokemonEntity (client-side world Pokemon).
      * Used by BallComparisonCalculator for out-of-battle calculations.
+     *
+     * Detects sleeping via PoseType since Cobblemon sets the persistent Sleep status
+     * server-side but doesn't sync it to clients — the synced POSE_TYPE entity data
+     * is the only reliable client-side indicator.
      */
     fun fromWorldPokemon(
         entity: PokemonEntity,
@@ -72,13 +77,15 @@ object BallContextFactory {
         level: Level
     ): BallContext {
         val pokemon = entity.pokemon
-        CatchRateMod.debugOnChange("Context", "${entity.uuid}_${entity.aspects}",
-            "fromWorldPokemon: ${pokemon.species.name} UUID=${entity.uuid} | entity.aspects=${entity.aspects}")
+        val effectiveStatus = getEffectiveStatusPath(entity)
+        CatchRateMod.debugOnChange("Context", "${entity.uuid}_${entity.aspects}_${effectiveStatus}",
+            "fromWorldPokemon: ${pokemon.species.name} UUID=${entity.uuid} | entity.aspects=${entity.aspects} | pose=${entity.getCurrentPoseType()} | effectiveStatus=$effectiveStatus")
         return fromPokemon(
             pokemon, player, level,
             inBattle = false, turnCount = 0, activeBattler = null,
             hasCaughtSpecies = checkHasCaughtSpecies(pokemon.species.resourceIdentifier),
-            pokemonAspects = entity.aspects
+            pokemonAspects = entity.aspects,
+            statusOverride = effectiveStatus
         )
     }
     
@@ -94,7 +101,8 @@ object BallContextFactory {
         turnCount: Int,
         activeBattler: PartyMember?,
         hasCaughtSpecies: Boolean? = null,
-        pokemonAspects: Set<String> = emptySet()
+        pokemonAspects: Set<String> = emptySet(),
+        statusOverride: String? = null
     ): BallContext {
         val species = pokemon.species
         val timeOfDay = level.dayTime % 24000
@@ -108,7 +116,7 @@ object BallContextFactory {
             weight = species.weight,
             baseSpeed = getBaseSpeed(species.baseStats),
             labels = safeGetLabels(species),
-            statusPath = pokemon.status?.status?.name?.path,
+            statusPath = statusOverride ?: pokemon.status?.status?.name?.path,
             lightLevel = level.getMaxLocalRawBrightness(player.blockPosition()),
             isNight = timeOfDay in NIGHT_START_TICK..NIGHT_END_TICK,
             moonPhase = level.moonPhase,
@@ -221,5 +229,20 @@ object BallContextFactory {
                 k.equals("spe", ignoreCase = true) || k.equals("SPEED", ignoreCase = true)
             }
         }?.value ?: 0
+    }
+    
+    /**
+     * Get the effective status path for a world PokemonEntity.
+     * Cobblemon sets Sleep status server-side when Pokémon rest, but doesn't sync it
+     * to clients. The synced POSE_TYPE entity data is the reliable client-side indicator.
+     */
+    fun getEffectiveStatusPath(entity: PokemonEntity): String? {
+        // Check the pokemon data status first (works if it happens to be synced)
+        val dataStatus = entity.pokemon.status?.status?.name?.path
+        if (dataStatus != null) return dataStatus
+        // Fall back to PoseType for sleep detection
+        return try {
+            if (entity.getCurrentPoseType() == PoseType.SLEEP) "sleep" else null
+        } catch (e: Throwable) { null }
     }
 }

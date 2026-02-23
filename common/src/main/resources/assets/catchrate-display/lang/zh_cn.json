@@ -49,7 +49,7 @@
   "catchrate.ball.beast.penalty": "非UB惩罚",
   "catchrate.ball.dream.sleeping": "睡眠中",
   "catchrate.ball.dream.need_sleep": "需要睡眠状态",
-  "catchrate.ball.dream.need_sleep_wild": "需要睡眠状态（战斗招式）",
+  "catchrate.ball.dream.need_sleep_wild": "目标未睡觉",
   "catchrate.ball.love.no_battler": "无战斗者信息",
   "catchrate.ball.love.need_battler": "需要参战宝可梦",
   "catchrate.ball.love.wild_genderless": "野生无性别",

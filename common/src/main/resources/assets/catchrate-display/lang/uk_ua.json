@@ -49,7 +49,7 @@
   "catchrate.ball.beast.penalty": "Штраф не-УЧ",
   "catchrate.ball.dream.sleeping": "Спить",
   "catchrate.ball.dream.need_sleep": "Потрібен статус сну",
-  "catchrate.ball.dream.need_sleep_wild": "Потрібен статус Сон (бойовий прийом)",
+  "catchrate.ball.dream.need_sleep_wild": "Ціль не спить",
   "catchrate.ball.love.no_battler": "Немає інфо про бійця",
   "catchrate.ball.love.need_battler": "Потрібен активний боєць",
   "catchrate.ball.love.wild_genderless": "Дикий безстатевий",

@@ -68,7 +68,7 @@
 
   "catchrate.ball.dream.sleeping": "Target is asleep",
   "catchrate.ball.dream.need_sleep": "Target not asleep",
-  "catchrate.ball.dream.need_sleep_wild": "Needs Sleep status (battle move)",
+  "catchrate.ball.dream.need_sleep_wild": "Target is awake",
 
   "catchrate.ball.love.no_battler": "No battler info",
   "catchrate.ball.love.need_battler": "Need active battler",

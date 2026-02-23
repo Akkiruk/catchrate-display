@@ -257,7 +257,6 @@ object BallMultiplierCalculator {
     private fun calculateDreamBall(ctx: BallContext): BallResult {
         val asleep = ctx.statusPath == "sleep"
         if (asleep) return BallResult(4F, true, BallTranslations.dreamSleeping())
-        // Out of combat: wild Pokémon don't have Sleep status (it's battle-applied)
         val reason = if (ctx.inBattle) BallTranslations.dreamNeedSleep() else BallTranslations.dreamNeedSleepWild()
         return BallResult(1F, false, reason)
     }

@@ -49,7 +49,7 @@
   "catchrate.ball.beast.penalty": "UB以外ペナルティ",
   "catchrate.ball.dream.sleeping": "眠っている",
   "catchrate.ball.dream.need_sleep": "眠り状態が必要",
-  "catchrate.ball.dream.need_sleep_wild": "眠り状態が必要（バトル技）",
+  "catchrate.ball.dream.need_sleep_wild": "対象は起きている",
   "catchrate.ball.love.no_battler": "バトラー情報なし",
   "catchrate.ball.love.need_battler": "アクティブなバトラーが必要",
   "catchrate.ball.love.wild_genderless": "野生は性別なし",

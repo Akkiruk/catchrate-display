@@ -1,5 +1,6 @@
 package com.catchrate.client
 
+import com.catchrate.BallContextFactory
 import com.catchrate.CatchRateCalculator
 import com.catchrate.CatchRateConstants.Colors
 import com.catchrate.CatchRateFormula
@@ -310,7 +311,7 @@ class CatchRateHudRenderer {
         val result = BallComparisonCalculator.calculateForWorldPokemon(pokemonEntity, ballName) ?: return
         
         val hpPercent = if (pokemon.maxHealth > 0) (pokemon.currentHealth.toDouble() / pokemon.maxHealth.toDouble()) * 100.0 else 100.0
-        val statusPath = pokemon.status?.status?.name?.path ?: ""
+        val statusPath = BallContextFactory.getEffectiveStatusPath(pokemonEntity) ?: ""
         
         renderUnifiedHud(guiGraphics, minecraft, HudData(
             pokemonName = pokemon.species.translatedName.string,
