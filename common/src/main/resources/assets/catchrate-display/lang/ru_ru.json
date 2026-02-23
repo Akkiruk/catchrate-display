@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ Вне боя: 0.5x",
   "catchrate.hud.release_to_close": "Отпустите %s для закрытия",
   "catchrate.hud.ball_comparison": "⚔ Сравнение Шаров (Ход %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ Сравнение Шаров (Дикий)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ Шансы включают штраф 0.5x вне боя",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "Ещё не встречен",
   "catchrate.ball.guaranteed_catch": "Гарантированная поимка",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Спецэффект при поимке",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "Сначала поймайте этот вид",
   "catchrate.ball.lure.effective": "Бонус рыбалки",
   "catchrate.ball.lure.ineffective": "Только выловленные Покемоны",
+  "catchrate.ball.safari.out_of_combat": "Бонус вне боя",
+  "catchrate.ball.safari.in_battle": "Нет эффекта в бою",
   "catchrate.message.enabled": "Шанс Поимки: §aВключено",
   "catchrate.message.disabled": "Шанс Поимки: §cВыключено",
   "catchrate.message.position_reset": "Позиция HUD сброшена",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

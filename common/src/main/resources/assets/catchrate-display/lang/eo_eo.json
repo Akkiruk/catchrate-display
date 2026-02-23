@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ Ekster batalo: 0.5x",
   "catchrate.hud.release_to_close": "Liberigu %s por fermi",
   "catchrate.hud.ball_comparison": "⚔ Pilko-Komparo (Turno %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ Pilko-Komparo (Sovaĝa)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ Probabloj inkluzivas 0.5x punon ekster batalo",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "Ankoraŭ ne renkontita",
   "catchrate.ball.guaranteed_catch": "Garantiita kapto",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Speciala efiko je kapto",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "Kaptu ĉi tiun specion unue",
   "catchrate.ball.lure.effective": "Fiŝkaptada bonuso",
   "catchrate.ball.lure.ineffective": "Nur fiŝkaptitaj Pokémon",
+  "catchrate.ball.safari.out_of_combat": "Bonuso ekster batalo",
+  "catchrate.ball.safari.in_battle": "Neniu efiko en batalo",
   "catchrate.message.enabled": "Kaptrado: §aŜaltita",
   "catchrate.message.disabled": "Kaptrado: §cMalŝaltita",
   "catchrate.message.position_reset": "HUD-pozicio restarigita",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

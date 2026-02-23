@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ Mimo boj: 0.5x",
   "catchrate.hud.release_to_close": "Uvolněte %s pro zavření",
   "catchrate.hud.ball_comparison": "⚔ Porovnání Míčů (Kolo %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ Porovnání Míčů (Divoký)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ Šance zahrnují 0.5x penalizaci mimo boj",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "Dosud nepotkáno",
   "catchrate.ball.guaranteed_catch": "Zaručené chycení",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Speciální efekt při chycení",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "Nejprve chytťte tento druh",
   "catchrate.ball.lure.effective": "Bonus rybaření",
   "catchrate.ball.lure.ineffective": "Pouze chycení rybařením",
+  "catchrate.ball.safari.out_of_combat": "Bonus mimo boj",
+  "catchrate.ball.safari.in_battle": "Žádný efekt v boji",
   "catchrate.message.enabled": "Míra Chycení: §aZapnuto",
   "catchrate.message.disabled": "Míra Chycení: §cVypnuto",
   "catchrate.message.position_reset": "Pozice HUD obnovena",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

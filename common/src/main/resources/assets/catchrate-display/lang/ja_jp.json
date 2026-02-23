@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ 戦闘外: 0.5x",
   "catchrate.hud.release_to_close": "%sを離して閉じる",
   "catchrate.hud.ball_comparison": "⚔ ボール比較 (ターン %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ ボール比較 (野生)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ 確率は戦闘外0.5xペナルティを含みます",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "まだ遭遇していません",
   "catchrate.ball.guaranteed_catch": "捕獲確定",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "捕獲時の特殊効果",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "この種を先に捕獲する必要あり",
   "catchrate.ball.lure.effective": "釣りボーナス",
   "catchrate.ball.lure.ineffective": "釣ったポケモンのみ",
+  "catchrate.ball.safari.out_of_combat": "戦闘外ボーナス",
+  "catchrate.ball.safari.in_battle": "戦闘中効果なし",
   "catchrate.message.enabled": "捕獲率: §a有効",
   "catchrate.message.disabled": "捕獲率: §c無効",
   "catchrate.message.position_reset": "HUD位置をリセット",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

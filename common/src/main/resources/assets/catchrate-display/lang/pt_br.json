@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ Fora de combate: 0.5x",
   "catchrate.hud.release_to_close": "Solte %s para fechar",
   "catchrate.hud.ball_comparison": "⚔ Comparação de Bolas (Turno %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ Comparação de Bolas (Selvagem)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ As taxas incluem penalidade de 0.5x fora de combate",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "Ainda não encontrado",
   "catchrate.ball.guaranteed_catch": "Captura garantida",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Efeito especial na captura",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "Capture esta espécie primeiro",
   "catchrate.ball.lure.effective": "Bônus de pesca",
   "catchrate.ball.lure.ineffective": "Apenas Pokémon pescados",
+  "catchrate.ball.safari.out_of_combat": "Bônus fora de combate",
+  "catchrate.ball.safari.in_battle": "Sem efeito em batalha",
   "catchrate.message.enabled": "Taxa de Captura: §aAtivado",
   "catchrate.message.disabled": "Taxa de Captura: §cDesativado",
   "catchrate.message.position_reset": "Posição HUD redefinida",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

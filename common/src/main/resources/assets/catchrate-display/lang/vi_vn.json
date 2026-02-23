@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ Ngoài chiến: 0.5x",
   "catchrate.hud.release_to_close": "Thả %s để đóng",
   "catchrate.hud.ball_comparison": "⚔ So Sánh Bóng (Lượt %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ So Sánh Bóng (Hoang dã)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ Tỷ lệ bao gồm hình phạt 0.5x ngoài chiến đấu",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "Chưa gặp",
   "catchrate.ball.guaranteed_catch": "Bắt được chắc chắn",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Hiệu ứng đặc biệt khi bắt",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "Bắt loài này trước",
   "catchrate.ball.lure.effective": "Thưởng câu cá",
   "catchrate.ball.lure.ineffective": "Chỉ Pokémon câu được",
+  "catchrate.ball.safari.out_of_combat": "Thưởng ngoài chiến đấu",
+  "catchrate.ball.safari.in_battle": "Không hiệu quả trong chiến đấu",
   "catchrate.message.enabled": "Tỷ Lệ Bắt: §aBật",
   "catchrate.message.disabled": "Tỷ Lệ Bắt: §cTắt",
   "catchrate.message.position_reset": "Vị trí HUD đã đặt lại",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

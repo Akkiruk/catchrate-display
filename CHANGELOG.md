@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.7] - 2026-02-23
+
+### Updated
+- Updated French (fr_fr) translation with all missing keys — thanks to HadesDeadlyTom for the contribution.
+- Added 8 missing translation keys to all 28 language files: Safari Ball tooltips, wild ball comparison header, out-of-combat penalty note, unknown/not-encountered text, and hide_unencountered command info.
+
 ## [2.7.6] - 2026-02-23
 
 ### Fixed

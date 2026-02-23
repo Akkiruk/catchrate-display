@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ Harcon kívül: 0.5x",
   "catchrate.hud.release_to_close": "Engedd el %s-t a bezáráshoz",
   "catchrate.hud.ball_comparison": "⚔ Labda Összehasonlítás (Kör %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ Labda Összehasonlítás (Vad)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ Az arányok tartalmazzák a 0.5x harcon kívüli büntetést",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "Még nem találkozott",
   "catchrate.ball.guaranteed_catch": "Biztos elkapás",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Speciális hatás elkapáskor",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "Előbb kapd el ezt a fajt",
   "catchrate.ball.lure.effective": "Horgász bónusz",
   "catchrate.ball.lure.ineffective": "Csak horgászott Pokémon",
+  "catchrate.ball.safari.out_of_combat": "Bónusz harcon kívül",
+  "catchrate.ball.safari.in_battle": "Nincs hatás harcban",
   "catchrate.message.enabled": "Elkapási Arány: §aBekapcsolva",
   "catchrate.message.disabled": "Elkapási Arány: §cKikapcsolva",
   "catchrate.message.position_reset": "HUD pozíció visszaállítva",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

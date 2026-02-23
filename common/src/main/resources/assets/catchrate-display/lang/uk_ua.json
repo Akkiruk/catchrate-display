@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ Поза боєм: 0.5x",
   "catchrate.hud.release_to_close": "Відпустіть %s щоб закрити",
   "catchrate.hud.ball_comparison": "⚔ Порівняння М'ячів (Хід %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ Порівняння М'ячів (Дикий)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ Шанси включають штраф 0.5x поза боєм",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "Ще не зустрічався",
   "catchrate.ball.guaranteed_catch": "Гарантована ловля",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Спецефект при ловлі",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "Спочатку спіймайте цей вид",
   "catchrate.ball.lure.effective": "Бонус рибалки",
   "catchrate.ball.lure.ineffective": "Тільки виловлені Покемони",
+  "catchrate.ball.safari.out_of_combat": "Бонус поза боєм",
+  "catchrate.ball.safari.in_battle": "Без ефекту в бою",
   "catchrate.message.enabled": "Шанс Ловлі: §aУвімкнено",
   "catchrate.message.disabled": "Шанс Ловлі: §cВимкнено",
   "catchrate.message.position_reset": "Позицію HUD скинуто",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

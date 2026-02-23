@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ 戰鬥外: 0.5x",
   "catchrate.hud.release_to_close": "釋放%s以關閉",
   "catchrate.hud.ball_comparison": "⚔ 球類比較 (回合 %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ 球類比較 (野生)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ 概率包含0.5x非戰鬥懲罰",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "尚未遇到",
   "catchrate.ball.guaranteed_catch": "保證捕獲",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "捕獲時特殊效果",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "先捕獲此種族",
   "catchrate.ball.lure.effective": "釣魚加成",
   "catchrate.ball.lure.ineffective": "僅釣到的寶可夢",
+  "catchrate.ball.safari.out_of_combat": "戰鬥外加成",
+  "catchrate.ball.safari.in_battle": "戰鬥中無效果",
   "catchrate.message.enabled": "捕獲率: §a已啟用",
   "catchrate.message.disabled": "捕獲率: §c已停用",
   "catchrate.message.position_reset": "HUD位置已重置",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ Utanför strid: 0.5x",
   "catchrate.hud.release_to_close": "Släpp %s för att stänga",
   "catchrate.hud.ball_comparison": "⚔ Bolljämförelse (Tur %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ Bolljämförelse (Vild)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ Chanser inkluderar 0.5x-straff utanför strid",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "Inte ännu påträffad",
   "catchrate.ball.guaranteed_catch": "Garanterad fångst",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Specialeffekt vid fångst",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "Fånga denna art först",
   "catchrate.ball.lure.effective": "Fiskebonus",
   "catchrate.ball.lure.ineffective": "Endast fiskade Pokémon",
+  "catchrate.ball.safari.out_of_combat": "Bonus utanför strid",
+  "catchrate.ball.safari.in_battle": "Ingen effekt i strid",
   "catchrate.message.enabled": "Fångstkans: §aAktiverad",
   "catchrate.message.disabled": "Fångstkans: §cInaktiverad",
   "catchrate.message.position_reset": "HUD-position återställd",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

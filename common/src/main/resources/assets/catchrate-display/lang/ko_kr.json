@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ 전투 밖: 0.5x",
   "catchrate.hud.release_to_close": "%s 놓아서 닫기",
   "catchrate.hud.ball_comparison": "⚔ 볼 비교 (턴 %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ 볼 비교 (야생)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ 확률에 전투 밖 0.5x 페널티 포함",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "아직 만나지 않음",
   "catchrate.ball.guaranteed_catch": "포획 확정",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "포획 시 특수 효과",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "이 종을 먼저 포획해야 함",
   "catchrate.ball.lure.effective": "낚시 보너스",
   "catchrate.ball.lure.ineffective": "낚시한 포켓몬만",
+  "catchrate.ball.safari.out_of_combat": "배틀 밖 보너스",
+  "catchrate.ball.safari.in_battle": "배틀 중 효과 없음",
   "catchrate.message.enabled": "포획률: §a활성화",
   "catchrate.message.disabled": "포획률: §c비활성화",
   "catchrate.message.position_reset": "HUD 위치 초기화됨",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

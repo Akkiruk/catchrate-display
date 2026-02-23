@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ Poza walką: 0.5x",
   "catchrate.hud.release_to_close": "Puść %s aby zamknąć",
   "catchrate.hud.ball_comparison": "⚔ Porównanie Balli (Tura %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ Porównanie Balli (Dziki)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ Szanse uwzględniają karę 0.5x poza walką",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "Jeszcze nie spotkany",
   "catchrate.ball.guaranteed_catch": "Gwarantowane złapanie",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Specjalny efekt przy złapaniu",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "Złap najpierw ten gatunek",
   "catchrate.ball.lure.effective": "Bonus rybaków",
   "catchrate.ball.lure.ineffective": "Tylko złowione Pokémony",
+  "catchrate.ball.safari.out_of_combat": "Bonus poza walką",
+  "catchrate.ball.safari.in_battle": "Brak efektu w walce",
   "catchrate.message.enabled": "Szansa Złapania: §aWłączone",
   "catchrate.message.disabled": "Szansa Złapania: §cWyłączone",
   "catchrate.message.position_reset": "Pozycja HUD zresetowana",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

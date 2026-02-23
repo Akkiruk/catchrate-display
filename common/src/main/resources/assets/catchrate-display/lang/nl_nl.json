@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ Buiten gevecht: 0.5x",
   "catchrate.hud.release_to_close": "Laat %s los om te sluiten",
   "catchrate.hud.ball_comparison": "⚔ Bal Vergelijking (Beurt %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ Bal Vergelijking (Wild)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ Kansen bevatten 0.5x buiten-gevecht straf",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "Nog niet tegengekomen",
   "catchrate.ball.guaranteed_catch": "Gegarandeerde vangst",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Speciaal effect bij vangst",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "Vang deze soort eerst",
   "catchrate.ball.lure.effective": "Vis bonus",
   "catchrate.ball.lure.ineffective": "Alleen geviste Pokémon",
+  "catchrate.ball.safari.out_of_combat": "Bonus buiten gevecht",
+  "catchrate.ball.safari.in_battle": "Geen effect in gevecht",
   "catchrate.message.enabled": "Vangkans: §aIngeschakeld",
   "catchrate.message.disabled": "Vangkans: §cUitgeschakeld",
   "catchrate.message.position_reset": "HUD positie gereset",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

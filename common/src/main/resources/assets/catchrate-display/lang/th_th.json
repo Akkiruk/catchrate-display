@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ นอกการต่อสู้: 0.5x",
   "catchrate.hud.release_to_close": "ปล่อย %s เพื่อปิด",
   "catchrate.hud.ball_comparison": "⚔ เปรียบเทียบบอล (เทิร์น %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ เปรียบเทียบบอล (ป่า)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ อัตราการจับรวมโทษ 0.5x นอกการต่อสู้",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "ยังไม่เคยพบ",
   "catchrate.ball.guaranteed_catch": "จับได้แน่นอน",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "เอฟเฟกต์พิเศษเมื่อจับ",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "จับสายพันธุ์นี้ก่อน",
   "catchrate.ball.lure.effective": "โบนัสตกปลา",
   "catchrate.ball.lure.ineffective": "เฉพาะ Pokémon ที่ตกได้",
+  "catchrate.ball.safari.out_of_combat": "โบนัสนอกการต่อสู้",
+  "catchrate.ball.safari.in_battle": "ไม่มีผลในการต่อสู้",
   "catchrate.message.enabled": "อัตราการจับ: §aเปิด",
   "catchrate.message.disabled": "อัตราการจับ: §cปิด",
   "catchrate.message.position_reset": "ตำแหน่ง HUD ถูกรีเซ็ต",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

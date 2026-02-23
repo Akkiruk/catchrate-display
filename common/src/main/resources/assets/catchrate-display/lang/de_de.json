@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ Außerhalb Kampf: 0.5x",
   "catchrate.hud.release_to_close": "%s loslassen zum Schließen",
   "catchrate.hud.ball_comparison": "⚔ Ball-Vergleich (Runde %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ Ball-Vergleich (Wild)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ Raten beinhalten 0.5x Nicht-im-Kampf-Strafe",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "Noch nicht begegnet",
   "catchrate.ball.guaranteed_catch": "Garantierter Fang",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Spezialeffekt bei Fang",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "Diese Art zuerst fangen",
   "catchrate.ball.lure.effective": "Angel-Bonus",
   "catchrate.ball.lure.ineffective": "Nur geangelte Pokémon",
+  "catchrate.ball.safari.out_of_combat": "Bonus außerhalb des Kampfes",
+  "catchrate.ball.safari.in_battle": "Kein Effekt im Kampf",
   "catchrate.message.enabled": "Fangrate: §aAktiviert",
   "catchrate.message.disabled": "Fangrate: §cDeaktiviert",
   "catchrate.message.position_reset": "HUD-Position zurückgesetzt",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ Savaş dışı: 0.5x",
   "catchrate.hud.release_to_close": "Kapatmak için %s bırak",
   "catchrate.hud.ball_comparison": "⚔ Top Karşılaştırması (Tur %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ Top Karşılaştırması (Vahşi)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ Oranlar 0.5x savaş dışı cezasını içerir",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "Henüz karşılaşılmadı",
   "catchrate.ball.guaranteed_catch": "Garantili yakalama",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Yakalamada özel etki",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "Önce bu türü yakala",
   "catchrate.ball.lure.effective": "Balıkçılık bonusu",
   "catchrate.ball.lure.ineffective": "Sadece olta ile yakalanan",
+  "catchrate.ball.safari.out_of_combat": "Savaş dışı bonus",
+  "catchrate.ball.safari.in_battle": "Savaşta etkisi yok",
   "catchrate.message.enabled": "Yakalama Oranı: §aAçık",
   "catchrate.message.disabled": "Yakalama Oranı: §cKapalı",
   "catchrate.message.position_reset": "HUD konumu sıfırlandı",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }

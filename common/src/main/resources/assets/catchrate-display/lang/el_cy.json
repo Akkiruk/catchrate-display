@@ -23,6 +23,11 @@
   "catchrate.hud.out_of_combat_penalty": "⚠ Εκτός μάχης: 0.5x",
   "catchrate.hud.release_to_close": "Αφήστε %s για κλείσιμο",
   "catchrate.hud.ball_comparison": "⚔ Σύγκριση Μπαλών (Γύρος %d)",
+  "catchrate.hud.ball_comparison_wild": "⚔ Σύγκριση Μπαλών (Άγριο)",
+  "catchrate.hud.out_of_combat_penalty_note": "⚠ Οι πιθανότητες περιλαμβάνουν ποινή 0.5x εκτός μάχης",
+  "catchrate.hud.unknown_pokemon": "???",
+  "catchrate.hud.unknown_rate": "???",
+  "catchrate.hud.not_encountered": "Δεν έχει αντιμετωπιστεί ακόμα",
   "catchrate.ball.guaranteed_catch": "Εγγυημένη σύλληψη",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Ειδικό εφέ στη σύλληψη",
@@ -64,6 +69,8 @@
   "catchrate.ball.repeat.ineffective": "Πιάστε πρώτα αυτό το είδος",
   "catchrate.ball.lure.effective": "Μπόνους ψαρέματος",
   "catchrate.ball.lure.ineffective": "Μόνο ψαρεμένα Pokémon",
+  "catchrate.ball.safari.out_of_combat": "Μπόνους εκτός μάχης",
+  "catchrate.ball.safari.in_battle": "Χωρίς εφέ στη μάχη",
   "catchrate.message.enabled": "Ποσοστό Σύλληψης: §aΕνεργοποιημένο",
   "catchrate.message.disabled": "Ποσοστό Σύλληψης: §cΑπενεργοποιημένο",
   "catchrate.message.position_reset": "Θέση HUD επαναφέρθηκε",
@@ -77,5 +84,6 @@
   "catchrate.command.info.debug_active": "§7  Debug active: §f%s",
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
+  "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================"
 }
