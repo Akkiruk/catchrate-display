@@ -68,6 +68,7 @@
 
   "catchrate.ball.dream.sleeping": "Target is asleep",
   "catchrate.ball.dream.need_sleep": "Target not asleep",
+  "catchrate.ball.dream.need_sleep_wild": "Needs Sleep status (battle move)",
 
   "catchrate.ball.love.no_battler": "No battler info",
   "catchrate.ball.love.need_battler": "Need active battler",
@@ -79,6 +80,7 @@
 
   "catchrate.ball.level.effective": "Level advantage",
   "catchrate.ball.level.ineffective": "No level advantage",
+  "catchrate.ball.level.no_battler": "Only works in battle",
 
   "catchrate.ball.repeat.effective": "Previously caught species",
   "catchrate.ball.repeat.ineffective": "Species not yet caught",

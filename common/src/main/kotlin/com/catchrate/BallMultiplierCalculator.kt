@@ -47,6 +47,7 @@ object BallTranslations {
     
     fun dreamSleeping() = Component.translatable("catchrate.ball.dream.sleeping").string
     fun dreamNeedSleep() = Component.translatable("catchrate.ball.dream.need_sleep").string
+    fun dreamNeedSleepWild() = Component.translatable("catchrate.ball.dream.need_sleep_wild").string
     
     fun loveNoBattler() = Component.translatable("catchrate.ball.love.no_battler").string
     fun loveNeedBattler() = Component.translatable("catchrate.ball.love.need_battler").string
@@ -58,6 +59,7 @@ object BallTranslations {
     
     fun levelEffective() = Component.translatable("catchrate.ball.level.effective").string
     fun levelIneffective() = Component.translatable("catchrate.ball.level.ineffective").string
+    fun levelNoBattler() = Component.translatable("catchrate.ball.level.no_battler").string
     fun repeatEffective() = Component.translatable("catchrate.ball.repeat.effective").string
     fun repeatIneffective() = Component.translatable("catchrate.ball.repeat.ineffective").string
     
@@ -254,7 +256,10 @@ object BallMultiplierCalculator {
     
     private fun calculateDreamBall(ctx: BallContext): BallResult {
         val asleep = ctx.statusPath == "sleep"
-        return BallResult(if (asleep) 4F else 1F, asleep, if (asleep) BallTranslations.dreamSleeping() else BallTranslations.dreamNeedSleep())
+        if (asleep) return BallResult(4F, true, BallTranslations.dreamSleeping())
+        // Out of combat: wild Pokémon don't have Sleep status (it's battle-applied)
+        val reason = if (ctx.inBattle) BallTranslations.dreamNeedSleep() else BallTranslations.dreamNeedSleepWild()
+        return BallResult(1F, false, reason)
     }
     
     private fun calculateLoveBall(ctx: BallContext): BallResult {
@@ -292,8 +297,9 @@ object BallMultiplierCalculator {
             val effective = mult > 1.01f
             return BallResult(mult, effective, if (effective) BallTranslations.levelEffective() else BallTranslations.levelIneffective())
         }
-        // Out of battle or no battler data available
-        return BallResult(1F, false, BallTranslations.levelIneffective())
+        // Out of battle: no battler to compare against
+        val reason = if (ctx.inBattle) BallTranslations.levelIneffective() else BallTranslations.levelNoBattler()
+        return BallResult(1F, false, reason)
     }
     
     private fun calculateRepeatBall(ctx: BallContext): BallResult {

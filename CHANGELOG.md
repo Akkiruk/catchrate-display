@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.5] - 2026-02-23
+
+### Improved
+- Dream Ball now shows "Needs Sleep status (battle move)" when looking at wild Pokémon instead of the misleading "Target not asleep". Wild Pokémon that appear to be resting don't have the Sleep status — it's only applied by battle moves like Spore and Hypnosis.
+- Level Ball now shows "Only works in battle" when looking at wild Pokémon instead of the confusing "No level advantage", since there's no active battler to compare levels against outside of battle.
+- Added new translation keys for all 28 languages.
+
 ## [2.7.4] - 2026-02-22
 
 ### Fixed
