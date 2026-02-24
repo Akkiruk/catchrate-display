@@ -188,8 +188,8 @@ object BallMultiplierCalculator {
     }
     
     private fun calculateTimerBall(ctx: BallContext): BallResult {
-        val turnsPassed = (ctx.turnCount - 1).coerceAtLeast(0)
-        val mult = if (ctx.inBattle) (turnsPassed * (1229F / 4096F) + 1F).coerceAtMost(4F) else 1F
+        // Cobblemon formula: turn * (1229/4096), capped at 4 — NOT the mainline games formula
+        val mult = if (ctx.inBattle) (ctx.turnCount * (1229F / 4096F)).coerceAtMost(4F) else 1F
         val effective = mult > 1.01f
         val reason = if (ctx.inBattle) BallTranslations.timerTurnInfo(ctx.turnCount) else BallTranslations.timerScales()
         return BallResult(mult, effective, reason)

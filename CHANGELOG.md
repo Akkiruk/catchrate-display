@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.7.8] - 2026-02-24
+
+### Fixed
+- **Timer Ball multiplier was wrong.** The mod used the mainline games formula (`(turn-1) × 0.3 + 1`, capped at 4) but Cobblemon uses its own formula (`turn × 0.3`, capped at 4). At turn 10 this showed 3.7x instead of the correct 3.0x, which could inflate catch rates enough to falsely display "Guaranteed" when the actual server-side chance was ~86%.
+
 ## [2.7.7] - 2026-02-23
 
 ### Updated
