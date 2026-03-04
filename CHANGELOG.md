@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.7.9] - 2026-03-04
+
+### Fixed
+- **Ancient Ultra Ball showed 1x instead of 2x.** Ancient Great Ball also showed 1x instead of 1.5x. The `calculateAncientBall()` method was returning a flat 1x for every ancient ball instead of reading the actual `MultiplierModifier` from the PokeBall object. Now dynamically reads the multiplier from Cobblemon's registry. Verified against PokeBalls.class bytecode: ancient_ultra_ball = `MultiplierModifier(2.0f)`, ancient_great_ball = `MultiplierModifier(1.5f)`, all others = null (1x). Ancient Origin Ball was already correct (caught by the `isGuaranteed()` check).
+
 ## [2.7.8] - 2026-02-24
 
 ### Fixed

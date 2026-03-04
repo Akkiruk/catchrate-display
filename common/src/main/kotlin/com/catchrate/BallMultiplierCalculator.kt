@@ -1,6 +1,7 @@
 package com.catchrate
 
 import com.cobblemon.mod.common.api.pokeball.PokeBalls
+import com.cobblemon.mod.common.api.pokeball.catching.modifiers.MultiplierModifier
 import com.cobblemon.mod.common.pokeball.PokeBall
 import com.cobblemon.mod.common.pokemon.Gender
 import net.minecraft.network.chat.Component
@@ -135,8 +136,9 @@ object BallMultiplierCalculator {
         } catch (e: Throwable) { false }
         
         if (isAncient) {
-            CatchRateMod.debugOnChange("Ball/$lower", "ancient", "$lower: ancient ball -> 1x")
-            return calculateAncientBall(lower)
+            val ancientResult = calculateAncientBall(lower, pokeBall)
+            CatchRateMod.debugOnChange("Ball/$lower", "ancient_${ancientResult.multiplier}", "$lower: ancient ball -> ${ancientResult.multiplier}x")
+            return ancientResult
         }
         
         val result = when (lower) {
@@ -171,8 +173,16 @@ object BallMultiplierCalculator {
         return result
     }
     
-    private fun calculateAncientBall(lower: String): BallResult {
-        return BallResult(1F, true, BallTranslations.ancient())
+    private fun calculateAncientBall(lower: String, pokeBall: PokeBall?): BallResult {
+        val mult = try {
+            val modifier = pokeBall?.catchRateModifier as? MultiplierModifier
+            if (modifier != null) {
+                val field = MultiplierModifier::class.java.getDeclaredField("multiplier")
+                field.isAccessible = true
+                field.getFloat(modifier)
+            } else 1F
+        } catch (e: Throwable) { 1F }
+        return BallResult(mult, true, BallTranslations.ancient())
     }
     
     private fun calculateSafariBall(ctx: BallContext): BallResult {
