@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.7.12] - 2026-03-04
+
+### Changed
+- **Catch rate cache now resolves entirely from local data.** Cobblemon's Species.encode/decode never includes catchRate, so the client registry always has the default 45 for every species. The old code checked the registry first and trusted any non-45 value, which was dead logic. The cache now always resolves from local datapacks and classpath JARs — one consistent source of truth, no registry dependency.
+
 ## [2.7.11] - 2026-03-04
 
 ### Fixed

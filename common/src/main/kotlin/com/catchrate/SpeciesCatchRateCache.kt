@@ -10,47 +10,32 @@ import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Multi-source catch rate cache that works around Cobblemon's broken species sync.
+ * Local-only catch rate cache. Cobblemon doesn't sync catchRate to the client
+ * (Species.encode/decode omits it), so the registry always has the constructor
+ * default of 45. We resolve every species from local data instead:
  *
- * Resolution order (highest priority first):
- *   1. Local datapacks (game dir /datapacks/) — ZIP and folder datapacks
+ *   1. Local datapacks (game dir /datapacks/) — ZIP and folder packs
  *   2. World save datapacks (saves/<world>/datapacks/) — per-world overrides
- *   3. Mod JARs on classpath — Cobblemon + addon mods like Cobblemon Extras
- *   4. Registry value — whatever Cobblemon synced (usually wrong: 45)
- *
- * Only overrides when the registry shows the default 45 (the broken value).
- * If the registry has anything else, it's trusted.
+ *   3. Mod JARs on classpath — Cobblemon + addon mods
+ *   4. Fallback: 45 (Cobblemon's default — most common wild Pokémon)
  */
 object SpeciesCatchRateCache {
 
-    private const val SPECIES_DEFAULT_CATCH_RATE = 45
+    private const val DEFAULT_CATCH_RATE = 45
     private val cache = ConcurrentHashMap<String, Int>()
-    private var loggedWarning = false
     private var datapacksScanned = false
-
-    // Bulk cache from datapack scanning — species name → catchRate
     private val datapackOverrides = ConcurrentHashMap<String, Int>()
 
     fun getCatchRate(species: Species): Int {
-        val registryValue = species.catchRate
-        if (registryValue != SPECIES_DEFAULT_CATCH_RATE) return registryValue
-
         val speciesName = species.name.lowercase()
-        cache[speciesName]?.let { cached ->
-            logOverrideOnce(species.name, speciesName, registryValue, cached)
-            return cached
-        }
+        cache[speciesName]?.let { return it }
 
         val resolved = resolve(species)
         cache[speciesName] = resolved
-        if (resolved != registryValue) {
-            logOverrideOnce(species.name, speciesName, registryValue, resolved)
-            if (!loggedWarning) {
-                CatchRateMod.LOGGER.warn("[CatchRate] Species catchRate mismatch detected — using local data. " +
-                    "This is a known issue with Cobblemon's client sync.")
-                loggedWarning = true
-            }
-        }
+        CatchRateMod.debugOnChange(
+            "CatchRate", speciesName,
+            "${species.name} catchRate resolved to $resolved (local data)"
+        )
         return resolved
     }
 
@@ -65,15 +50,10 @@ object SpeciesCatchRateCache {
     // -- Resolution chain --
 
     private fun resolve(species: Species): Int {
-        // 1. Datapacks (scanned lazily on first miss)
         ensureDatapacksScanned()
         datapackOverrides[species.name.lowercase()]?.let { return it }
-
-        // 2. Classpath (mod JARs — Cobblemon, addons)
         loadFromClasspath(species)?.let { return it }
-
-        // 3. Fallback to registry
-        return species.catchRate
+        return DEFAULT_CATCH_RATE
     }
 
     // -- Datapack scanning --
@@ -203,14 +183,4 @@ object SpeciesCatchRateCache {
         } catch (_: Throwable) { null }
     }
 
-    // -- Logging --
-
-    private fun logOverrideOnce(displayName: String, key: String, registry: Int, resolved: Int) {
-        if (resolved != SPECIES_DEFAULT_CATCH_RATE) {
-            CatchRateMod.debugOnChange(
-                "CatchRateOverride", key,
-                "$displayName catchRate override: registry=$registry, resolved=$resolved"
-            )
-        }
-    }
 }
