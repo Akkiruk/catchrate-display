@@ -1,7 +1,6 @@
 package com.catchrate
 
 import com.cobblemon.mod.common.api.pokeball.PokeBalls
-import com.cobblemon.mod.common.api.pokeball.catching.modifiers.MultiplierModifier
 import com.cobblemon.mod.common.pokeball.PokeBall
 import com.cobblemon.mod.common.pokemon.Gender
 import net.minecraft.network.chat.Component
@@ -174,14 +173,12 @@ object BallMultiplierCalculator {
     }
     
     private fun calculateAncientBall(lower: String, pokeBall: PokeBall?): BallResult {
-        val mult = try {
-            val modifier = pokeBall?.catchRateModifier as? MultiplierModifier
-            if (modifier != null) {
-                val field = MultiplierModifier::class.java.getDeclaredField("multiplier")
-                field.isAccessible = true
-                field.getFloat(modifier)
-            } else 1F
-        } catch (e: Throwable) { 1F }
+        val mult = when (lower) {
+            "ancient_great_ball" -> 1.5F
+            "ancient_ultra_ball" -> 2F
+            "ancient_origin_ball" -> return BallResult(255F, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
+            else -> 1F
+        }
         return BallResult(mult, true, BallTranslations.ancient())
     }
     

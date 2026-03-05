@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.7.10] - 2026-03-04
+
+### Fixed
+- **Ancient Great Ball, Ultra Ball, and Origin Ball multipliers now correct.** Replaced reflection-based multiplier reading with hardcoded values: Ancient Great Ball = 1.5x, Ancient Ultra Ball = 2x, Ancient Origin Ball = guaranteed catch (255x).
+
 ## [2.7.9] - 2026-03-04
 
 ### Fixed
