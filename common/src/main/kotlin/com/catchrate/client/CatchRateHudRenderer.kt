@@ -260,7 +260,8 @@ class CatchRateHudRenderer {
         val ballConditionReason: String,
         val turnCount: Int,
         val isWild: Boolean,
-        val isEncountered: Boolean = true
+        val isEncountered: Boolean = true,
+        val isCatchRateEstimate: Boolean = false
     )
     
     private fun renderClientModeHud(guiGraphics: GuiGraphics, minecraft: Minecraft, result: CatchRateResult, ballName: String) {
@@ -285,7 +286,8 @@ class CatchRateHudRenderer {
             ballConditionReason = result.ballConditionReason,
             turnCount = turnCount,
             isWild = false,
-            isEncountered = encountered
+            isEncountered = encountered,
+            isCatchRateEstimate = result.isCatchRateEstimate
         ))
     }
     
@@ -328,7 +330,8 @@ class CatchRateHudRenderer {
             ballConditionReason = result.reason,
             turnCount = 0,
             isWild = true,
-            isEncountered = encountered
+            isEncountered = encountered,
+            isCatchRateEstimate = result.isCatchRateEstimate
         ))
     }
     
@@ -354,7 +357,8 @@ class CatchRateHudRenderer {
         val percentText = if (data.isGuaranteed) {
             HudTranslations.guaranteedShort()
         } else {
-            "${CatchRateFormula.formatCatchPercentage(data.catchPercentage, data.isGuaranteed)}%"
+            val approx = if (data.isCatchRateEstimate) "~" else ""
+            "$approx${CatchRateFormula.formatCatchPercentage(data.catchPercentage, data.isGuaranteed)}%"
         }
         
         val hasStatus = data.statusMultiplier > 1.0
@@ -526,7 +530,8 @@ class CatchRateHudRenderer {
             
             val ballText = Component.literal("$medal${ball.displayName}")
             val rateColor = HudDrawing.getChanceFormatting(ball.catchRate)
-            val rateText = Component.literal("${CatchRateFormula.formatCatchPercentage(ball.catchRate, ball.isGuaranteed)}%").withStyle(rateColor)
+            val approx = if (ball.isCatchRateEstimate) "~" else ""
+            val rateText = Component.literal("$approx${CatchRateFormula.formatCatchPercentage(ball.catchRate, ball.isGuaranteed)}%").withStyle(rateColor)
             
             val multColor = HudDrawing.getBallMultiplierFormatting(ball.multiplier)
             val multText = Component.literal("${String.format("%.1f", ball.multiplier)}x").withStyle(multColor)

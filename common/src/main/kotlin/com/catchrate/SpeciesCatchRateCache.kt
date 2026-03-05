@@ -23,6 +23,7 @@ object SpeciesCatchRateCache {
 
     private const val DEFAULT_CATCH_RATE = 45
     private val cache = ConcurrentHashMap<String, Int>()
+    private val estimatedSpecies = ConcurrentHashMap.newKeySet<String>()
     private var datapacksScanned = false
     private val datapackOverrides = ConcurrentHashMap<String, Int>()
 
@@ -34,14 +35,18 @@ object SpeciesCatchRateCache {
         cache[speciesName] = resolved
         CatchRateMod.debugOnChange(
             "CatchRate", speciesName,
-            "${species.name} catchRate resolved to $resolved (local data)"
+            "${species.name} catchRate resolved to $resolved (local data${if (speciesName in estimatedSpecies) ", ESTIMATE" else ""})"
         )
         return resolved
     }
 
+    /** True when the catch rate came from the fallback default, not from actual species data. */
+    fun isEstimate(species: Species): Boolean = species.name.lowercase() in estimatedSpecies
+
     /** Clear the cache (e.g., on world change or disconnect). */
     fun invalidate() {
         cache.clear()
+        estimatedSpecies.clear()
         datapackOverrides.clear()
         datapacksScanned = false
         CatchRateMod.debug("Cache", "Catch rate cache invalidated")
@@ -53,6 +58,8 @@ object SpeciesCatchRateCache {
         ensureDatapacksScanned()
         datapackOverrides[species.name.lowercase()]?.let { return it }
         loadFromClasspath(species)?.let { return it }
+        // No local data found — mark as estimate so the UI can indicate uncertainty
+        estimatedSpecies.add(species.name.lowercase())
         return DEFAULT_CATCH_RATE
     }
 

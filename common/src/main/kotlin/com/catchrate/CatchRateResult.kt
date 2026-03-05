@@ -16,5 +16,7 @@ data class CatchRateResult(
     val levelBonus: Double = 1.0,
     val modifiedCatchRate: Double = 0.0,
     val ballConditionMet: Boolean = true,
-    val ballConditionReason: String = ""
+    val ballConditionReason: String = "",
+    /** True when the base catch rate is a fallback estimate (species not found in local data). */
+    val isCatchRateEstimate: Boolean = false
 )

@@ -44,7 +44,8 @@ object BallComparisonCalculator {
         val multiplier: Double,
         val conditionMet: Boolean,
         val reason: String,
-        val isGuaranteed: Boolean = false
+        val isGuaranteed: Boolean = false,
+        val isCatchRateEstimate: Boolean = false
     )
     
     /**
@@ -73,6 +74,7 @@ object BallComparisonCalculator {
         )
         
         val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species).toFloat()
+        val isEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species)
         val statusMult = CatchRateFormula.getStatusMultiplier(pokemon.status?.name?.path)
         val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
         
@@ -99,7 +101,8 @@ object BallComparisonCalculator {
                 multiplier = result.multiplier.toDouble(),
                 conditionMet = result.conditionMet,
                 reason = result.reason,
-                isGuaranteed = isFormulaGuaranteed
+                isGuaranteed = isFormulaGuaranteed,
+                isCatchRateEstimate = isEstimate
             )
         }.sortedByDescending { it.catchRate }
     }
@@ -128,6 +131,7 @@ object BallComparisonCalculator {
         val result = BallMultiplierCalculator.calculate(ballId, ctx)
         
         val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species).toFloat()
+        val isEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species)
         val maxHp = pokemon.maxHealth.toFloat()
         val currentHp = pokemon.currentHealth.toFloat()
         val statusMult = CatchRateFormula.getStatusMultiplier(BallContextFactory.getEffectiveStatusPath(entity))
@@ -160,7 +164,8 @@ object BallComparisonCalculator {
             multiplier = result.multiplier.toDouble(),
             conditionMet = result.conditionMet,
             reason = result.reason,
-            isGuaranteed = isFormulaGuaranteed
+            isGuaranteed = isFormulaGuaranteed,
+            isCatchRateEstimate = isEstimate
         )
     }
     
@@ -186,6 +191,7 @@ object BallComparisonCalculator {
         val ctx = BallContextFactory.fromWorldPokemon(entity, player, level)
         
         val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species).toFloat()
+        val isEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species)
         val maxHp = pokemon.maxHealth.toFloat()
         val currentHp = pokemon.currentHealth.toFloat()
         val statusMult = CatchRateFormula.getStatusMultiplier(BallContextFactory.getEffectiveStatusPath(entity))
@@ -214,7 +220,8 @@ object BallComparisonCalculator {
                 multiplier = result.multiplier.toDouble(),
                 conditionMet = result.conditionMet,
                 reason = result.reason,
-                isGuaranteed = isFormulaGuaranteed
+                isGuaranteed = isFormulaGuaranteed,
+                isCatchRateEstimate = isEstimate
             )
         }.sortedByDescending { it.catchRate }
     }

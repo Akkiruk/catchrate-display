@@ -115,7 +115,8 @@ object CatchRateCalculator {
             levelBonus = bonusLevel.toDouble(),
             modifiedCatchRate = modifiedCatchRate.toDouble(),
             ballConditionMet = ballResult.conditionMet,
-            ballConditionReason = ballResult.reason
+            ballConditionReason = ballResult.reason,
+            isCatchRateEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species)
         )
     }
     

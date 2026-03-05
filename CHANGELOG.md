@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.7.13] - 2026-03-04
+
+### Added
+- **Estimated catch rates now show a `~` prefix.** If the mod can't find a species in any local data source (datapacks or mod JARs), it falls back to the default catch rate of 45. When this happens, the HUD and ball comparison panel prefix the percentage with `~` (e.g., `~14.2%`) to indicate the value may be inaccurate. Species that genuinely have a catch rate of 45 are unaffected — the indicator only appears when no local data was found at all.
+
 ## [2.7.12] - 2026-03-04
 
 ### Changed
