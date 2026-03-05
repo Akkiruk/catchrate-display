@@ -3,6 +3,7 @@ package com.catchrate.neoforge
 import com.catchrate.CatchRateKeybinds
 import com.catchrate.CatchRateMod
 import com.catchrate.DebugCommands
+import com.catchrate.SpeciesCatchRateCache
 import com.catchrate.client.CatchRateHudRenderer
 import net.minecraft.client.Minecraft
 import net.neoforged.api.distmarker.Dist
@@ -35,6 +36,10 @@ object CatchRateDisplayNeoForgeClient {
         if (CatchRateMod.isDebugActive) {
             CatchRateMod.logEnvironmentInfo()
         }
+        
+        // Preload catch rate cache on background thread to avoid lag spike on first Pokemon lookup
+        SpeciesCatchRateCache.preloadAsync()
+        
         event.registerAboveAll(
             net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(CatchRateMod.NEOFORGE_MOD_ID, "catch_rate_hud")
         ) { guiGraphics, deltaTracker ->

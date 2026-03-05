@@ -3,6 +3,7 @@ package com.catchrate.fabric
 import com.catchrate.CatchRateDebugLog
 import com.catchrate.CatchRateKeybinds
 import com.catchrate.CatchRateMod
+import com.catchrate.SpeciesCatchRateCache
 import com.catchrate.client.CatchRateHudRenderer
 import com.catchrate.config.CatchRateConfig
 import net.fabricmc.api.ClientModInitializer
@@ -31,6 +32,9 @@ class CatchRateDisplayFabricClient : ClientModInitializer {
         if (CatchRateMod.isDebugActive) {
             CatchRateMod.logEnvironmentInfo()
         }
+        
+        // Preload catch rate cache on background thread to avoid lag spike on first Pokemon lookup
+        SpeciesCatchRateCache.preloadAsync()
         
         // Register keybinds
         val keyMappings = CatchRateKeybinds.createKeyMappings()

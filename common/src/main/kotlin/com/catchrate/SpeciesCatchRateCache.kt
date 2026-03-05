@@ -24,8 +24,10 @@ object SpeciesCatchRateCache {
     private const val DEFAULT_CATCH_RATE = 45
     private val cache = ConcurrentHashMap<String, Int>()
     private val estimatedSpecies = ConcurrentHashMap.newKeySet<String>()
-    private var datapacksScanned = false
+    @Volatile private var datapacksScanned = false
     private val datapackOverrides = ConcurrentHashMap<String, Int>()
+    @Volatile private var preloading = false
+    @Volatile private var preloaded = false
 
     fun getCatchRate(species: Species): Int {
         val speciesName = species.name.lowercase()
@@ -46,12 +48,53 @@ object SpeciesCatchRateCache {
     /** Number of species currently cached. */
     fun cacheSize(): Int = cache.size
 
+    /**
+     * Preload the cache on a background thread. Scans datapacks and resolves
+     * all known Cobblemon species so the first render-thread lookup is instant.
+     */
+    fun preloadAsync() {
+        if (preloaded || preloading) return
+        preloading = true
+        Thread {
+            try {
+                val start = System.nanoTime()
+                ensureDatapacksScanned()
+                // Resolve every registered species from Cobblemon
+                val allSpecies = try {
+                    com.cobblemon.mod.common.api.pokemon.PokemonSpecies.species.toList()
+                } catch (_: Throwable) { emptyList() }
+                var resolved = 0
+                for (species in allSpecies) {
+                    val name = species.name.lowercase()
+                    if (!cache.containsKey(name)) {
+                        val rate = resolve(species)
+                        cache[name] = rate
+                        resolved++
+                    }
+                }
+                val elapsed = (System.nanoTime() - start) / 1_000_000
+                CatchRateMod.LOGGER.info("[CatchRate] Background preload complete: $resolved species in ${elapsed}ms (${cache.size} total cached)")
+                preloaded = true
+            } catch (e: Throwable) {
+                CatchRateMod.LOGGER.warn("[CatchRate] Background preload failed: ${e.message}")
+            } finally {
+                preloading = false
+            }
+        }.apply {
+            isDaemon = true
+            name = "CatchRate-Preload"
+            priority = Thread.MIN_PRIORITY
+            start()
+        }
+    }
+
     /** Clear the cache (e.g., on world change or disconnect). */
     fun invalidate() {
         cache.clear()
         estimatedSpecies.clear()
         datapackOverrides.clear()
         datapacksScanned = false
+        preloaded = false
         CatchRateMod.debug("Cache", "Catch rate cache invalidated")
     }
 

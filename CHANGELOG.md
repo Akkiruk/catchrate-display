@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.8.1] - 2026-03-05
+
+### Fixed
+- **Eliminated lag spike when first looking at a Pokémon with a Poké Ball.** The catch rate cache (datapack scan + classpath JSON reads for every species) was being done lazily on the render thread. Now preloads all species data on a background thread during client init, so the first lookup is instant.
+
 ## [2.8.0] - 2026-03-05
 
 ### Added
