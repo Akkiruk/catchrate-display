@@ -159,12 +159,19 @@ object SpeciesCatchRateCache {
 
     // -- Classpath loading --
 
+    // All known Cobblemon generation folders — includes sub-generations like 7b (Meltan/Melmetal)
+    // and 8a (Legends: Arceus Pokémon). Checked against Cobblemon 1.7.3 jar.
+    private val generationFolders = listOf(
+        "generation1", "generation2", "generation3", "generation4", "generation5",
+        "generation6", "generation7", "generation7b", "generation8", "generation8a", "generation9"
+    )
+
     private fun loadFromClasspath(species: Species): Int? {
         val namespace = species.resourceIdentifier?.namespace ?: "cobblemon"
         val name = species.name.lowercase()
 
-        for (gen in 1..9) {
-            val path = "data/$namespace/species/generation$gen/$name.json"
+        for (gen in generationFolders) {
+            val path = "data/$namespace/species/$gen/$name.json"
             classpathStream(path)?.let { stream ->
                 extractCatchRate(stream)?.let { return it }
             }

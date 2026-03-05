@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.7.11] - 2026-03-04
+
+### Fixed
+- **Wrong catch rates for Meltan, Melmetal, Enamorus, Kleavor, Sneasler, and Ursaluna.** The species catch rate cache only scanned `generation1` through `generation9` on the classpath, missing Cobblemon's `generation7b` (Meltan/Melmetal) and `generation8a` (Legends: Arceus) folders. If the registry served the broken default 45, these species would show inflated catch rates (e.g., Meltan/Melmetal real rate is 3, displayed as 45 — 15x too easy).
+
 ## [2.7.10] - 2026-03-04
 
 ### Fixed
