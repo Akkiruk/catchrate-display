@@ -43,6 +43,9 @@ object SpeciesCatchRateCache {
     /** True when the catch rate came from the fallback default, not from actual species data. */
     fun isEstimate(species: Species): Boolean = species.name.lowercase() in estimatedSpecies
 
+    /** Number of species currently cached. */
+    fun cacheSize(): Int = cache.size
+
     /** Clear the cache (e.g., on world change or disconnect). */
     fun invalidate() {
         cache.clear()

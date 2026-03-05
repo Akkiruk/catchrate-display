@@ -3,6 +3,7 @@ package com.catchrate.client
 import com.catchrate.BallContextFactory
 import com.catchrate.CatchRateCalculator
 import com.catchrate.CatchRateConstants.Colors
+import com.catchrate.CatchRateDebugLog
 import com.catchrate.CatchRateFormula
 import com.catchrate.CatchRateKeybinds
 import com.catchrate.CatchRateMod
@@ -167,6 +168,8 @@ class CatchRateHudRenderer {
         mustChooseTransitions = 0
         cachedClientResult = null
         cachedComparison = null
+        CatchRateDebugLog.onBattleEnd() // clear any stale pending from previous battle
+        CatchRateDebugLog.log("Battle started: id=${battle.battleId} isPvW=${battle.isPvW}")
     }
     
     private fun updateTurnCount(battle: ClientBattle) {
@@ -177,9 +180,43 @@ class CatchRateHudRenderer {
                 turnCount++
                 cachedClientResult = null
                 cachedComparison = null
+                
+                // Check for guaranteed catch failure: turn advanced = the ball didn't catch
+                val failure = CatchRateDebugLog.onNewTurn(turnCount)
+                if (failure != null) {
+                    CatchRateMod.LOGGER.error("[CatchRate] GUARANTEED CATCH FAILED! ${failure.pokemonName} Lv${failure.pokemonLevel} with ${failure.ballName} (${failure.ballMultiplier}x)")
+                    notifyGuaranteedFailure(failure)
+                }
             }
         }
         lastMustChoose = nowMustChoose
+    }
+    
+    private fun notifyGuaranteedFailure(failure: CatchRateDebugLog.GuaranteedFailure) {
+        val minecraft = Minecraft.getInstance()
+        val player = minecraft.player ?: return
+        
+        // Auto-enable debug logging so subsequent calculations are captured
+        if (!CatchRateMod.isDebugActive) {
+            CatchRateMod.sessionDebugOverride = true
+            CatchRateDebugLog.log("Debug logging auto-enabled after guaranteed catch failure")
+        }
+        
+        // Send chat messages to the player
+        player.sendSystemMessage(Component.literal(""))
+        player.sendSystemMessage(
+            Component.literal("\u00a7c\u00a7l[CatchRate] \u00a74GUARANTEED CATCH FAILED!")
+        )
+        player.sendSystemMessage(
+            Component.literal("\u00a7e${failure.pokemonName} Lv${failure.pokemonLevel} \u00a77broke free from \u00a7b${CatchRateFormula.formatBallName(failure.ballName)} \u00a77(${failure.ballMultiplier}x)")
+        )
+        player.sendSystemMessage(
+            Component.literal("\u00a77This should never happen. A debug log has been created.")
+        )
+        player.sendSystemMessage(
+            Component.literal("\u00a7aRun \u00a72/catchrate log \u00a7ato upload the report and send the link to the mod developer.")
+        )
+        player.sendSystemMessage(Component.literal(""))
     }
     
     private fun checkCacheInvalidation(pokemon: ClientBattlePokemon, heldItem: ItemStack) {
@@ -199,6 +236,7 @@ class CatchRateHudRenderer {
     }
     
     private fun resetState() {
+        CatchRateDebugLog.onBattleEnd()
         lastBattleId = null
         turnCount = 1
         lastMustChoose = false
@@ -230,13 +268,23 @@ class CatchRateHudRenderer {
     
     private fun getClientCalculation(pokemon: ClientBattlePokemon, heldItem: ItemStack): CatchRateResult? {
         if (cachedClientResult == null || (tickCounter - lastClientCalcTick) > CLIENT_CALC_INTERVAL_TICKS) {
-            cachedClientResult = try {
+            val result = try {
                 CatchRateCalculator.calculateCatchRate(pokemon, heldItem, turnCount, null, true)
             } catch (e: Throwable) {
                 CatchRateMod.debugOnChange("HudErr", "calc", "Calculation failed: ${e.message}")
                 null
             }
+            cachedClientResult = result
             lastClientCalcTick = tickCounter
+            
+            // Log detailed calculation and track guaranteed predictions
+            if (result != null) {
+                val pokemonName = pokemon.species.name
+                CatchRateDebugLog.logCalculation(pokemonName, pokemon.level, result, inBattle = true)
+                if (result.isGuaranteed) {
+                    CatchRateDebugLog.recordGuaranteedPrediction(result, pokemonName, pokemon.level, turnCount)
+                }
+            }
         }
         return cachedClientResult
     }

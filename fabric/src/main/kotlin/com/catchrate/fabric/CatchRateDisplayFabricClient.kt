@@ -1,5 +1,6 @@
 package com.catchrate.fabric
 
+import com.catchrate.CatchRateDebugLog
 import com.catchrate.CatchRateKeybinds
 import com.catchrate.CatchRateMod
 import com.catchrate.client.CatchRateHudRenderer
@@ -11,7 +12,10 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
+import net.minecraft.client.Minecraft
+import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
 
 /**
  * Fabric client-side entrypoint.
@@ -52,6 +56,9 @@ class CatchRateDisplayFabricClient : ClientModInitializer {
                     .then(ClientCommandManager.literal("info")
                         .executes { ctx -> showInfo(ctx.source) }
                     )
+                    .then(ClientCommandManager.literal("log")
+                        .executes { ctx -> uploadLog(ctx.source) }
+                    )
             )
             CatchRateMod.LOGGER.info("[CatchRateDisplay] Registered /catchrate command")
         }
@@ -82,6 +89,33 @@ class CatchRateDisplayFabricClient : ClientModInitializer {
         source.sendFeedback(Component.translatable("catchrate.command.info.footer"))
         
         CatchRateMod.logEnvironmentInfo()
+        return 1
+    }
+    
+    private fun uploadLog(source: FabricClientCommandSource): Int {
+        source.sendFeedback(Component.translatable("catchrate.command.log.uploading"))
+        
+        val localPath = try { CatchRateDebugLog.saveToFile() } catch (_: Throwable) { null }
+        
+        CatchRateDebugLog.uploadToMcloGs { success, urlOrError ->
+            val minecraft = Minecraft.getInstance()
+            minecraft.execute {
+                val player = minecraft.player ?: return@execute
+                if (success) {
+                    player.sendSystemMessage(Component.translatable("catchrate.command.log.success"))
+                    player.sendSystemMessage(
+                        Component.literal("\u00a7b\u00a7n$urlOrError")
+                            .withStyle(Style.EMPTY.withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, urlOrError)))
+                    )
+                    player.sendSystemMessage(Component.translatable("catchrate.command.log.instructions"))
+                } else {
+                    player.sendSystemMessage(Component.translatable("catchrate.command.log.failed", urlOrError))
+                    if (localPath != null) {
+                        player.sendSystemMessage(Component.translatable("catchrate.command.log.saved_locally", localPath))
+                    }
+                }
+            }
+        }
         return 1
     }
 }
