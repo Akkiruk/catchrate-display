@@ -116,16 +116,37 @@ object BallMultiplierCalculator {
     fun calculate(ballId: String, ctx: BallContext): BallResult {
         val lower = ballId.lowercase()
         
+        // Hardcoded overrides — these NEVER depend on Cobblemon API lookups
+        when (lower) {
+            "origin_ball", "ancient_origin_ball" -> {
+                CatchRateMod.debugOnChange("Ball/$lower", "guaranteed", "$lower: guaranteed catch -> 255x")
+                return BallResult(255F, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
+            }
+            "ancient_great_ball" -> {
+                CatchRateMod.debugOnChange("Ball/$lower", "ancient_1.5", "$lower: ancient ball -> 1.5x")
+                return BallResult(1.5F, true, BallTranslations.ancient())
+            }
+            "ancient_ultra_ball" -> {
+                CatchRateMod.debugOnChange("Ball/$lower", "ancient_2.0", "$lower: ancient ball -> 2.0x")
+                return BallResult(2F, true, BallTranslations.ancient())
+            }
+        }
+        
         val pokeBall = pokeBallCache[lower] ?: try {
             PokeBalls.getPokeBall(ResourceLocation.fromNamespaceAndPath("cobblemon", lower))
                 ?.also { pokeBallCache[lower] = it }
         } catch (e: Throwable) { null }
         
+        if (lower.contains("master")) {
+            CatchRateMod.debugOnChange("Ball/$lower", "guaranteed", "$lower: guaranteed catch -> 255x")
+            return BallResult(255F, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
+        }
+        
         val isGuaranteed = try {
             pokeBall?.catchRateModifier?.isGuaranteed() == true
         } catch (e: Throwable) { false }
         
-        if (isGuaranteed || lower.contains("master")) {
+        if (isGuaranteed) {
             CatchRateMod.debugOnChange("Ball/$lower", "guaranteed", "$lower: guaranteed catch -> 255x")
             return BallResult(255F, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
         }

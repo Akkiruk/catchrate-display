@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.8.2] - 2026-03-07
+
+### Fixed
+- **Ancient Great Ball, Ancient Ultra Ball, and Origin Ball now show correct multipliers (1.5x, 2x, 255x).** These balls were showing 1x because their multipliers depended on Cobblemon API property lookups (`pokeBall.ancient`, `catchRateModifier.isGuaranteed()`) that silently returned false. Ball multipliers for these three are now hardcoded by name at the top of the calculation, bypassing API lookups entirely.
+
 ## [2.8.1] - 2026-03-05
 
 ### Fixed
