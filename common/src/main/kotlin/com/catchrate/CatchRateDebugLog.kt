@@ -4,12 +4,6 @@ import com.catchrate.config.CatchRateConfig
 import com.catchrate.platform.PlatformHelper
 import net.minecraft.client.Minecraft
 import java.io.File
-import java.net.URI
-import java.net.URLEncoder
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -258,44 +252,7 @@ object CatchRateDebugLog {
         return sb.toString().trimEnd()
     }
 
-    /** Upload the full report to mclo.gs and return the URL, or an error message. */
-    fun uploadToMcloGs(onComplete: (success: Boolean, urlOrError: String) -> Unit) {
-        Thread {
-            try {
-                val report = buildFullReport()
-                val client = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build()
-                val body = "content=" + URLEncoder.encode(report, "UTF-8")
-                val request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.mclo.gs/1/log"))
-                    .timeout(Duration.ofSeconds(15))
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .POST(HttpRequest.BodyPublishers.ofString(body))
-                    .build()
-                val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-                val responseBody = response.body()
-
-                if (response.statusCode() == 200 && responseBody.contains("\"success\":true")) {
-                    // Parse URL from JSON response: {"success":true,"id":"abc","url":"https://mclo.gs/abc"}
-                    val url = responseBody
-                        .substringAfter("\"url\":\"")
-                        .substringBefore("\"")
-                    onComplete(true, url)
-                } else {
-                    onComplete(false, "Upload failed (HTTP ${response.statusCode()}): $responseBody")
-                }
-            } catch (e: Throwable) {
-                onComplete(false, "Upload error: ${e.javaClass.simpleName}: ${e.message}")
-            }
-        }.apply {
-            isDaemon = true
-            name = "CatchRate-LogUpload"
-            start()
-        }
-    }
-
-    /** Save the report to a local file as fallback. Returns the file path. */
+    /** Save the report to a local file. Returns the file path. */
     fun saveToFile(): String {
         val report = buildFullReport()
         val gameDir = PlatformHelper.getGameDir().toFile()

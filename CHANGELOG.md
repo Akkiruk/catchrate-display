@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.8.3] - 2026-03-08
+
+### Removed
+- **Removed mclo.gs upload from `/catchrate log`.** The command now saves the debug report to a local file only (`catchrate-logs/` in the game directory). No external network calls are made by the mod.
+
 ## [2.8.2] - 2026-03-07
 
 ### Fixed
@@ -15,7 +20,7 @@
 ### Added
 - **Comprehensive debug logging system.** All catch rate calculations are now logged to an in-memory buffer with full details: Pokémon, ball, multipliers, HP, status, modified catch rate, and whether the catch was predicted as guaranteed.
 - **Guaranteed catch failure detection.** If the mod predicts a 100% catch (Master Ball, or formula-guaranteed) and the Pokémon breaks free, a prominent chat notification appears with instructions to generate a debug report.
-- **`/catchrate log` command.** Generates a comprehensive debug report including environment info (mod version, Minecraft version, loader, Cobblemon version, Java, OS, server type), installed mods list, config state, all recent calculation logs, guaranteed catch failures, and catch rate cache info — then uploads it to mclo.gs and gives the player a clickable link to share. Also saves a local copy to `catchrate-logs/` as fallback.
+- **`/catchrate log` command.** Generates a comprehensive debug report including environment info (mod version, Minecraft version, loader, Cobblemon version, Java, OS, server type), installed mods list, config state, all recent calculation logs, guaranteed catch failures, and catch rate cache info — saves it to `catchrate-logs/` in the game directory.
 - **Auto-enable debug on failure.** Debug logging is automatically enabled for the session after a guaranteed catch failure, so subsequent calculations are captured in the report.
 
 ## [2.7.13] - 2026-03-04

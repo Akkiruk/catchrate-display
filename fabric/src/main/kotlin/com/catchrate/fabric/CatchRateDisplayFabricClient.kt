@@ -14,9 +14,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
 import net.minecraft.client.Minecraft
-import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.Style
 
 /**
  * Fabric client-side entrypoint.
@@ -100,25 +98,10 @@ class CatchRateDisplayFabricClient : ClientModInitializer {
         source.sendFeedback(Component.translatable("catchrate.command.log.uploading"))
         
         val localPath = try { CatchRateDebugLog.saveToFile() } catch (_: Throwable) { null }
-        
-        CatchRateDebugLog.uploadToMcloGs { success, urlOrError ->
-            val minecraft = Minecraft.getInstance()
-            minecraft.execute {
-                val player = minecraft.player ?: return@execute
-                if (success) {
-                    player.sendSystemMessage(Component.translatable("catchrate.command.log.success"))
-                    player.sendSystemMessage(
-                        Component.literal("\u00a7b\u00a7n$urlOrError")
-                            .withStyle(Style.EMPTY.withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, urlOrError)))
-                    )
-                    player.sendSystemMessage(Component.translatable("catchrate.command.log.instructions"))
-                } else {
-                    player.sendSystemMessage(Component.translatable("catchrate.command.log.failed", urlOrError))
-                    if (localPath != null) {
-                        player.sendSystemMessage(Component.translatable("catchrate.command.log.saved_locally", localPath))
-                    }
-                }
-            }
+        if (localPath != null) {
+            source.sendFeedback(Component.translatable("catchrate.command.log.saved_locally", localPath))
+        } else {
+            source.sendFeedback(Component.translatable("catchrate.command.log.failed", "Could not save file"))
         }
         return 1
     }

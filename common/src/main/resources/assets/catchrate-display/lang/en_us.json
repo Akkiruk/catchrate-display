@@ -108,9 +108,7 @@
   "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
   "catchrate.command.info.footer": "§6============================================",
 
-  "catchrate.command.log.uploading": "§e[CatchRate] Generating debug report and uploading to mclo.gs...",
-  "catchrate.command.log.success": "§a[CatchRate] Debug report uploaded! Click the link below to open it:",
-  "catchrate.command.log.instructions": "§7Send this link to the mod developer so they can diagnose the issue.",
-  "catchrate.command.log.failed": "§c[CatchRate] Upload failed: %s",
-  "catchrate.command.log.saved_locally": "§7Report saved locally to: §f%s"
+  "catchrate.command.log.uploading": "§e[CatchRate] Generating debug report...",
+  "catchrate.command.log.failed": "§c[CatchRate] Failed to save report: %s",
+  "catchrate.command.log.saved_locally": "§a[CatchRate] Debug report saved to: §f%s"
 }
