@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.8.4] - 2026-03-26
+
+### Fixed
+- **Guaranteed catch failure warnings no longer trigger from passive HUD updates.** The failure detector now arms only after the player leaves the battle choice prompt with the same guaranteed Poke Ball still selected, and it only reports a failed catch on the next turn if that held ball stack actually changed. This stops false "guaranteed catch failed" messages from appearing just because a target's HP dropped into guaranteed range.
+
 ## [2.8.3] - 2026-03-08
 
 ### Removed

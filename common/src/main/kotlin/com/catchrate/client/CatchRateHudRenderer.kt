@@ -13,6 +13,7 @@ import com.cobblemon.mod.common.api.pokedex.PokedexEntryProgress
 import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
+import com.cobblemon.mod.common.item.PokeBallItem
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.DeltaTracker
@@ -122,7 +123,7 @@ class CatchRateHudRenderer {
             return
         }
         
-        updateTurnCount(battle)
+        updateTurnCount(battle, player)
         
         val heldItem = player.mainHandItem
         if (!isPokeball(heldItem)) {
@@ -172,8 +173,14 @@ class CatchRateHudRenderer {
         CatchRateDebugLog.log("Battle started: id=${battle.battleId} isPvW=${battle.isPvW}")
     }
     
-    private fun updateTurnCount(battle: ClientBattle) {
+    private fun updateTurnCount(battle: ClientBattle, player: LocalPlayer) {
         val nowMustChoose = battle.mustChoose
+
+        if (!nowMustChoose && lastMustChoose) {
+            val (heldBallId, heldBallCount) = getGuaranteedFailureCheckState(player.mainHandItem)
+            CatchRateDebugLog.armPendingGuaranteedThrow(turnCount, heldBallId, heldBallCount)
+        }
+
         if (nowMustChoose && !lastMustChoose) {
             mustChooseTransitions++
             if (mustChooseTransitions > 1) {
@@ -182,7 +189,8 @@ class CatchRateHudRenderer {
                 cachedComparison = null
                 
                 // Check for guaranteed catch failure: turn advanced = the ball didn't catch
-                val failure = CatchRateDebugLog.onNewTurn(turnCount)
+                val (heldBallId, heldBallCount) = getGuaranteedFailureCheckState(player.mainHandItem)
+                val failure = CatchRateDebugLog.onNewTurn(turnCount, heldBallId, heldBallCount)
                 if (failure != null) {
                     CatchRateMod.LOGGER.error("[CatchRate] GUARANTEED CATCH FAILED! ${failure.pokemonName} Lv${failure.pokemonLevel} with ${failure.ballName} (${failure.ballMultiplier}x)")
                     notifyGuaranteedFailure(failure)
@@ -282,11 +290,20 @@ class CatchRateHudRenderer {
                 val pokemonName = pokemon.species.name
                 CatchRateDebugLog.logCalculation(pokemonName, pokemon.level, result, inBattle = true)
                 if (result.isGuaranteed) {
-                    CatchRateDebugLog.recordGuaranteedPrediction(result, pokemonName, pokemon.level, turnCount)
+                    val (heldBallId, heldBallCount) = getGuaranteedFailureCheckState(heldItem)
+                    if (heldBallId != null) {
+                        CatchRateDebugLog.recordGuaranteedPrediction(result, pokemonName, pokemon.level, turnCount, heldBallId, heldBallCount)
+                    }
                 }
             }
         }
         return cachedClientResult
+    }
+
+    private fun getGuaranteedFailureCheckState(itemStack: ItemStack): Pair<String?, Int?> {
+        val ballId = getBallId(itemStack).lowercase().ifBlank { return null to null }
+        val count = if (itemStack.item is PokeBallItem) itemStack.count else null
+        return ballId to count
     }
     
     

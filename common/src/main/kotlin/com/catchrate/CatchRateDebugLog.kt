@@ -44,7 +44,10 @@ object CatchRateDebugLog {
         val pokemonLevel: Int,
         val turnCount: Int,
         val timestamp: String,
-        val environmentSnapshot: String
+        val environmentSnapshot: String,
+        val heldBallId: String,
+        val heldBallCount: Int?,
+        val throwAttemptArmed: Boolean = false
     )
 
     var pendingGuaranteed: PendingGuaranteed? = null
@@ -90,26 +93,67 @@ object CatchRateDebugLog {
         result: CatchRateResult,
         pokemonName: String,
         pokemonLevel: Int,
-        turnCount: Int
+        turnCount: Int,
+        heldBallId: String,
+        heldBallCount: Int?
     ) {
+        val existing = pendingGuaranteed
+        if (existing != null &&
+            existing.turnCount == turnCount &&
+            existing.pokemonName == pokemonName &&
+            existing.result.ballName == result.ballName &&
+            existing.heldBallId == heldBallId &&
+            existing.heldBallCount == heldBallCount &&
+            kotlin.math.abs(existing.result.modifiedCatchRate - result.modifiedCatchRate) < 0.0001 &&
+            kotlin.math.abs(existing.result.hpPercentage - result.hpPercentage) < 0.01
+        ) {
+            return
+        }
+
         pendingGuaranteed = PendingGuaranteed(
             result = result,
             pokemonName = pokemonName,
             pokemonLevel = pokemonLevel,
             turnCount = turnCount,
             timestamp = now(),
-            environmentSnapshot = buildEnvironmentSnapshot()
+            environmentSnapshot = buildEnvironmentSnapshot(),
+            heldBallId = heldBallId,
+            heldBallCount = heldBallCount
         )
         log("!!! GUARANTEED CATCH PREDICTED: $pokemonName Lv$pokemonLevel with ${result.ballName} (${result.ballMultiplier}x, mod=${String.format("%.4f", result.modifiedCatchRate)})")
     }
 
-    /** Called when a new turn starts - if we had a pending guaranteed prediction, the catch failed. */
-    fun onNewTurn(newTurnCount: Int): GuaranteedFailure? {
+    /** Arm the failure check only after the player has actually submitted an action while the same guaranteed ball is still selected. */
+    fun armPendingGuaranteedThrow(turnCount: Int, heldBallId: String?, heldBallCount: Int?) {
+        val pending = pendingGuaranteed ?: return
+        if (pending.turnCount != turnCount) return
+        if (heldBallId != pending.heldBallId) return
+        if (pending.heldBallCount != null && heldBallCount != pending.heldBallCount) return
+        if (pending.throwAttemptArmed) return
+
+        pendingGuaranteed = pending.copy(throwAttemptArmed = true)
+        log("Armed guaranteed catch failure check for ${pending.pokemonName} Lv${pending.pokemonLevel} with ${pending.result.ballName}")
+    }
+
+    /** Called when a new turn starts - if we had a confirmed throw attempt and the ball stack changed, the catch failed. */
+    fun onNewTurn(newTurnCount: Int, heldBallId: String?, heldBallCount: Int?): GuaranteedFailure? {
         val pending = pendingGuaranteed ?: return null
-        // Only trigger if the turn actually advanced (meaning the ball was thrown and failed)
         if (newTurnCount <= pending.turnCount) return null
+        if (!pending.throwAttemptArmed) return null
+
+        val ballWasConsumed = when {
+            pending.heldBallCount == null -> false
+            heldBallId == pending.heldBallId && heldBallCount != null -> heldBallCount < pending.heldBallCount
+            (heldBallId == null || heldBallId.isBlank()) && pending.heldBallCount <= 1 -> true
+            else -> false
+        }
 
         pendingGuaranteed = null
+        if (!ballWasConsumed) {
+            log("Cleared guaranteed catch prediction without confirmed ball consumption")
+            return null
+        }
+
         val failure = GuaranteedFailure(
             timestamp = pending.timestamp,
             pokemonName = pending.pokemonName,
