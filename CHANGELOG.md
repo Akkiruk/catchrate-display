@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.8.7] - 2026-04-01
+
+### Fixed
+- **Dive Ball overworld catch rates now use whether the target Pokemon is underwater, not whether the player is underwater.** This fixes false 3.5x Dive Ball bonuses when looking at a non-submerged Pokemon while the player is underwater.
+
 ## [2.8.6] - 2026-04-01
 
 ### Fixed

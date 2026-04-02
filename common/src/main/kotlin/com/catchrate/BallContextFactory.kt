@@ -54,6 +54,7 @@ object BallContextFactory {
             lightLevel = level.getMaxLocalRawBrightness(player.blockPosition()),
             isNight = timeOfDay in NIGHT_START_TICK..NIGHT_END_TICK,
             moonPhase = level.moonPhase,
+            isTargetUnderwater = player.isUnderWater,
             isPlayerUnderwater = player.isUnderWater,
             inBattle = true,
             turnCount = turnCount,
@@ -84,6 +85,7 @@ object BallContextFactory {
             pokemon, player, level,
             inBattle = false, turnCount = 0, activeBattler = null,
             hasCaughtSpecies = checkHasCaughtSpecies(pokemon.species.resourceIdentifier),
+            isTargetUnderwater = entity.isUnderWater,
             pokemonAspects = entity.aspects,
             statusOverride = effectiveStatus
         )
@@ -101,6 +103,7 @@ object BallContextFactory {
         turnCount: Int,
         activeBattler: PartyMember?,
         hasCaughtSpecies: Boolean? = null,
+        isTargetUnderwater: Boolean = false,
         pokemonAspects: Set<String> = emptySet(),
         statusOverride: String? = null
     ): BallContext {
@@ -120,6 +123,7 @@ object BallContextFactory {
             lightLevel = level.getMaxLocalRawBrightness(player.blockPosition()),
             isNight = timeOfDay in NIGHT_START_TICK..NIGHT_END_TICK,
             moonPhase = level.moonPhase,
+            isTargetUnderwater = isTargetUnderwater,
             isPlayerUnderwater = player.isUnderWater,
             inBattle = inBattle,
             turnCount = turnCount,

@@ -89,6 +89,7 @@ object BallMultiplierCalculator {
         val lightLevel: Int,
         val isNight: Boolean,
         val moonPhase: Int,
+        val isTargetUnderwater: Boolean,
         val isPlayerUnderwater: Boolean,
         val inBattle: Boolean,
         val turnCount: Int,
@@ -234,9 +235,10 @@ object BallMultiplierCalculator {
     }
     
     private fun calculateDiveBall(ctx: BallContext): BallResult {
-        val mult = if (ctx.isPlayerUnderwater) 3.5F else 1F
-        return BallResult(mult, ctx.isPlayerUnderwater, 
-            if (ctx.isPlayerUnderwater) BallTranslations.diveUnderwater() else BallTranslations.diveNeedUnderwater())
+        val targetUnderwater = if (ctx.inBattle) ctx.isPlayerUnderwater else ctx.isTargetUnderwater
+        val mult = if (targetUnderwater) 3.5F else 1F
+        return BallResult(mult, targetUnderwater,
+            if (targetUnderwater) BallTranslations.diveUnderwater() else BallTranslations.diveNeedUnderwater())
     }
     
     private fun calculateMoonBall(ctx: BallContext): BallResult {
