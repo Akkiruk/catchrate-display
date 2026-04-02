@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.8.11] - 2026-04-02
+
+### Fixed
+- **Fabric startup works again after the rollback.** Kept the reverted HUD behavior from `2.8.10`, but restored the shared capture-tracking mixin refmap packaging so Cobblemon's battle capture handlers remap correctly on Fabric.
+
 ## [2.8.10] - 2026-04-02
 
 ### Fixed
