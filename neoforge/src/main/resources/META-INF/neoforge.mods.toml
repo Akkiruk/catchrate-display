@@ -39,3 +39,6 @@ type="required"
 versionRange="[5.0.0,)"
 ordering="NONE"
 side="BOTH"
+
+[[mixins]]
+config="catchrate-display-common.mixins.json"

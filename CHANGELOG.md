@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.8.6] - 2026-04-01
+
+### Fixed
+- **Stopped battle-end log spam outside battle.** The HUD renderer no longer writes `Battle ended` on every frame after combat ends; that event is now logged once by the shared battle monitor.
+- **Incident trail now goes to `latest.log` as well as the local incident file.** Authoritative capture-tracking events like battle start, turn advance, arming, skip reasons, success, and confirmed failure now persist to the normal Minecraft log without mirroring every routine HUD calculation there.
+- **Removed dead refactor leftovers.** Cleaned unused tracker imports and an unused calculator helper left behind by the packet-based failure detection rewrite.
+
+### Improved
+- **Removed dead HUD/config cleanup leftovers.** Ball comparison is now treated as runtime key state instead of a saved config value, dead `compactMode` config was removed, the no-op compact ball-name wrapper was dropped, and guaranteed catch paths now reuse the shared max catch-rate constant.
+
+## [2.8.5] - 2026-04-01
+
+### Fixed
+- **Guaranteed catch failure detection now uses Cobblemon's client capture packets instead of turn and inventory heuristics.** CatchRate Display now correlates the actual `BattleCaptureStartPacket` ball and target with the actual `BattleCaptureEndPacket` success flag, so passive HUD updates, stack movement, launcher/container edge cases, and normal battle turn flow no longer produce false guaranteed-failure warnings.
+- **Confirmed guaranteed failures no longer print chat spam.** Incidents are now written to `latest.log` and a dedicated local incident file under `catchrate-logs/incidents/` with the exact battle, target, ball, formula inputs, and recent debug history.
+- **Unreliable guaranteed predictions are excluded from incident warnings.** If the mod is using an estimated base catch rate because local species data is missing, the throw is still displayed normally but it will not generate a guaranteed-failure incident.
+
 ## [2.8.4] - 2026-03-26
 
 ### Fixed

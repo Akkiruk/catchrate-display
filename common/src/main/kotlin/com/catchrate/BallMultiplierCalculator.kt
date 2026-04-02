@@ -120,7 +120,7 @@ object BallMultiplierCalculator {
         when (lower) {
             "origin_ball", "ancient_origin_ball" -> {
                 CatchRateMod.debugOnChange("Ball/$lower", "guaranteed", "$lower: guaranteed catch -> 255x")
-                return BallResult(255F, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
+                return BallResult(CatchRateConstants.MAX_CATCH_RATE, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
             }
             "ancient_great_ball" -> {
                 CatchRateMod.debugOnChange("Ball/$lower", "ancient_1.5", "$lower: ancient ball -> 1.5x")
@@ -139,7 +139,7 @@ object BallMultiplierCalculator {
         
         if (lower.contains("master")) {
             CatchRateMod.debugOnChange("Ball/$lower", "guaranteed", "$lower: guaranteed catch -> 255x")
-            return BallResult(255F, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
+            return BallResult(CatchRateConstants.MAX_CATCH_RATE, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
         }
         
         val isGuaranteed = try {
@@ -148,7 +148,7 @@ object BallMultiplierCalculator {
         
         if (isGuaranteed) {
             CatchRateMod.debugOnChange("Ball/$lower", "guaranteed", "$lower: guaranteed catch -> 255x")
-            return BallResult(255F, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
+            return BallResult(CatchRateConstants.MAX_CATCH_RATE, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
         }
         
         val isAncient = try {
@@ -197,7 +197,7 @@ object BallMultiplierCalculator {
         val mult = when (lower) {
             "ancient_great_ball" -> 1.5F
             "ancient_ultra_ball" -> 2F
-            "ancient_origin_ball" -> return BallResult(255F, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
+            "ancient_origin_ball" -> return BallResult(CatchRateConstants.MAX_CATCH_RATE, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
             else -> 1F
         }
         return BallResult(mult, true, BallTranslations.ancient())

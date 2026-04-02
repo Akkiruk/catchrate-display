@@ -8,8 +8,8 @@ import com.cobblemon.mod.common.pokeball.PokeBall
 import net.minecraft.client.Minecraft
 import net.minecraft.core.NonNullList
 import net.minecraft.core.component.DataComponents
-import net.minecraft.world.item.ItemStack
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.item.ItemStack
 
 /**
  * Client-side catch rate calculator.
@@ -34,36 +34,44 @@ object CatchRateCalculator {
         inBattle: Boolean = true
     ): CatchRateResult {
         return try {
-            calculateCatchRateInternal(pokemon, itemStack, turnCount, playerHighestLevel, inBattle)
+            val pokeBall = getPokeBallFromItem(itemStack)
+            val ballName = pokeBall?.name?.path ?: itemStack.item.toString().substringAfter(":").substringBefore("}")
+            calculateCatchRateInternal(pokemon, pokeBall, ballName, turnCount, playerHighestLevel, inBattle)
         } catch (e: Throwable) {
             CatchRateMod.debugOnChange("CalcErr", "fallback", "calculateCatchRate failed: ${e.javaClass.simpleName}: ${e.message}")
-            val baseCatchRate = try { SpeciesCatchRateCache.getCatchRate(pokemon.species) } catch (_: Throwable) { 45 }
             val ballName = try { getPokeBallFromItem(itemStack)?.name?.path } catch (_: Throwable) { null }
                 ?: itemStack.item.toString().substringAfter(":").substringBefore("}")
-            CatchRateResult(
-                percentage = CatchRateFormula.modifiedRateToPercentage(baseCatchRate.toFloat()).toDouble().coerceIn(0.0, 100.0),
-                hpPercentage = 100.0,
-                statusMultiplier = 1.0,
-                ballMultiplier = 1.0,
-                baseCatchRate = baseCatchRate,
-                statusName = "",
-                ballName = ballName,
-                turnCount = turnCount
-            )
+            buildFallbackResult(pokemon, ballName, turnCount)
+        }
+    }
+
+    fun calculateCatchRate(
+        pokemon: ClientBattlePokemon,
+        ballType: ResourceLocation,
+        turnCount: Int = 1,
+        playerHighestLevel: Int? = null,
+        inBattle: Boolean = true
+    ): CatchRateResult {
+        return try {
+            val pokeBall = try { PokeBalls.getPokeBall(ballType) } catch (_: Throwable) { null }
+            val ballName = pokeBall?.name?.path ?: ballType.path
+            calculateCatchRateInternal(pokemon, pokeBall, ballName, turnCount, playerHighestLevel, inBattle)
+        } catch (e: Throwable) {
+            CatchRateMod.debugOnChange("CalcErr", "fallback_packet", "calculateCatchRate(packet) failed: ${e.javaClass.simpleName}: ${e.message}")
+            buildFallbackResult(pokemon, ballType.path, turnCount)
         }
     }
 
     private fun calculateCatchRateInternal(
         pokemon: ClientBattlePokemon,
-        itemStack: ItemStack,
+        pokeBall: PokeBall?,
+        ballName: String,
         turnCount: Int = 1,
         playerHighestLevel: Int? = null,
         inBattle: Boolean = true
     ): CatchRateResult {
-        val pokeBall = getPokeBallFromItem(itemStack)
-        val ballName = pokeBall?.name?.path ?: itemStack.item.toString().substringAfter(":").substringBefore("}")
-        
         val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species)
+        val isEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species)
         
         // Calculate HP using shared formula
         val hpInfo = CatchRateFormula.calculateHpInfo(
@@ -98,7 +106,7 @@ object CatchRateCalculator {
             "${pokemon.species.name}_${ballName}_${hpInfo.currentHp.toInt()}_${statusPath}_${bonusStatus}",
             "${pokemon.species.name} Lv${level} | Ball=$ballName ${ballBonus}x${if (ballResult.conditionMet) " (met)" else ""} | " +
             "HP=${String.format("%.1f", hpInfo.percentage)}% (${hpInfo.currentHp.toInt()}/${hpInfo.maxHp.toInt()}) | " +
-            "Status=${CatchRateFormula.getStatusDisplayName(statusPath)} ${bonusStatus}x | " +
+            "Status=${statusPath ?: "none"} ${bonusStatus}x | " +
             "Result=${String.format("%.2f", captureChance)}% (mod=${String.format("%.1f", modifiedCatchRate)}, base=$catchRate)"
         )
         
@@ -116,7 +124,24 @@ object CatchRateCalculator {
             modifiedCatchRate = modifiedCatchRate.toDouble(),
             ballConditionMet = ballResult.conditionMet,
             ballConditionReason = ballResult.reason,
-            isCatchRateEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species)
+            isCatchRateEstimate = isEstimate,
+            isReliableGuaranteedPrediction = !isEstimate
+        )
+    }
+
+    private fun buildFallbackResult(pokemon: ClientBattlePokemon, ballName: String, turnCount: Int): CatchRateResult {
+        val baseCatchRate = try { SpeciesCatchRateCache.getCatchRate(pokemon.species) } catch (_: Throwable) { 45 }
+        return CatchRateResult(
+            percentage = CatchRateFormula.modifiedRateToPercentage(baseCatchRate.toFloat()).toDouble().coerceIn(0.0, 100.0),
+            hpPercentage = 100.0,
+            statusMultiplier = 1.0,
+            ballMultiplier = 1.0,
+            baseCatchRate = baseCatchRate,
+            statusName = "",
+            ballName = ballName,
+            turnCount = turnCount,
+            isCatchRateEstimate = true,
+            isReliableGuaranteedPrediction = false
         )
     }
     
@@ -184,12 +209,4 @@ object CatchRateCalculator {
         return BallMultiplierCalculator.calculate(ballName.lowercase(), ctx)
     }
     
-    private fun getHpPercentage(pokemon: ClientBattlePokemon): Double {
-        val hpInfo = CatchRateFormula.calculateHpInfo(
-            hpValue = pokemon.hpValue,
-            maxHpValue = pokemon.maxHp,
-            isFlat = pokemon.isHpFlat
-        )
-        return hpInfo.percentage
-    }
 }

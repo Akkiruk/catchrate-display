@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.catchrate.mixin.client",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "BattleCaptureStartHandlerMixin",
+    "BattleCaptureEndHandlerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

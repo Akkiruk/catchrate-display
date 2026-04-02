@@ -1,6 +1,7 @@
 package com.catchrate.client
 
 import com.catchrate.BallContextFactory
+import com.catchrate.CatchRateBattleMonitor
 import com.catchrate.CatchRateCalculator
 import com.catchrate.CatchRateConstants.Colors
 import com.catchrate.CatchRateDebugLog
@@ -13,14 +14,13 @@ import com.cobblemon.mod.common.api.pokedex.PokedexEntryProgress
 import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
-import com.cobblemon.mod.common.item.PokeBallItem
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.DeltaTracker
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.world.item.ItemStack
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.world.item.ItemStack
 
 /**
  * Translation key helper object for HUD strings.
@@ -49,9 +49,6 @@ object HudTranslations {
 class CatchRateHudRenderer {
     
     private var lastBattleId: java.util.UUID? = null
-    private var turnCount = 1
-    private var lastMustChoose = false
-    private var mustChooseTransitions = 0
     
     private var lastPokemonUuid: java.util.UUID? = null
     private var lastBallItem: String? = null
@@ -115,15 +112,19 @@ class CatchRateHudRenderer {
         }
         
         if (battle.battleId != lastBattleId) {
-            CatchRateMod.debug("HUD", "Battle started: ${battle.battleId} isPvW=${battle.isPvW}")
-            onBattleStart(battle)
+            lastBattleId = battle.battleId
+            cachedClientResult = null
+            cachedComparison = null
+            cachedWorldComparison = null
+            lastPokemonUuid = null
+            lastBallItem = null
+            lastHpValue = -1F
+            lastStatusName = null
         }
         if (!battle.isPvW) {
             CatchRateMod.debugOnChange("battleType", "pvp", "Not PvW battle, HUD hidden")
             return
         }
-        
-        updateTurnCount(battle, player)
         
         val heldItem = player.mainHandItem
         if (!isPokeball(heldItem)) {
@@ -140,10 +141,11 @@ class CatchRateHudRenderer {
         checkCacheInvalidation(opponentPokemon, heldItem)
         
         val ballName = getBallId(heldItem).lowercase()
+        val showComparison = CatchRateKeybinds.isComparisonHeld
         CatchRateMod.debugOnChange("target", "${opponentPokemon.species.name}_${ballName}", 
             "Target: ${opponentPokemon.species.name} Lv${opponentPokemon.level} with $ballName")
         
-        if (config.showBallComparison) {
+        if (showComparison) {
             // Block comparison panel for unencountered Pokémon
             if (!hasEncounteredSpecies(opponentPokemon.species.resourceIdentifier)) {
                 val result = getClientCalculation(opponentPokemon, heldItem) ?: return
@@ -160,71 +162,6 @@ class CatchRateHudRenderer {
         
         val result = getClientCalculation(opponentPokemon, heldItem) ?: return
         renderClientModeHud(guiGraphics, minecraft, result, ballName)
-    }
-    
-    private fun onBattleStart(battle: ClientBattle) {
-        lastBattleId = battle.battleId
-        turnCount = 1
-        lastMustChoose = false
-        mustChooseTransitions = 0
-        cachedClientResult = null
-        cachedComparison = null
-        CatchRateDebugLog.onBattleEnd() // clear any stale pending from previous battle
-        CatchRateDebugLog.log("Battle started: id=${battle.battleId} isPvW=${battle.isPvW}")
-    }
-    
-    private fun updateTurnCount(battle: ClientBattle, player: LocalPlayer) {
-        val nowMustChoose = battle.mustChoose
-
-        if (!nowMustChoose && lastMustChoose) {
-            val (heldBallId, heldBallCount) = getGuaranteedFailureCheckState(player.mainHandItem)
-            CatchRateDebugLog.armPendingGuaranteedThrow(turnCount, heldBallId, heldBallCount)
-        }
-
-        if (nowMustChoose && !lastMustChoose) {
-            mustChooseTransitions++
-            if (mustChooseTransitions > 1) {
-                turnCount++
-                cachedClientResult = null
-                cachedComparison = null
-                
-                // Check for guaranteed catch failure: turn advanced = the ball didn't catch
-                val (heldBallId, heldBallCount) = getGuaranteedFailureCheckState(player.mainHandItem)
-                val failure = CatchRateDebugLog.onNewTurn(turnCount, heldBallId, heldBallCount)
-                if (failure != null) {
-                    CatchRateMod.LOGGER.error("[CatchRate] GUARANTEED CATCH FAILED! ${failure.pokemonName} Lv${failure.pokemonLevel} with ${failure.ballName} (${failure.ballMultiplier}x)")
-                    notifyGuaranteedFailure(failure)
-                }
-            }
-        }
-        lastMustChoose = nowMustChoose
-    }
-    
-    private fun notifyGuaranteedFailure(failure: CatchRateDebugLog.GuaranteedFailure) {
-        val minecraft = Minecraft.getInstance()
-        val player = minecraft.player ?: return
-        
-        // Auto-enable debug logging so subsequent calculations are captured
-        if (!CatchRateMod.isDebugActive) {
-            CatchRateMod.sessionDebugOverride = true
-            CatchRateDebugLog.log("Debug logging auto-enabled after guaranteed catch failure")
-        }
-        
-        // Send chat messages to the player
-        player.sendSystemMessage(Component.literal(""))
-        player.sendSystemMessage(
-            Component.literal("\u00a7c\u00a7l[CatchRate] \u00a74GUARANTEED CATCH FAILED!")
-        )
-        player.sendSystemMessage(
-            Component.literal("\u00a7e${failure.pokemonName} Lv${failure.pokemonLevel} \u00a77broke free from \u00a7b${CatchRateFormula.formatBallName(failure.ballName)} \u00a77(${failure.ballMultiplier}x)")
-        )
-        player.sendSystemMessage(
-            Component.literal("\u00a77This should never happen. A debug log has been created.")
-        )
-        player.sendSystemMessage(
-            Component.literal("\u00a7aRun \u00a72/catchrate log \u00a7ato upload the report and send the link to the mod developer.")
-        )
-        player.sendSystemMessage(Component.literal(""))
     }
     
     private fun checkCacheInvalidation(pokemon: ClientBattlePokemon, heldItem: ItemStack) {
@@ -244,11 +181,7 @@ class CatchRateHudRenderer {
     }
     
     private fun resetState() {
-        CatchRateDebugLog.onBattleEnd()
         lastBattleId = null
-        turnCount = 1
-        lastMustChoose = false
-        mustChooseTransitions = 0
         lastPokemonUuid = null
         lastBallItem = null
         lastHpValue = -1F
@@ -275,6 +208,7 @@ class CatchRateHudRenderer {
     }
     
     private fun getClientCalculation(pokemon: ClientBattlePokemon, heldItem: ItemStack): CatchRateResult? {
+        val turnCount = CatchRateBattleMonitor.getTurnCount()
         if (cachedClientResult == null || (tickCounter - lastClientCalcTick) > CLIENT_CALC_INTERVAL_TICKS) {
             val result = try {
                 CatchRateCalculator.calculateCatchRate(pokemon, heldItem, turnCount, null, true)
@@ -289,21 +223,9 @@ class CatchRateHudRenderer {
             if (result != null) {
                 val pokemonName = pokemon.species.name
                 CatchRateDebugLog.logCalculation(pokemonName, pokemon.level, result, inBattle = true)
-                if (result.isGuaranteed) {
-                    val (heldBallId, heldBallCount) = getGuaranteedFailureCheckState(heldItem)
-                    if (heldBallId != null) {
-                        CatchRateDebugLog.recordGuaranteedPrediction(result, pokemonName, pokemon.level, turnCount, heldBallId, heldBallCount)
-                    }
-                }
             }
         }
         return cachedClientResult
-    }
-
-    private fun getGuaranteedFailureCheckState(itemStack: ItemStack): Pair<String?, Int?> {
-        val ballId = getBallId(itemStack).lowercase().ifBlank { return null to null }
-        val count = if (itemStack.item is PokeBallItem) itemStack.count else null
-        return ballId to count
     }
     
     
@@ -344,12 +266,12 @@ class CatchRateHudRenderer {
             hpMultiplier = hpMult,
             statusName = result.statusName,
             statusMultiplier = result.statusMultiplier,
-            ballDisplayName = CatchRateFormula.formatBallNameCompact(result.ballName),
+            ballDisplayName = CatchRateFormula.formatBallName(result.ballName),
             ballId = ballName,
             ballMultiplier = result.ballMultiplier,
             ballConditionMet = result.ballConditionMet,
             ballConditionReason = result.ballConditionReason,
-            turnCount = turnCount,
+            turnCount = result.turnCount,
             isWild = false,
             isEncountered = encountered,
             isCatchRateEstimate = result.isCatchRateEstimate
@@ -364,7 +286,7 @@ class CatchRateHudRenderer {
         
         val config = CatchRateConfig.get()
         val encountered = hasEncounteredSpecies(pokemonEntity.pokemon.species.resourceIdentifier)
-        if (config.showBallComparison && encountered) {
+        if (CatchRateKeybinds.isComparisonHeld && encountered) {
             try {
                 renderWorldComparisonPanel(guiGraphics, minecraft, pokemonEntity)
                 return
@@ -388,7 +310,7 @@ class CatchRateHudRenderer {
             hpMultiplier = (3.0 - 2.0 * hpPercent / 100.0) / 3.0,
             statusName = statusPath,
             statusMultiplier = CatchRateFormula.getStatusMultiplier(statusPath).toDouble(),
-            ballDisplayName = CatchRateFormula.formatBallNameCompact(result.ballName),
+            ballDisplayName = CatchRateFormula.formatBallName(result.ballName),
             ballId = ballName,
             ballMultiplier = result.multiplier,
             ballConditionMet = result.conditionMet,
@@ -544,6 +466,7 @@ class CatchRateHudRenderer {
     }
     
     private fun renderBallComparisonPanel(guiGraphics: GuiGraphics, minecraft: Minecraft, pokemon: ClientBattlePokemon, battle: ClientBattle) {
+        val turnCount = CatchRateBattleMonitor.getTurnCount(battle.battleId)
         val turnChanged = turnCount != lastComparisonTurnCount
         if (cachedComparison == null || turnChanged || (tickCounter - lastComparisonTick) > COMPARISON_CALC_INTERVAL_TICKS) {
             cachedComparison = BallComparisonCalculator.calculateAllBalls(pokemon, turnCount, battle)

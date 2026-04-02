@@ -1,5 +1,8 @@
 val fabricLoaderVersion = findProperty("fabric_loader_version")?.toString() ?: "0.16.7"
 val cobblemonVersion = findProperty("cobblemon_version")?.toString() ?: "1.7.1+1.21.1"
+val loom = extensions.getByName<net.fabricmc.loom.api.LoomGradleExtensionAPI>("loom")
+loom.mixin.defaultRefmapName.set("catchrate-display-refmap.json")
+
 architectury {
     common("fabric", "neoforge")
 }

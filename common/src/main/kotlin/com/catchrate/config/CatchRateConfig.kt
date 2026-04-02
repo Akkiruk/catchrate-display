@@ -13,8 +13,6 @@ data class CatchRateConfig(
     var hudOffsetY: Int = -50,
     var hudEnabled: Boolean = true,
     var showOutOfCombat: Boolean = true,
-    var compactMode: Boolean = false,
-    var showBallComparison: Boolean = false,
     var hideUnencounteredInfo: Boolean = true,
     var debugLogging: Boolean = false
 ) {
@@ -77,7 +75,6 @@ data class CatchRateConfig(
                 hudOffsetY = json.get("hudOffsetY")?.asInt ?: -50,
                 hudEnabled = json.get("hudEnabled")?.asBoolean ?: true,
                 showOutOfCombat = json.get("showOutOfCombat")?.asBoolean ?: true,
-                compactMode = json.get("compactMode")?.asBoolean ?: false,
                 hideUnencounteredInfo = json.get("hideUnencounteredInfo")?.asBoolean ?: true,
                 debugLogging = json.get("debugLogging")?.asBoolean ?: false
             )

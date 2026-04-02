@@ -177,24 +177,6 @@ object CatchRateFormula {
     }
     
     /**
-     * Get the display name for a status condition (deprecated - use getStatusTranslationKey).
-     * Kept for backwards compatibility.
-     * @param statusPath The status identifier path
-     */
-    @Deprecated("Use getStatusTranslationKey() with Text.translatable() instead")
-    fun getStatusDisplayName(statusPath: String?): String {
-        return when (statusPath?.lowercase()) {
-            "sleep" -> "Asleep"
-            "frozen" -> "Frozen"
-            "paralysis" -> "Paralyzed"
-            "poison" -> "Poisoned"
-            "poisonbadly" -> "Badly Poisoned"
-            "burn" -> "Burned"
-            else -> "None"
-        }
-    }
-    
-    /**
      * Get the status icon for UI display.
      */
     fun getStatusIcon(statusPath: String?): String {
@@ -220,31 +202,6 @@ object CatchRateFormula {
         } else {
             1F
         }
-    }
-    
-    /**
-     * Calculate the level penalty when catching Pokemon higher level than your team.
-     * 
-     * NOTE: This function exists for reference but Cobblemon's CobblemonCaptureCalculator
-     * has a bug in findHighestThrowerLevel() - it always returns null for wild Pokemon
-     * battles because the condition checks if the player's active Pokemon matches the
-     * wild Pokemon's UUID (which is never true). As a result, the level penalty is
-     * NEVER APPLIED in actual gameplay.
-     * 
-     * We keep this function for potential future use if Cobblemon fixes this,
-     * but currently it should not be called.
-     * 
-     * @param pokemonLevel The wild Pokemon's level
-     * @param playerHighestLevel The highest level Pokemon on the player's team
-     * @return Multiplier from 0.1 to 1.0
-     */
-    @Deprecated("Cobblemon doesn't actually apply level penalty due to a bug in findHighestThrowerLevel")
-    fun getLevelPenalty(pokemonLevel: Int, playerHighestLevel: Int?): Float {
-        if (playerHighestLevel == null || playerHighestLevel >= pokemonLevel) {
-            return 1F
-        }
-        val penalty = (pokemonLevel - playerHighestLevel) / 50F
-        return max(0.1F, 1F - penalty.coerceAtMost(0.9F))
     }
     
     // ==================== HP UTILITIES ====================
@@ -292,11 +249,4 @@ object CatchRateFormula {
             .joinToString(" ") { it.replaceFirstChar { c -> c.uppercaseChar() } }
     }
     
-    /**
-     * Compact ball name for single-ball HUD. Uses full localized name
-     * since suffix stripping doesn't work across languages.
-     */
-    fun formatBallNameCompact(name: String): String {
-        return formatBallName(name)
-    }
 }

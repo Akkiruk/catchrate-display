@@ -1,6 +1,7 @@
 package com.catchrate.neoforge
 
 import com.catchrate.CatchRateKeybinds
+import com.catchrate.CatchRateBattleMonitor
 import com.catchrate.CatchRateMod
 import com.catchrate.DebugCommands
 import com.catchrate.SpeciesCatchRateCache
@@ -57,6 +58,7 @@ object CatchRateDisplayNeoForgeClientEvents {
     @SubscribeEvent
     fun onClientTick(event: ClientTickEvent.Post) {
         val minecraft = Minecraft.getInstance()
+        CatchRateBattleMonitor.onClientTick()
         if (minecraft.player != null) {
             CatchRateKeybinds.tick(minecraft)
         }

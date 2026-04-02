@@ -79,7 +79,6 @@ object CatchRateKeybinds {
         }
         
         isComparisonHeld = showComparisonKey.isDown
-        config.showBallComparison = isComparisonHeld
         
         val moveSpeed = 10
         while (moveUpKey.consumeClick()) config.adjustOffset(0, -moveSpeed)

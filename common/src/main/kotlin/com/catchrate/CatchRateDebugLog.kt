@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter
 /**
  * In-memory debug log collector for catch rate calculations.
  * Captures detailed calculation snapshots, environment info, and guaranteed catch failures.
- * Can produce a comprehensive report and upload it to mclo.gs.
+ * Can produce a comprehensive local report and incident files.
  */
 object CatchRateDebugLog {
 
@@ -21,6 +21,8 @@ object CatchRateDebugLog {
 
     data class GuaranteedFailure(
         val timestamp: String,
+        val battleId: String,
+        val targetPNX: String,
         val pokemonName: String,
         val pokemonLevel: Int,
         val ballName: String,
@@ -37,30 +39,26 @@ object CatchRateDebugLog {
         val environmentSnapshot: String
     )
 
-    // Track last guaranteed prediction for failure detection
-    data class PendingGuaranteed(
-        val result: CatchRateResult,
-        val pokemonName: String,
-        val pokemonLevel: Int,
-        val turnCount: Int,
-        val timestamp: String,
-        val environmentSnapshot: String,
-        val heldBallId: String,
-        val heldBallCount: Int?,
-        val throwAttemptArmed: Boolean = false
-    )
-
-    var pendingGuaranteed: PendingGuaranteed? = null
-        private set
-
     private fun now(): String = LocalDateTime.now().format(timestampFormat)
 
-    fun log(message: String) {
+    fun currentTimestamp(): String = now()
+
+    private fun appendEntry(message: String): String {
         val entry = "[${now()}] $message"
         synchronized(entries) {
             if (entries.size >= MAX_ENTRIES) entries.removeFirst()
             entries.addLast(entry)
         }
+        return entry
+    }
+
+    fun log(message: String) {
+        appendEntry(message)
+    }
+
+    fun logIncident(message: String) {
+        appendEntry(message)
+        CatchRateMod.LOGGER.info("[CatchRate] {}", message)
     }
 
     /** Log a full catch rate calculation snapshot. */
@@ -88,99 +86,47 @@ object CatchRateDebugLog {
         log(sb.toString().trimEnd())
     }
 
-    /** Record that a guaranteed catch was predicted - will check for failure on next turn. */
-    fun recordGuaranteedPrediction(
-        result: CatchRateResult,
-        pokemonName: String,
-        pokemonLevel: Int,
-        turnCount: Int,
-        heldBallId: String,
-        heldBallCount: Int?
-    ) {
-        val existing = pendingGuaranteed
-        if (existing != null &&
-            existing.turnCount == turnCount &&
-            existing.pokemonName == pokemonName &&
-            existing.result.ballName == result.ballName &&
-            existing.heldBallId == heldBallId &&
-            existing.heldBallCount == heldBallCount &&
-            kotlin.math.abs(existing.result.modifiedCatchRate - result.modifiedCatchRate) < 0.0001 &&
-            kotlin.math.abs(existing.result.hpPercentage - result.hpPercentage) < 0.01
-        ) {
-            return
-        }
-
-        pendingGuaranteed = PendingGuaranteed(
-            result = result,
-            pokemonName = pokemonName,
-            pokemonLevel = pokemonLevel,
-            turnCount = turnCount,
-            timestamp = now(),
-            environmentSnapshot = buildEnvironmentSnapshot(),
-            heldBallId = heldBallId,
-            heldBallCount = heldBallCount
-        )
-        log("!!! GUARANTEED CATCH PREDICTED: $pokemonName Lv$pokemonLevel with ${result.ballName} (${result.ballMultiplier}x, mod=${String.format("%.4f", result.modifiedCatchRate)})")
-    }
-
-    /** Arm the failure check only after the player has actually submitted an action while the same guaranteed ball is still selected. */
-    fun armPendingGuaranteedThrow(turnCount: Int, heldBallId: String?, heldBallCount: Int?) {
-        val pending = pendingGuaranteed ?: return
-        if (pending.turnCount != turnCount) return
-        if (heldBallId != pending.heldBallId) return
-        if (pending.heldBallCount != null && heldBallCount != pending.heldBallCount) return
-        if (pending.throwAttemptArmed) return
-
-        pendingGuaranteed = pending.copy(throwAttemptArmed = true)
-        log("Armed guaranteed catch failure check for ${pending.pokemonName} Lv${pending.pokemonLevel} with ${pending.result.ballName}")
-    }
-
-    /** Called when a new turn starts - if we had a confirmed throw attempt and the ball stack changed, the catch failed. */
-    fun onNewTurn(newTurnCount: Int, heldBallId: String?, heldBallCount: Int?): GuaranteedFailure? {
-        val pending = pendingGuaranteed ?: return null
-        if (newTurnCount <= pending.turnCount) return null
-        if (!pending.throwAttemptArmed) return null
-
-        val ballWasConsumed = when {
-            pending.heldBallCount == null -> false
-            heldBallId == pending.heldBallId && heldBallCount != null -> heldBallCount < pending.heldBallCount
-            (heldBallId == null || heldBallId.isBlank()) && pending.heldBallCount <= 1 -> true
-            else -> false
-        }
-
-        pendingGuaranteed = null
-        if (!ballWasConsumed) {
-            log("Cleared guaranteed catch prediction without confirmed ball consumption")
-            return null
-        }
-
-        val failure = GuaranteedFailure(
-            timestamp = pending.timestamp,
-            pokemonName = pending.pokemonName,
-            pokemonLevel = pending.pokemonLevel,
-            ballName = pending.result.ballName,
-            ballMultiplier = pending.result.ballMultiplier,
-            baseCatchRate = pending.result.baseCatchRate,
-            modifiedCatchRate = pending.result.modifiedCatchRate,
-            hpPercentage = pending.result.hpPercentage,
-            statusName = pending.result.statusName,
-            statusMultiplier = pending.result.statusMultiplier,
-            turnCount = pending.turnCount,
-            ballConditionMet = pending.result.ballConditionMet,
-            ballConditionReason = pending.result.ballConditionReason,
-            isCatchRateEstimate = pending.result.isCatchRateEstimate,
-            environmentSnapshot = pending.environmentSnapshot
-        )
+    fun recordGuaranteedFailure(failure: GuaranteedFailure): String? {
         synchronized(guaranteedFailures) {
             guaranteedFailures.add(failure)
         }
-        log("!!! GUARANTEED CATCH FAILED: ${failure.pokemonName} Lv${failure.pokemonLevel} with ${failure.ballName} on turn ${failure.turnCount}!")
-        return failure
+        logIncident("!!! GUARANTEED CATCH FAILED: ${failure.pokemonName} Lv${failure.pokemonLevel} with ${failure.ballName} on turn ${failure.turnCount}! battle=${failure.battleId} target=${failure.targetPNX}")
+
+        if (!CatchRateMod.isDebugActive) {
+            CatchRateMod.sessionDebugOverride = true
+            logIncident("Debug logging auto-enabled after confirmed guaranteed catch failure")
+        }
+
+        val incidentPath = saveIncidentToFile(failure)
+        CatchRateMod.LOGGER.error("[CatchRate] CONFIRMED guaranteed catch failure detected via client capture packets")
+        CatchRateMod.LOGGER.error(
+            "[CatchRate] battle={} targetPNX={} pokemon={} lv={} ball={} mult={} turn={} baseCatchRate={} modifiedCatchRate={} hp={} status={} statusMult={} conditionMet={} conditionReason=\"{}\" estimated={} incidentLog={}",
+            failure.battleId,
+            failure.targetPNX,
+            failure.pokemonName,
+            failure.pokemonLevel,
+            failure.ballName,
+            failure.ballMultiplier,
+            failure.turnCount,
+            failure.baseCatchRate,
+            String.format("%.4f", failure.modifiedCatchRate),
+            String.format("%.1f", failure.hpPercentage),
+            failure.statusName.ifEmpty { "none" },
+            failure.statusMultiplier,
+            failure.ballConditionMet,
+            failure.ballConditionReason,
+            failure.isCatchRateEstimate,
+            incidentPath ?: "(failed to write incident file)"
+        )
+        return incidentPath
     }
 
-    /** Called when the battle ends - clear pending guaranteed if the catch succeeded (battle ended). */
+    fun onBattleObserved(battleId: String, isPvW: Boolean) {
+        logIncident("Battle started: id=$battleId isPvW=$isPvW")
+    }
+
     fun onBattleEnd() {
-        pendingGuaranteed = null
+        logIncident("Battle ended; cleared active guaranteed capture tracking")
     }
 
     /** Build a comprehensive debug report for upload. */
@@ -216,6 +162,7 @@ object CatchRateDebugLog {
                 guaranteedFailures.forEachIndexed { i, f ->
                     sb.appendLine("  Failure #${i + 1}:")
                     sb.appendLine("    Time: ${f.timestamp}")
+                    sb.appendLine("    Battle: ${f.battleId} | TargetPNX: ${f.targetPNX}")
                     sb.appendLine("    Pokemon: ${f.pokemonName} Lv${f.pokemonLevel}")
                     sb.appendLine("    Ball: ${f.ballName} (${f.ballMultiplier}x) condition_met=${f.ballConditionMet} reason=\"${f.ballConditionReason}\"")
                     sb.appendLine("    Base Catch Rate: ${f.baseCatchRate}${if (f.isCatchRateEstimate) " (ESTIMATED)" else ""}")
@@ -308,6 +255,56 @@ object CatchRateDebugLog {
         return file.absolutePath
     }
 
+    private fun saveIncidentToFile(failure: GuaranteedFailure): String? {
+        return try {
+            val gameDir = PlatformHelper.getGameDir().toFile()
+            val logsDir = File(gameDir, "catchrate-logs/incidents")
+            logsDir.mkdirs()
+            val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss_SSS"))
+            val file = File(logsDir, "guaranteed-failure-$timestamp.txt")
+            file.writeText(buildIncidentReport(failure))
+            file.absolutePath
+        } catch (_: Throwable) {
+            null
+        }
+    }
+
+    private fun buildIncidentReport(failure: GuaranteedFailure): String {
+        val sb = StringBuilder()
+        sb.appendLine("=".repeat(60))
+        sb.appendLine("  CATCHRATE DISPLAY - GUARANTEED FAILURE INCIDENT")
+        sb.appendLine("  Generated: ${now()}")
+        sb.appendLine("=".repeat(60))
+        sb.appendLine()
+        sb.appendLine("--- FAILURE ---")
+        sb.appendLine("Time: ${failure.timestamp}")
+        sb.appendLine("Battle: ${failure.battleId}")
+        sb.appendLine("TargetPNX: ${failure.targetPNX}")
+        sb.appendLine("Pokemon: ${failure.pokemonName} Lv${failure.pokemonLevel}")
+        sb.appendLine("Ball: ${failure.ballName} (${failure.ballMultiplier}x)")
+        sb.appendLine("Turn: ${failure.turnCount}")
+        sb.appendLine("Base Catch Rate: ${failure.baseCatchRate}${if (failure.isCatchRateEstimate) " (ESTIMATED)" else ""}")
+        sb.appendLine("Modified Catch Rate: ${String.format("%.4f", failure.modifiedCatchRate)}")
+        sb.appendLine("HP: ${String.format("%.1f", failure.hpPercentage)}%")
+        sb.appendLine("Status: ${failure.statusName.ifEmpty { "none" }} (${failure.statusMultiplier}x)")
+        sb.appendLine("Ball Condition: met=${failure.ballConditionMet} reason=\"${failure.ballConditionReason}\"")
+        sb.appendLine()
+        sb.appendLine("--- ENVIRONMENT ---")
+        sb.appendLine(failure.environmentSnapshot)
+        sb.appendLine()
+        sb.appendLine("--- RECENT DEBUG LOG ---")
+        synchronized(entries) {
+            if (entries.isEmpty()) {
+                sb.appendLine("  (no entries)")
+            } else {
+                entries.takeLast(80).forEach { sb.appendLine("  $it") }
+            }
+        }
+        sb.appendLine()
+        sb.appendLine("=".repeat(60))
+        return sb.toString()
+    }
+
     // ==================== Data Collectors ====================
 
     private fun getMinecraftVersion(): String {
@@ -375,8 +372,7 @@ object CatchRateDebugLog {
   hudOffsetX: ${config.hudOffsetX}
   hudOffsetY: ${config.hudOffsetY}
   showOutOfCombat: ${config.showOutOfCombat}
-  compactMode: ${config.compactMode}
-  showBallComparison: ${config.showBallComparison}
+    comparisonHeld: ${CatchRateKeybinds.isComparisonHeld}
   hideUnencounteredInfo: ${config.hideUnencounteredInfo}
   debugLogging: ${config.debugLogging}"""
     }

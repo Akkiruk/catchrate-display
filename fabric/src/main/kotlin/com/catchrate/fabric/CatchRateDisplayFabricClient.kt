@@ -2,6 +2,7 @@ package com.catchrate.fabric
 
 import com.catchrate.CatchRateDebugLog
 import com.catchrate.CatchRateKeybinds
+import com.catchrate.CatchRateBattleMonitor
 import com.catchrate.CatchRateMod
 import com.catchrate.SpeciesCatchRateCache
 import com.catchrate.client.CatchRateHudRenderer
@@ -45,6 +46,7 @@ class CatchRateDisplayFabricClient : ClientModInitializer {
         
         // Register client tick for keybinds
         ClientTickEvents.END_CLIENT_TICK.register { minecraft ->
+            CatchRateBattleMonitor.onClientTick()
             CatchRateKeybinds.tick(minecraft)
         }
         

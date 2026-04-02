@@ -40,9 +40,6 @@ object CatchRateConstants {
     
     // ==================== BALL CONSTANTS (only commonly used ones) ====================
     
-    /** Guaranteed catch multiplier (Master Ball, etc.) */
-    const val BALL_GUARANTEED_MULT = 255F
-    
     /** Standard Poke Ball multiplier (fallback) */
     const val BALL_STANDARD_MULT = 1F
     
