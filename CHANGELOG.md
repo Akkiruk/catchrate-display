@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.8.9] - 2026-04-01
+
+### Fixed
+- **Fabric startup no longer fails on the capture-tracking mixins.** The shared capture-start and capture-end hooks now compile as Java mixins and ship with the generated `catchrate-display-refmap.json`, which fixes the missing-remap crash introduced in 2.8.8.
+
 ## [2.8.8] - 2026-04-01
 
 ### Fixed
