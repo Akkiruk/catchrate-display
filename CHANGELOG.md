@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.8.8] - 2026-04-01
+
+### Fixed
+- **Chat no longer washes out or cuts through the catch-rate HUD panel.** The HUD now registers above the vanilla chat layer on both Fabric and NeoForge instead of drawing underneath later chat overlays.
+
 ## [2.8.7] - 2026-04-01
 
 ### Fixed

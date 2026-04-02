@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.catchrate.fabric.mixin.client",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "GuiChatHudMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
