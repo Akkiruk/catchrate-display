@@ -9,7 +9,6 @@ architectury {
 
 dependencies {
     modImplementation("net.fabricmc:fabric-loader:$fabricLoaderVersion")
-    annotationProcessor("org.spongepowered:mixin:0.8.7:processor")
 
     // Cobblemon common module (compileOnly — not bundled)
     modCompileOnly("com.cobblemon:mod:$cobblemonVersion")

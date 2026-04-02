@@ -1,14 +1,9 @@
 # Changelog
 
-## [2.8.9] - 2026-04-01
+## [2.8.10] - 2026-04-02
 
 ### Fixed
-- **Fabric startup no longer fails on the capture-tracking mixins.** The shared capture-start and capture-end hooks now compile as Java mixins and ship with the generated `catchrate-display-refmap.json`, which fixes the missing-remap crash introduced in 2.8.8.
-
-## [2.8.8] - 2026-04-01
-
-### Fixed
-- **Chat no longer washes out or cuts through the catch-rate HUD panel.** The HUD now registers above the vanilla chat layer on both Fabric and NeoForge instead of drawing underneath later chat overlays.
+- **Restored the last known-good HUD registration path.** Reverted the issue #22 render-order experiment and removed the new Fabric chat mixin so the mod starts normally again on Fabric.
 
 ## [2.8.7] - 2026-04-01
 
