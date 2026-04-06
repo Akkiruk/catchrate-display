@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.8.12] - 2026-04-06
+
+### Fixed
+- **Fixed false "GUARANTEED" catch rate for multi-word Pokémon** (Tapu Lele, Iron Valiant, Raging Bolt, Mr. Mime, Ho-Oh, Type: Null, etc.). The catch rate cache was looking up species by display name with spaces/punctuation (e.g., "tapu lele") but Cobblemon's data files use stripped names ("tapulele"). This caused all multi-word species to fall back to the default catch rate of 45, producing wildly inflated catch percentages — most visibly showing "GUARANTEED" on legendaries.
+- **Added safeguard against false GUARANTEED on estimated catch rates.** The HUD will no longer display "GUARANTEED" when it can't verify the actual catch rate from species data.
+
 ## [2.8.11] - 2026-04-02
 
 ### Fixed

@@ -24,26 +24,35 @@ object SpeciesCatchRateCache {
     private const val DEFAULT_CATCH_RATE = 45
     private val cache = ConcurrentHashMap<String, Int>()
     private val estimatedSpecies = ConcurrentHashMap.newKeySet<String>()
+
+    /**
+     * Normalize a species name to match Cobblemon's JSON filename format.
+     * Cobblemon filenames strip ALL non-alphanumeric characters:
+     * "Tapu Lele" → "tapulele", "Mr. Mime" → "mrmime", "Ho-Oh" → "hooh"
+     */
+    private fun speciesKey(species: Species): String =
+        species.resourceIdentifier?.path?.lowercase()
+            ?: species.name.lowercase().replace(Regex("[^a-z0-9]"), "")
     @Volatile private var datapacksScanned = false
     private val datapackOverrides = ConcurrentHashMap<String, Int>()
     @Volatile private var preloading = false
     @Volatile private var preloaded = false
 
     fun getCatchRate(species: Species): Int {
-        val speciesName = species.name.lowercase()
-        cache[speciesName]?.let { return it }
+        val key = speciesKey(species)
+        cache[key]?.let { return it }
 
         val resolved = resolve(species)
-        cache[speciesName] = resolved
+        cache[key] = resolved
         CatchRateMod.debugOnChange(
-            "CatchRate", speciesName,
-            "${species.name} catchRate resolved to $resolved (local data${if (speciesName in estimatedSpecies) ", ESTIMATE" else ""})"
+            "CatchRate", key,
+            "${species.name} catchRate resolved to $resolved (key=$key${if (key in estimatedSpecies) ", ESTIMATE" else ""})"
         )
         return resolved
     }
 
     /** True when the catch rate came from the fallback default, not from actual species data. */
-    fun isEstimate(species: Species): Boolean = species.name.lowercase() in estimatedSpecies
+    fun isEstimate(species: Species): Boolean = speciesKey(species) in estimatedSpecies
 
     /** Number of species currently cached. */
     fun cacheSize(): Int = cache.size
@@ -65,10 +74,10 @@ object SpeciesCatchRateCache {
                 } catch (_: Throwable) { emptyList() }
                 var resolved = 0
                 for (species in allSpecies) {
-                    val name = species.name.lowercase()
-                    if (!cache.containsKey(name)) {
+                    val key = speciesKey(species)
+                    if (!cache.containsKey(key)) {
                         val rate = resolve(species)
-                        cache[name] = rate
+                        cache[key] = rate
                         resolved++
                     }
                 }
@@ -102,10 +111,11 @@ object SpeciesCatchRateCache {
 
     private fun resolve(species: Species): Int {
         ensureDatapacksScanned()
-        datapackOverrides[species.name.lowercase()]?.let { return it }
+        val key = speciesKey(species)
+        datapackOverrides[key]?.let { return it }
         loadFromClasspath(species)?.let { return it }
         // No local data found — mark as estimate so the UI can indicate uncertainty
-        estimatedSpecies.add(species.name.lowercase())
+        estimatedSpecies.add(key)
         return DEFAULT_CATCH_RATE
     }
 
@@ -201,7 +211,7 @@ object SpeciesCatchRateCache {
 
     private fun loadFromClasspath(species: Species): Int? {
         val namespace = species.resourceIdentifier?.namespace ?: "cobblemon"
-        val name = species.name.lowercase()
+        val name = speciesKey(species)
 
         for (gen in generationFolders) {
             val path = "data/$namespace/species/$gen/$name.json"

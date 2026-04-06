@@ -341,11 +341,14 @@ class CatchRateHudRenderer {
         val wildText = if (data.isWild) HudTranslations.wild() else null
         val hpText = "${HudTranslations.hp()} ${String.format("%.2f", data.hpMultiplier)}x"
         
-        val percentText = if (data.isGuaranteed) {
+        // Don't claim GUARANTEED when the catch rate is an estimate — the real rate
+        // could be much lower (e.g., legendary at 3 misidentified as default 45)
+        val effectiveGuaranteed = data.isGuaranteed && !data.isCatchRateEstimate
+        val percentText = if (effectiveGuaranteed) {
             HudTranslations.guaranteedShort()
         } else {
             val approx = if (data.isCatchRateEstimate) "~" else ""
-            "$approx${CatchRateFormula.formatCatchPercentage(data.catchPercentage, data.isGuaranteed)}%"
+            "$approx${CatchRateFormula.formatCatchPercentage(data.catchPercentage, effectiveGuaranteed)}%"
         }
         
         val hasStatus = data.statusMultiplier > 1.0
@@ -389,7 +392,7 @@ class CatchRateHudRenderer {
         
         // Catch bar + percentage
         val barY = y + 16
-        if (data.isGuaranteed) {
+        if (effectiveGuaranteed) {
             HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, 100.0, true)
             guiGraphics.drawString(font, percentText, x + 6, barY + 12, Colors.TEXT_GREEN)
         } else {
