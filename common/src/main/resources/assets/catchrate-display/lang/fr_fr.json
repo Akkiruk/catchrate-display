@@ -36,6 +36,7 @@
   "catchrate.ball.quick.not_in_battle": "Fonctionne seulement au tour 1",
   "catchrate.ball.quick.effective": "Au premier tour",
   "catchrate.ball.quick.ineffective": "Efficace seulement au tour 1",
+  "catchrate.ball.quick.consumed": "Quick Ball bonus already spent on this target",
   "catchrate.ball.timer.turn_info": "Tour %d",
   "catchrate.ball.timer.scales": "Augmente avec les tours",
   "catchrate.ball.dusk.dark_area": "Zone sombre (L%d)",
@@ -88,5 +89,8 @@
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
   "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
-  "catchrate.command.info.footer": "§6============================================"
+  "catchrate.command.info.footer": "§6============================================",
+  "catchrate.command.log.uploading": "§e[CatchRate] Generating debug report...",
+  "catchrate.command.log.failed": "§c[CatchRate] Failed to save report: %s",
+  "catchrate.command.log.saved_locally": "§a[CatchRate] Debug report saved to: §f%s"
 }

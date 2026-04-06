@@ -39,6 +39,7 @@
   "catchrate.ball.quick.not_in_battle": "Only works turn 1 in battle",
   "catchrate.ball.quick.effective": "First turn of battle",
   "catchrate.ball.quick.ineffective": "Not first turn",
+  "catchrate.ball.quick.consumed": "Quick Ball bonus already spent on this target",
 
   "catchrate.ball.timer.turn_info": "Turn %d",
   "catchrate.ball.timer.scales": "Increases each turn",

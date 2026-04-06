@@ -2,6 +2,8 @@ package com.catchrate.client
 
 import com.catchrate.BallContextFactory
 import com.catchrate.BallMultiplierCalculator
+import com.catchrate.CobbleCuisineCompat
+import com.catchrate.CatchRatePredictionReliability
 import com.catchrate.CatchRateMod
 import com.catchrate.CatchRateFormula
 import com.catchrate.SpeciesCatchRateCache
@@ -45,7 +47,8 @@ object BallComparisonCalculator {
         val conditionMet: Boolean,
         val reason: String,
         val isGuaranteed: Boolean = false,
-        val isCatchRateEstimate: Boolean = false
+        val isCatchRateEstimate: Boolean = false,
+        val isPredictionReliable: Boolean = true
     )
     
     /**
@@ -66,6 +69,14 @@ object BallComparisonCalculator {
         val level = minecraft.level ?: return emptyList()
         
         val ctx = BallContextFactory.fromBattlePokemon(pokemon, turnCount, player, level, battle)
+        val reliability = CatchRatePredictionReliability.analyzeBattleTarget(pokemon, battle)
+        if (!reliability.isReliable) {
+            CatchRateMod.debugOnChange(
+                "ComparisonReliability",
+                "${pokemon.uuid}_${pokemon.species.name}",
+                "Ball comparison marked approximate for ${pokemon.species.name}: ${reliability.reason}"
+            )
+        }
         
         val hpInfo = CatchRateFormula.calculateHpInfo(
             hpValue = pokemon.hpValue,
@@ -77,6 +88,7 @@ object BallComparisonCalculator {
         val isEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species)
         val statusMult = CatchRateFormula.getStatusMultiplier(pokemon.status?.name?.path)
         val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
+        val externalCatchRateMultiplier = CobbleCuisineCompat.getCatchRateMultiplier(player)
         
         return comparableBalls.map { ballId ->
             val result = BallMultiplierCalculator.calculate(ballId, ctx)
@@ -89,7 +101,8 @@ object BallComparisonCalculator {
                 ballMultiplier = result.multiplier,
                 statusMultiplier = statusMult,
                 levelBonus = levelBonus,
-                inBattle = true
+                inBattle = true,
+                externalCatchRateMultiplier = externalCatchRateMultiplier
             )
             val isFormulaGuaranteed = result.isGuaranteed || CatchRateFormula.isGuaranteedByFormula(modifiedRate)
             val catchChance = if (isFormulaGuaranteed) 100F else CatchRateFormula.modifiedRateToPercentage(modifiedRate)
@@ -102,7 +115,8 @@ object BallComparisonCalculator {
                 conditionMet = result.conditionMet,
                 reason = result.reason,
                 isGuaranteed = isFormulaGuaranteed,
-                isCatchRateEstimate = isEstimate
+                isCatchRateEstimate = isEstimate,
+                isPredictionReliable = reliability.isReliable
             )
         }.sortedByDescending { it.catchRate }
     }
@@ -129,6 +143,7 @@ object BallComparisonCalculator {
         val ctx = BallContextFactory.fromWorldPokemon(entity, player, level)
         
         val result = BallMultiplierCalculator.calculate(ballId, ctx)
+        val reliability = CatchRatePredictionReliability.analyzeWorldTarget(entity)
         
         val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species).toFloat()
         val isEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species)
@@ -136,6 +151,7 @@ object BallComparisonCalculator {
         val currentHp = pokemon.currentHealth.toFloat()
         val statusMult = CatchRateFormula.getStatusMultiplier(BallContextFactory.getEffectiveStatusPath(entity))
         val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
+        val externalCatchRateMultiplier = CobbleCuisineCompat.getCatchRateMultiplier(player)
         
         val catchChance = CatchRateFormula.calculateCatchPercentage(
             baseCatchRate = baseCatchRate,
@@ -144,7 +160,8 @@ object BallComparisonCalculator {
             ballMultiplier = result.multiplier,
             statusMultiplier = statusMult,
             levelBonus = levelBonus,
-            inBattle = false
+            inBattle = false,
+            externalCatchRateMultiplier = externalCatchRateMultiplier
         )
         
         CatchRateMod.debugOnChange("WorldCalc",
@@ -165,7 +182,8 @@ object BallComparisonCalculator {
             conditionMet = result.conditionMet,
             reason = result.reason,
             isGuaranteed = isFormulaGuaranteed,
-            isCatchRateEstimate = isEstimate
+            isCatchRateEstimate = isEstimate,
+            isPredictionReliable = reliability.isReliable
         )
     }
     
@@ -189,6 +207,7 @@ object BallComparisonCalculator {
         
         val pokemon = entity.pokemon
         val ctx = BallContextFactory.fromWorldPokemon(entity, player, level)
+        val reliability = CatchRatePredictionReliability.analyzeWorldTarget(entity)
         
         val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species).toFloat()
         val isEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species)
@@ -196,6 +215,7 @@ object BallComparisonCalculator {
         val currentHp = pokemon.currentHealth.toFloat()
         val statusMult = CatchRateFormula.getStatusMultiplier(BallContextFactory.getEffectiveStatusPath(entity))
         val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
+        val externalCatchRateMultiplier = CobbleCuisineCompat.getCatchRateMultiplier(player)
         
         return comparableBalls.map { ballId ->
             val result = BallMultiplierCalculator.calculate(ballId, ctx)
@@ -207,7 +227,8 @@ object BallComparisonCalculator {
                 ballMultiplier = result.multiplier,
                 statusMultiplier = statusMult,
                 levelBonus = levelBonus,
-                inBattle = false
+                inBattle = false,
+                externalCatchRateMultiplier = externalCatchRateMultiplier
             )
             
             val isFormulaGuaranteed = result.isGuaranteed || catchChance >= 100F
@@ -221,7 +242,8 @@ object BallComparisonCalculator {
                 conditionMet = result.conditionMet,
                 reason = result.reason,
                 isGuaranteed = isFormulaGuaranteed,
-                isCatchRateEstimate = isEstimate
+                isCatchRateEstimate = isEstimate,
+                isPredictionReliable = reliability.isReliable
             )
         }.sortedByDescending { it.catchRate }
     }

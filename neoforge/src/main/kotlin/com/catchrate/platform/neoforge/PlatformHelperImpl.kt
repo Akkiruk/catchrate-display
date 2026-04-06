@@ -3,6 +3,7 @@
 package com.catchrate.platform.neoforge
 
 import net.neoforged.fml.loading.FMLPaths
+import net.neoforged.fml.ModList
 import java.nio.file.Path
 
 /**
@@ -18,5 +19,10 @@ object PlatformHelperImpl {
     @JvmStatic
     fun getGameDir(): Path {
         return FMLPaths.GAMEDIR.get()
+    }
+
+    @JvmStatic
+    fun isModLoaded(modId: String): Boolean {
+        return ModList.get().isLoaded(modId)
     }
 }

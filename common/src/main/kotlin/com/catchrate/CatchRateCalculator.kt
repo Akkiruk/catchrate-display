@@ -72,6 +72,14 @@ object CatchRateCalculator {
     ): CatchRateResult {
         val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species)
         val isEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species)
+        val reliability = CatchRatePredictionReliability.analyzeBattleTarget(pokemon, CobblemonClient.battle)
+        if (!reliability.isReliable) {
+            CatchRateMod.debugOnChange(
+                "PredictionReliability",
+                "${pokemon.uuid}_${pokemon.species.name}",
+                "Prediction marked approximate for ${pokemon.species.name}: ${reliability.reason}"
+            )
+        }
         
         // Calculate HP using shared formula
         val hpInfo = CatchRateFormula.calculateHpInfo(
@@ -88,6 +96,8 @@ object CatchRateCalculator {
         val bonusLevel = CatchRateFormula.getLowLevelBonus(level)
         val ballResult = getBallResult(pokeBall, ballName, pokemon, turnCount)
         val ballBonus = ballResult.multiplier
+        val externalCatchRateMultiplier = CobbleCuisineCompat.getCatchRateMultiplier(Minecraft.getInstance().player)
+        val externalCatchRateReason = if (externalCatchRateMultiplier != 1F) "CobbleCuisine catch boost" else ""
         
         // Compute modified rate once, derive percentage from it (avoids duplicate HP/modifier math)
         val modifiedCatchRate = CatchRateFormula.calculateModifiedCatchRate(
@@ -97,7 +107,8 @@ object CatchRateCalculator {
             ballMultiplier = ballBonus,
             statusMultiplier = bonusStatus,
             levelBonus = bonusLevel,
-            inBattle = inBattle
+            inBattle = inBattle,
+            externalCatchRateMultiplier = externalCatchRateMultiplier
         )
         val isFormulaGuaranteed = ballResult.isGuaranteed || CatchRateFormula.isGuaranteedByFormula(modifiedCatchRate)
         val captureChance = if (isFormulaGuaranteed) 100F else CatchRateFormula.modifiedRateToPercentage(modifiedCatchRate)
@@ -107,6 +118,7 @@ object CatchRateCalculator {
             "${pokemon.species.name} Lv${level} | Ball=$ballName ${ballBonus}x${if (ballResult.conditionMet) " (met)" else ""} | " +
             "HP=${String.format("%.1f", hpInfo.percentage)}% (${hpInfo.currentHp.toInt()}/${hpInfo.maxHp.toInt()}) | " +
             "Status=${statusPath ?: "none"} ${bonusStatus}x | " +
+            "Compat=${String.format("%.2f", externalCatchRateMultiplier)}x | " +
             "Result=${String.format("%.2f", captureChance)}% (mod=${String.format("%.1f", modifiedCatchRate)}, base=$catchRate)"
         )
         
@@ -125,7 +137,9 @@ object CatchRateCalculator {
             ballConditionMet = ballResult.conditionMet,
             ballConditionReason = ballResult.reason,
             isCatchRateEstimate = isEstimate,
-            isReliableGuaranteedPrediction = !isEstimate
+            externalCatchRateMultiplier = externalCatchRateMultiplier.toDouble(),
+            externalCatchRateReason = externalCatchRateReason,
+            isReliableGuaranteedPrediction = !isEstimate && reliability.isReliable
         )
     }
 

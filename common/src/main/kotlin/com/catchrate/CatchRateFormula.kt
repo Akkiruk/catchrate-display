@@ -38,6 +38,7 @@ object CatchRateFormula {
      * @param levelBonus Low-level bonus multiplier (for Pokemon under level 13)
      * @param inBattle Whether the Pokemon is being caught in battle (false = 0.5x penalty)
      * @param levelPenalty Optional penalty for catching Pokemon higher level than your team
+     * @param externalCatchRateMultiplier Additional client-visible compat multiplier
      * @return Catch percentage from 0.0 to 100.0
      */
     fun calculateCatchPercentage(
@@ -48,7 +49,8 @@ object CatchRateFormula {
         statusMultiplier: Float = STATUS_NONE_MULT,
         levelBonus: Float = 1F,
         inBattle: Boolean = true,
-        levelPenalty: Float = 1F
+        levelPenalty: Float = 1F,
+        externalCatchRateMultiplier: Float = 1F
     ): Float {
         val battleModifier = if (inBattle) 1F else OUT_OF_BATTLE_MODIFIER
         
@@ -57,7 +59,7 @@ object CatchRateFormula {
         
         // Modified catch rate with ball bonus
         var modifiedRate = (hpComponent * ballMultiplier) / (3F * maxHp)
-        modifiedRate *= statusMultiplier * levelBonus * levelPenalty
+        modifiedRate *= statusMultiplier * levelBonus * levelPenalty * externalCatchRateMultiplier
         
         // Calculate shake probability (rounded to int like Cobblemon does)
         val shakeProbability = calculateShakeProbability(modifiedRate).roundToInt()
@@ -109,12 +111,13 @@ object CatchRateFormula {
         statusMultiplier: Float = STATUS_NONE_MULT,
         levelBonus: Float = 1F,
         inBattle: Boolean = true,
-        levelPenalty: Float = 1F
+        levelPenalty: Float = 1F,
+        externalCatchRateMultiplier: Float = 1F
     ): Float {
         val battleModifier = if (inBattle) 1F else OUT_OF_BATTLE_MODIFIER
         val hpComponent = (3F * maxHp - 2F * currentHp) * baseCatchRate * battleModifier
         var modifiedRate = (hpComponent * ballMultiplier) / (3F * maxHp)
-        modifiedRate *= statusMultiplier * levelBonus * levelPenalty
+        modifiedRate *= statusMultiplier * levelBonus * levelPenalty * externalCatchRateMultiplier
         return modifiedRate
     }
     

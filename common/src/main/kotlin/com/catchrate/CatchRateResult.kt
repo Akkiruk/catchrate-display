@@ -19,6 +19,9 @@ data class CatchRateResult(
     val ballConditionReason: String = "",
     /** True when the base catch rate is a fallback estimate (species not found in local data). */
     val isCatchRateEstimate: Boolean = false,
-    /** True when a displayed guaranteed catch can be safely compared against an actual failed result. */
+    /** Additional catch-rate multiplier from detected client-side compat effects. */
+    val externalCatchRateMultiplier: Double = 1.0,
+    val externalCatchRateReason: String = "",
+    /** True when the displayed catch prediction is based on trustworthy client target data. */
     val isReliableGuaranteedPrediction: Boolean = false
 )

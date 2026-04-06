@@ -35,6 +35,7 @@
   "catchrate.ball.quick.not_in_battle": "Funguje pouze v 1. kole",
   "catchrate.ball.quick.effective": "V prvním kole",
   "catchrate.ball.quick.ineffective": "Účinné pouze v 1. kole",
+  "catchrate.ball.quick.consumed": "Quick Ball bonus already spent on this target",
   "catchrate.ball.timer.turn_info": "Kolo %d",
   "catchrate.ball.timer.scales": "Roste s koly",
   "catchrate.ball.dusk.dark_area": "Tmavá oblast (L%d)",
@@ -85,5 +86,8 @@
   "catchrate.command.info.hud_enabled": "§7  HUD enabled: §f%s",
   "catchrate.command.info.show_ooc": "§7  Show out of combat: §f%s",
   "catchrate.command.info.hide_unencountered": "§7  Hide unencountered info: §f%s",
-  "catchrate.command.info.footer": "§6============================================"
+  "catchrate.command.info.footer": "§6============================================",
+  "catchrate.command.log.uploading": "§e[CatchRate] Generating debug report...",
+  "catchrate.command.log.failed": "§c[CatchRate] Failed to save report: %s",
+  "catchrate.command.log.saved_locally": "§a[CatchRate] Debug report saved to: §f%s"
 }

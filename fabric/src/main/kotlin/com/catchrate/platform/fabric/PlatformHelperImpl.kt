@@ -19,4 +19,9 @@ object PlatformHelperImpl {
     fun getGameDir(): Path {
         return FabricLoader.getInstance().gameDir
     }
+
+    @JvmStatic
+    fun isModLoaded(modId: String): Boolean {
+        return FabricLoader.getInstance().isModLoaded(modId)
+    }
 }

@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.8.13] - 2026-04-06
+
+### Changed
+- **Overhauled logging system to stop spamming the Minecraft log.** Routine events (battle start/end, non-guaranteed captures, turn advances) now only go to the in-memory buffer, not `latest.log`. Only actual guaranteed catch failures write to `LOGGER.error()`.
+- **Added always-on `catch-outcomes.log`** in `catchrate-logs/`. Every catch attempt is logged as a single line with outcome (CAUGHT/FAILED), species, ball, multipliers, HP, and status. Rolls at 512 KB. Not gated by debug mode.
+- **Removed auto-enable debug on guaranteed failure.** This was causing log floods after a single failure event.
+- **All capture attempts are now tracked for outcome logging**, not just guaranteed ones.
+
 ## [2.8.12] - 2026-04-06
 
 ### Fixed

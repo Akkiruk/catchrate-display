@@ -58,6 +58,7 @@ object BallContextFactory {
             isPlayerUnderwater = player.isUnderWater,
             inBattle = true,
             turnCount = turnCount,
+            quickBallBonusConsumed = CatchRateCaptureTracker.hasConsumedQuickBallBonus(battle?.battleId, pokemon.uuid),
             activeBattler = getActiveBattlerFromClientBattle(battle),
             hasCaughtSpecies = checkHasCaughtSpecies(species.resourceIdentifier),
             pokemonAspects = aspects
@@ -127,6 +128,7 @@ object BallContextFactory {
             isPlayerUnderwater = player.isUnderWater,
             inBattle = inBattle,
             turnCount = turnCount,
+            quickBallBonusConsumed = false,
             activeBattler = activeBattler,
             hasCaughtSpecies = hasCaughtSpecies,
             pokemonAspects = pokemonAspects

@@ -248,7 +248,8 @@ class CatchRateHudRenderer {
         val turnCount: Int,
         val isWild: Boolean,
         val isEncountered: Boolean = true,
-        val isCatchRateEstimate: Boolean = false
+        val isCatchRateEstimate: Boolean = false,
+        val isPredictionReliable: Boolean = true
     )
     
     private fun renderClientModeHud(guiGraphics: GuiGraphics, minecraft: Minecraft, result: CatchRateResult, ballName: String) {
@@ -274,7 +275,8 @@ class CatchRateHudRenderer {
             turnCount = result.turnCount,
             isWild = false,
             isEncountered = encountered,
-            isCatchRateEstimate = result.isCatchRateEstimate
+            isCatchRateEstimate = result.isCatchRateEstimate,
+            isPredictionReliable = result.isReliableGuaranteedPrediction
         ))
     }
     
@@ -318,7 +320,8 @@ class CatchRateHudRenderer {
             turnCount = 0,
             isWild = true,
             isEncountered = encountered,
-            isCatchRateEstimate = result.isCatchRateEstimate
+            isCatchRateEstimate = result.isCatchRateEstimate,
+            isPredictionReliable = result.isPredictionReliable
         ))
     }
     
@@ -341,13 +344,13 @@ class CatchRateHudRenderer {
         val wildText = if (data.isWild) HudTranslations.wild() else null
         val hpText = "${HudTranslations.hp()} ${String.format("%.2f", data.hpMultiplier)}x"
         
-        // Don't claim GUARANTEED when the catch rate is an estimate — the real rate
-        // could be much lower (e.g., legendary at 3 misidentified as default 45)
-        val effectiveGuaranteed = data.isGuaranteed && !data.isCatchRateEstimate
+        // Don't claim GUARANTEED when the catch rate is an estimate or the client-side
+        // target data is not trustworthy (for example, disguised Pokemon).
+        val effectiveGuaranteed = data.isGuaranteed && !data.isCatchRateEstimate && data.isPredictionReliable
         val percentText = if (effectiveGuaranteed) {
             HudTranslations.guaranteedShort()
         } else {
-            val approx = if (data.isCatchRateEstimate) "~" else ""
+            val approx = if (data.isCatchRateEstimate || !data.isPredictionReliable) "~" else ""
             "$approx${CatchRateFormula.formatCatchPercentage(data.catchPercentage, effectiveGuaranteed)}%"
         }
         
@@ -521,8 +524,9 @@ class CatchRateHudRenderer {
             
             val ballText = Component.literal("$medal${ball.displayName}")
             val rateColor = HudDrawing.getChanceFormatting(ball.catchRate)
-            val approx = if (ball.isCatchRateEstimate) "~" else ""
-            val rateText = Component.literal("$approx${CatchRateFormula.formatCatchPercentage(ball.catchRate, ball.isGuaranteed)}%").withStyle(rateColor)
+            val effectiveGuaranteed = ball.isGuaranteed && ball.isPredictionReliable && !ball.isCatchRateEstimate
+            val approx = if (ball.isCatchRateEstimate || !ball.isPredictionReliable) "~" else ""
+            val rateText = Component.literal("$approx${CatchRateFormula.formatCatchPercentage(ball.catchRate, effectiveGuaranteed)}%").withStyle(rateColor)
             
             val multColor = HudDrawing.getBallMultiplierFormatting(ball.multiplier)
             val multText = Component.literal("${String.format("%.1f", ball.multiplier)}x").withStyle(multColor)

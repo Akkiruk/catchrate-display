@@ -56,9 +56,12 @@ object CatchRateDebugLog {
         appendEntry(message)
     }
 
+    /** Log to in-memory buffer. Only writes to LOGGER when debug is active. */
     fun logIncident(message: String) {
         appendEntry(message)
-        CatchRateMod.LOGGER.info("[CatchRate] {}", message)
+        if (CatchRateMod.isDebugActive) {
+            CatchRateMod.LOGGER.info("[CatchRate] {}", message)
+        }
     }
 
     /** Log a full catch rate calculation snapshot. */
@@ -77,6 +80,9 @@ object CatchRateDebugLog {
         sb.appendLine("  HP: ${String.format("%.1f", result.hpPercentage)}%")
         sb.appendLine("  Status: ${result.statusName.ifEmpty { "none" }} (${result.statusMultiplier}x)")
         sb.appendLine("  Level Bonus: ${result.levelBonus}x")
+        if (result.externalCatchRateMultiplier != 1.0 || result.externalCatchRateReason.isNotEmpty()) {
+            sb.appendLine("  External Catch Modifier: ${result.externalCatchRateMultiplier}x ${result.externalCatchRateReason}".trimEnd())
+        }
         sb.appendLine("  Modified Catch Rate: ${String.format("%.4f", result.modifiedCatchRate)}")
         sb.appendLine("  In Battle: $inBattle${if (!inBattle) " (0.5x penalty)" else ""}")
         sb.appendLine("  Guaranteed: ${result.isGuaranteed}")
@@ -90,43 +96,32 @@ object CatchRateDebugLog {
         synchronized(guaranteedFailures) {
             guaranteedFailures.add(failure)
         }
-        logIncident("!!! GUARANTEED CATCH FAILED: ${failure.pokemonName} Lv${failure.pokemonLevel} with ${failure.ballName} on turn ${failure.turnCount}! battle=${failure.battleId} target=${failure.targetPNX}")
-
-        if (!CatchRateMod.isDebugActive) {
-            CatchRateMod.sessionDebugOverride = true
-            logIncident("Debug logging auto-enabled after confirmed guaranteed catch failure")
-        }
 
         val incidentPath = saveIncidentToFile(failure)
-        CatchRateMod.LOGGER.error("[CatchRate] CONFIRMED guaranteed catch failure detected via client capture packets")
-        CatchRateMod.LOGGER.error(
-            "[CatchRate] battle={} targetPNX={} pokemon={} lv={} ball={} mult={} turn={} baseCatchRate={} modifiedCatchRate={} hp={} status={} statusMult={} conditionMet={} conditionReason=\"{}\" estimated={} incidentLog={}",
-            failure.battleId,
-            failure.targetPNX,
-            failure.pokemonName,
-            failure.pokemonLevel,
-            failure.ballName,
-            failure.ballMultiplier,
-            failure.turnCount,
-            failure.baseCatchRate,
-            String.format("%.4f", failure.modifiedCatchRate),
+        CatchRateMod.LOGGER.error("[CatchRate] GUARANTEED CATCH FAILED: {} Lv{} with {} (baseCR={}{}, modCR={}, hp={}%, status={}, ball={}x, turn={})",
+            failure.pokemonName, failure.pokemonLevel, failure.ballName,
+            failure.baseCatchRate, if (failure.isCatchRateEstimate) " ESTIMATED" else "",
+            String.format("%.1f", failure.modifiedCatchRate),
             String.format("%.1f", failure.hpPercentage),
             failure.statusName.ifEmpty { "none" },
-            failure.statusMultiplier,
-            failure.ballConditionMet,
-            failure.ballConditionReason,
-            failure.isCatchRateEstimate,
-            incidentPath ?: "(failed to write incident file)"
+            failure.ballMultiplier, failure.turnCount
         )
+        if (incidentPath != null) {
+            CatchRateMod.LOGGER.error("[CatchRate] Incident report saved: {}", incidentPath)
+        }
+        appendCatchOutcome(failure.pokemonName, failure.pokemonLevel, failure.ballName,
+            failure.baseCatchRate, failure.modifiedCatchRate, failure.hpPercentage,
+            failure.statusName, failure.statusMultiplier, failure.ballMultiplier,
+            failure.turnCount, failure.isCatchRateEstimate, isGuaranteed = true, succeeded = false)
         return incidentPath
     }
 
     fun onBattleObserved(battleId: String, isPvW: Boolean) {
-        logIncident("Battle started: id=$battleId isPvW=$isPvW")
+        log("Battle started: id=$battleId isPvW=$isPvW")
     }
 
     fun onBattleEnd() {
-        logIncident("Battle ended; cleared active guaranteed capture tracking")
+        log("Battle ended; cleared capture tracking")
     }
 
     /** Build a comprehensive debug report for upload. */
@@ -246,19 +241,56 @@ object CatchRateDebugLog {
     /** Save the report to a local file. Returns the file path. */
     fun saveToFile(): String {
         val report = buildFullReport()
-        val gameDir = PlatformHelper.getGameDir().toFile()
-        val logsDir = File(gameDir, "catchrate-logs")
-        logsDir.mkdirs()
-        val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
-        val file = File(logsDir, "catchrate-debug-$timestamp.txt")
+        val file = File(getLogsDir(), "catchrate-debug-${fileTimestamp()}.txt")
         file.writeText(report)
         return file.absolutePath
     }
 
+    // ==================== Always-on Catch Outcome Log ====================
+
+    private const val MAX_OUTCOME_FILE_BYTES = 512 * 1024 // 512 KB
+
+    /**
+     * Append a single-line catch outcome to catch-outcomes.log.
+     * Always on — not gated by debug mode. Rolls the file at 512 KB.
+     */
+    fun appendCatchOutcome(
+        pokemonName: String, level: Int, ballName: String,
+        baseCatchRate: Int, modifiedCatchRate: Double, hpPercent: Double,
+        statusName: String, statusMult: Double, ballMult: Double,
+        turn: Int, isEstimate: Boolean, isGuaranteed: Boolean, succeeded: Boolean
+    ) {
+        try {
+            val dir = getLogsDir()
+            val file = File(dir, "catch-outcomes.log")
+            if (file.exists() && file.length() > MAX_OUTCOME_FILE_BYTES) {
+                val rotated = File(dir, "catch-outcomes.prev.log")
+                rotated.delete()
+                file.renameTo(rotated)
+            }
+            val est = if (isEstimate) "~" else ""
+            val guar = if (isGuaranteed) " GUARANTEED" else ""
+            val result = if (succeeded) "CAUGHT" else "FAILED"
+            val line = "[${now()}] $result$guar | $pokemonName Lv$level | $ballName ${ballMult}x | " +
+                "baseCR=${est}$baseCatchRate modCR=${String.format("%.1f", modifiedCatchRate)} | " +
+                "HP=${String.format("%.1f", hpPercent)}% | " +
+                "status=${statusName.ifEmpty { "none" }} ${statusMult}x | turn=$turn\n"
+            file.appendText(line)
+        } catch (_: Throwable) { /* never crash the game for logging */ }
+    }
+
+    private fun getLogsDir(): File {
+        val dir = File(PlatformHelper.getGameDir().toFile(), "catchrate-logs")
+        dir.mkdirs()
+        return dir
+    }
+
+    private fun fileTimestamp(): String =
+        LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
+
     private fun saveIncidentToFile(failure: GuaranteedFailure): String? {
         return try {
-            val gameDir = PlatformHelper.getGameDir().toFile()
-            val logsDir = File(gameDir, "catchrate-logs/incidents")
+            val logsDir = File(getLogsDir(), "incidents")
             logsDir.mkdirs()
             val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss_SSS"))
             val file = File(logsDir, "guaranteed-failure-$timestamp.txt")

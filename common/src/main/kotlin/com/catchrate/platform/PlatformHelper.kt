@@ -17,4 +17,8 @@ object PlatformHelper {
     @JvmStatic
     @ExpectPlatform
     fun getGameDir(): Path = throw AssertionError("@ExpectPlatform not replaced")
+
+    @JvmStatic
+    @ExpectPlatform
+    fun isModLoaded(modId: String): Boolean = throw AssertionError("@ExpectPlatform not replaced")
 }
