@@ -229,7 +229,14 @@ object CatchRateDebugLog {
             sb.appendLine("Battle Active: yes (id=${battle.battleId}, isPvW=${battle.isPvW}, mustChoose=${battle.mustChoose})")
             val opponent = battle.side2?.activeClientBattlePokemon?.firstOrNull()?.battlePokemon
             if (opponent != null) {
-                sb.appendLine("  Opponent: ${opponent.species.name} Lv${opponent.level}")
+                val analysis = CatchRatePredictionReliability.analyzeBattleTarget(opponent, battle)
+                val species = analysis.effectiveSpecies ?: opponent.species
+                val displayNote = if (species.resourceIdentifier != opponent.species.resourceIdentifier) {
+                    " (displayed as ${opponent.species.name})"
+                } else {
+                    ""
+                }
+                sb.appendLine("  Opponent: ${species.name} Lv${opponent.level}$displayNote")
             }
         } else {
             sb.appendLine("Battle Active: no")

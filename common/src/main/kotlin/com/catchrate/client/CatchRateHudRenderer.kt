@@ -8,6 +8,7 @@ import com.catchrate.CatchRateDebugLog
 import com.catchrate.CatchRateFormula
 import com.catchrate.CatchRateKeybinds
 import com.catchrate.CatchRateMod
+import com.catchrate.CatchRatePredictionReliability
 import com.catchrate.CatchRateResult
 import com.catchrate.config.CatchRateConfig
 import com.cobblemon.mod.common.api.pokedex.PokedexEntryProgress
@@ -142,12 +143,13 @@ class CatchRateHudRenderer {
         
         val ballName = getBallId(heldItem).lowercase()
         val showComparison = CatchRateKeybinds.isComparisonHeld
-        CatchRateMod.debugOnChange("target", "${opponentPokemon.species.name}_${ballName}", 
-            "Target: ${opponentPokemon.species.name} Lv${opponentPokemon.level} with $ballName")
+        val targetSpecies = getEffectiveBattleSpecies(opponentPokemon)
+        CatchRateMod.debugOnChange("target", "${targetSpecies.name}_${ballName}", 
+            "Target: ${targetSpecies.name} Lv${opponentPokemon.level} with $ballName")
         
         if (showComparison) {
             // Block comparison panel for unencountered Pokémon
-            if (!hasEncounteredSpecies(opponentPokemon.species.resourceIdentifier)) {
+            if (!hasEncounteredSpecies(targetSpecies.resourceIdentifier)) {
                 val result = getClientCalculation(opponentPokemon, heldItem) ?: return
                 renderClientModeHud(guiGraphics, minecraft, result, ballName)
                 return
@@ -221,7 +223,7 @@ class CatchRateHudRenderer {
             
             // Log detailed calculation and track guaranteed predictions
             if (result != null) {
-                val pokemonName = pokemon.species.name
+                val pokemonName = getEffectiveBattleSpecies(pokemon).name
                 CatchRateDebugLog.logCalculation(pokemonName, pokemon.level, result, inBattle = true)
             }
         }
@@ -251,12 +253,15 @@ class CatchRateHudRenderer {
         val isCatchRateEstimate: Boolean = false,
         val isPredictionReliable: Boolean = true
     )
+
+    private fun getEffectiveBattleSpecies(pokemon: ClientBattlePokemon) =
+        CatchRatePredictionReliability.analyzeBattleTarget(pokemon, CobblemonClient.battle).effectiveSpecies ?: pokemon.species
     
     private fun renderClientModeHud(guiGraphics: GuiGraphics, minecraft: Minecraft, result: CatchRateResult, ballName: String) {
         val opponent = cachedClientResult?.let {
             CobblemonClient.battle?.side2?.activeClientBattlePokemon?.firstOrNull()?.battlePokemon
         }
-        val species = opponent?.species
+        val species = opponent?.let(::getEffectiveBattleSpecies)
         val encountered = species?.let { hasEncounteredSpecies(it.resourceIdentifier) } ?: true
         val hpMult = (3.0 - 2.0 * result.hpPercentage / 100.0) / 3.0
         renderUnifiedHud(guiGraphics, minecraft, HudData(

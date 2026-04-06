@@ -70,11 +70,17 @@ object BallComparisonCalculator {
         
         val ctx = BallContextFactory.fromBattlePokemon(pokemon, turnCount, player, level, battle)
         val reliability = CatchRatePredictionReliability.analyzeBattleTarget(pokemon, battle)
-        if (!reliability.isReliable) {
+        val effectiveSpecies = reliability.effectiveSpecies ?: pokemon.species
+        val preservedSpecies = effectiveSpecies.resourceIdentifier != pokemon.species.resourceIdentifier
+        if (!reliability.isReliable || preservedSpecies) {
             CatchRateMod.debugOnChange(
                 "ComparisonReliability",
-                "${pokemon.uuid}_${pokemon.species.name}",
-                "Ball comparison marked approximate for ${pokemon.species.name}: ${reliability.reason}"
+                "${pokemon.uuid}_${effectiveSpecies.name}",
+                if (preservedSpecies) {
+                    "Using remembered species ${effectiveSpecies.name} while battle client displays ${pokemon.species.name}: ${reliability.reason}"
+                } else {
+                    "Ball comparison marked approximate for ${pokemon.species.name}: ${reliability.reason}"
+                }
             )
         }
         
@@ -84,8 +90,8 @@ object BallComparisonCalculator {
             isFlat = pokemon.isHpFlat
         )
         
-        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species).toFloat()
-        val isEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species)
+        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(effectiveSpecies).toFloat()
+        val isEstimate = SpeciesCatchRateCache.isEstimate(effectiveSpecies)
         val statusMult = CatchRateFormula.getStatusMultiplier(pokemon.status?.name?.path)
         val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
         val externalCatchRateMultiplier = CobbleCuisineCompat.getCatchRateMultiplier(player)

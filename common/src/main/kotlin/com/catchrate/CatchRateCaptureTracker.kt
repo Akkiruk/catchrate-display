@@ -23,11 +23,13 @@ object CatchRateCaptureTracker {
     fun onBattleStarted(battleId: UUID) {
         activeCaptures.entries.removeIf { it.value.battleId != battleId }
         consumedQuickBallTargets.clear()
+        CatchRatePredictionReliability.clearBattleMemory()
     }
 
     fun onBattleEnded() {
         activeCaptures.clear()
         consumedQuickBallTargets.clear()
+        CatchRatePredictionReliability.clearBattleMemory()
     }
 
     fun hasConsumedQuickBallBonus(battleId: UUID?, pokemonUuid: UUID?): Boolean {
@@ -63,10 +65,11 @@ object CatchRateCaptureTracker {
 
         val key = key(battleId, targetPnx)
         val trackGuaranteed = result.isGuaranteed && result.isReliableGuaranteedPrediction
+        val effectiveSpecies = CatchRatePredictionReliability.analyzeBattleTarget(pokemon, battle).effectiveSpecies ?: pokemon.species
         activeCaptures[key] = ActiveCapture(
             battleId = battleId,
             targetPnx = targetPnx,
-            pokemonName = pokemon.species.name,
+            pokemonName = effectiveSpecies.name,
             pokemonLevel = pokemon.level,
             result = result,
             environmentSnapshot = if (trackGuaranteed) CatchRateDebugLog.buildEnvironmentSnapshot() else null,
@@ -74,7 +77,7 @@ object CatchRateCaptureTracker {
         )
         if (trackGuaranteed) {
             CatchRateDebugLog.logIncident(
-                "Armed guaranteed capture check: ${pokemon.species.name} Lv${pokemon.level} " +
+                "Armed guaranteed capture check: ${effectiveSpecies.name} Lv${pokemon.level} " +
                     "with ${result.ballName} turn ${result.turnCount}"
             )
         }

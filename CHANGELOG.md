@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.8.14] - 2026-04-06
+
+### Fixed
+- **Battle HUD now preserves a previously known real species through disguise and Transform cases.** If a wild target starts battle as Ditto and later disguises into another species, catch rate calculations, the HUD, the comparison panel, and capture logs keep using the remembered real species instead of switching to the copied appearance.
+- **Disguised targets now stay approximate only when Cobblemon never exposed the true species to the client.** This avoids false certainty for hidden-from-frame-one illusion cases while restoring accurate rates for transform-after-reveal cases.
+
 ## [2.8.13] - 2026-04-06
 
 ### Changed

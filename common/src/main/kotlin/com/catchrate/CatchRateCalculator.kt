@@ -70,14 +70,20 @@ object CatchRateCalculator {
         playerHighestLevel: Int? = null,
         inBattle: Boolean = true
     ): CatchRateResult {
-        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species)
-        val isEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species)
         val reliability = CatchRatePredictionReliability.analyzeBattleTarget(pokemon, CobblemonClient.battle)
-        if (!reliability.isReliable) {
+        val effectiveSpecies = reliability.effectiveSpecies ?: pokemon.species
+        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(effectiveSpecies)
+        val isEstimate = SpeciesCatchRateCache.isEstimate(effectiveSpecies)
+        val preservedSpecies = effectiveSpecies.resourceIdentifier != pokemon.species.resourceIdentifier
+        if (!reliability.isReliable || preservedSpecies) {
             CatchRateMod.debugOnChange(
                 "PredictionReliability",
-                "${pokemon.uuid}_${pokemon.species.name}",
-                "Prediction marked approximate for ${pokemon.species.name}: ${reliability.reason}"
+                "${pokemon.uuid}_${effectiveSpecies.name}",
+                if (preservedSpecies) {
+                    "Using remembered species ${effectiveSpecies.name} while battle client displays ${pokemon.species.name}: ${reliability.reason}"
+                } else {
+                    "Prediction marked approximate for ${pokemon.species.name}: ${reliability.reason}"
+                }
             )
         }
         
@@ -114,8 +120,8 @@ object CatchRateCalculator {
         val captureChance = if (isFormulaGuaranteed) 100F else CatchRateFormula.modifiedRateToPercentage(modifiedCatchRate)
         
         CatchRateMod.debugOnChange("Calc",
-            "${pokemon.species.name}_${ballName}_${hpInfo.currentHp.toInt()}_${statusPath}_${bonusStatus}",
-            "${pokemon.species.name} Lv${level} | Ball=$ballName ${ballBonus}x${if (ballResult.conditionMet) " (met)" else ""} | " +
+            "${effectiveSpecies.name}_${ballName}_${hpInfo.currentHp.toInt()}_${statusPath}_${bonusStatus}",
+            "${effectiveSpecies.name} Lv${level} | Ball=$ballName ${ballBonus}x${if (ballResult.conditionMet) " (met)" else ""} | " +
             "HP=${String.format("%.1f", hpInfo.percentage)}% (${hpInfo.currentHp.toInt()}/${hpInfo.maxHp.toInt()}) | " +
             "Status=${statusPath ?: "none"} ${bonusStatus}x | " +
             "Compat=${String.format("%.2f", externalCatchRateMultiplier)}x | " +
