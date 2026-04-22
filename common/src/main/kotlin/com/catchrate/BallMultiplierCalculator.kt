@@ -121,20 +121,23 @@ object BallMultiplierCalculator {
         
         // Hardcoded overrides — these NEVER depend on Cobblemon API lookups
         when (lower) {
-            "origin_ball", "ancient_origin_ball" -> {
+            "origin_ball" -> {
                 CatchRateMod.debugOnChange("Ball/$lower", "guaranteed", "$lower: guaranteed catch -> 255x")
                 return BallResult(CatchRateConstants.MAX_CATCH_RATE, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
             }
-            "ancient_great_ball" -> {
-                CatchRateMod.debugOnChange("Ball/$lower", "ancient_1.5", "$lower: ancient ball -> 1.5x")
-                return BallResult(1.5F, true, BallTranslations.ancient())
-            }
-            "ancient_ultra_ball" -> {
-                CatchRateMod.debugOnChange("Ball/$lower", "ancient_2.0", "$lower: ancient ball -> 2.0x")
-                return BallResult(2F, true, BallTranslations.ancient())
-            }
         }
-        
+
+        if (lower.startsWith("ancient_")) {
+            val ancientResult = calculateAncientBall(lower)
+            val profile = CobblemonVersionSupport.ancientBallProfile().name.lowercase()
+            CatchRateMod.debugOnChange(
+                "Ball/$lower",
+                "ancient_${ancientResult.multiplier}_$profile",
+                "$lower: ancient ball -> ${ancientResult.multiplier}x [$profile]"
+            )
+            return ancientResult
+        }
+
         val pokeBall = pokeBallCache[lower] ?: try {
             PokeBalls.getPokeBall(ResourceLocation.fromNamespaceAndPath("cobblemon", lower))
                 ?.also { pokeBallCache[lower] = it }
@@ -153,17 +156,7 @@ object BallMultiplierCalculator {
             CatchRateMod.debugOnChange("Ball/$lower", "guaranteed", "$lower: guaranteed catch -> 255x")
             return BallResult(CatchRateConstants.MAX_CATCH_RATE, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
         }
-        
-        val isAncient = try {
-            pokeBall?.ancient == true
-        } catch (e: Throwable) { false }
-        
-        if (isAncient) {
-            val ancientResult = calculateAncientBall(lower, pokeBall)
-            CatchRateMod.debugOnChange("Ball/$lower", "ancient_${ancientResult.multiplier}", "$lower: ancient ball -> ${ancientResult.multiplier}x")
-            return ancientResult
-        }
-        
+
         val result = when (lower) {
             "quick_ball" -> calculateQuickBall(ctx)
             "timer_ball" -> calculateTimerBall(ctx)
@@ -196,14 +189,26 @@ object BallMultiplierCalculator {
         return result
     }
     
-    private fun calculateAncientBall(lower: String, pokeBall: PokeBall?): BallResult {
-        val mult = when (lower) {
-            "ancient_great_ball" -> 1.5F
-            "ancient_ultra_ball" -> 2F
-            "ancient_origin_ball" -> return BallResult(CatchRateConstants.MAX_CATCH_RATE, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
-            else -> 1F
+    private fun calculateAncientBall(lower: String): BallResult {
+        if (lower == "ancient_origin_ball") {
+            return BallResult(CatchRateConstants.MAX_CATCH_RATE, true, BallTranslations.guaranteedCatch(), isGuaranteed = true)
         }
-        return BallResult(mult, true, BallTranslations.ancient())
+
+        val mult = when (CobblemonVersionSupport.ancientBallProfile()) {
+            CobblemonVersionSupport.AncientBallProfile.LEGACY_PRE_173_FIX -> when (lower) {
+                "ancient_great_ball" -> 1.5F
+                "ancient_ultra_ball" -> 2F
+                else -> 1F
+            }
+            CobblemonVersionSupport.AncientBallProfile.RESPECTIVE_MODIFIERS_POST_173 -> when (lower) {
+                "ancient_great_ball", "ancient_leaden_ball", "ancient_wing_ball" -> 1.5F
+                "ancient_ultra_ball", "ancient_gigaton_ball", "ancient_jet_ball" -> 2F
+                else -> 1F
+            }
+        }
+
+        val reason = if (mult > 1F) BallTranslations.multiplierAlways() else BallTranslations.ancient()
+        return BallResult(mult, true, reason)
     }
     
     private fun calculateSafariBall(ctx: BallContext): BallResult {

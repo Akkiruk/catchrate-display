@@ -17,13 +17,24 @@ import java.util.concurrent.ConcurrentHashMap
  *   1. Local datapacks (game dir /datapacks/) — ZIP and folder packs
  *   2. World save datapacks (saves/<world>/datapacks/) — per-world overrides
  *   3. Mod JARs on classpath — Cobblemon + addon mods
- *   4. Fallback: 45 (Cobblemon's default — most common wild Pokémon)
+ *   4. Fallback: 3 (pessimistic unresolved estimate to avoid false guarantees)
  */
 object SpeciesCatchRateCache {
 
-    private const val DEFAULT_CATCH_RATE = 45
-    private val cache = ConcurrentHashMap<String, Int>()
-    private val estimatedSpecies = ConcurrentHashMap.newKeySet<String>()
+    data class CatchRateResolution(
+        val catchRate: Int,
+        val isEstimate: Boolean,
+        val source: String,
+        val sourcePath: String? = null
+    )
+
+    private data class CatchRateSourceHit(
+        val catchRate: Int,
+        val sourcePath: String
+    )
+
+    private const val DEFAULT_CATCH_RATE = 3
+    private val cache = ConcurrentHashMap<String, CatchRateResolution>()
 
     /**
      * Normalize a species name to match Cobblemon's JSON filename format.
@@ -34,11 +45,17 @@ object SpeciesCatchRateCache {
         species.resourceIdentifier?.path?.lowercase()
             ?: species.name.lowercase().replace(Regex("[^a-z0-9]"), "")
     @Volatile private var datapacksScanned = false
-    private val datapackOverrides = ConcurrentHashMap<String, Int>()
+    private val datapackOverrides = ConcurrentHashMap<String, CatchRateSourceHit>()
     @Volatile private var preloading = false
     @Volatile private var preloaded = false
 
     fun getCatchRate(species: Species): Int {
+        return getResolution(species).catchRate
+    }
+
+    fun fallbackCatchRate(): Int = DEFAULT_CATCH_RATE
+
+    fun getResolution(species: Species): CatchRateResolution {
         val key = speciesKey(species)
         cache[key]?.let { return it }
 
@@ -46,13 +63,13 @@ object SpeciesCatchRateCache {
         cache[key] = resolved
         CatchRateMod.debugOnChange(
             "CatchRate", key,
-            "${species.name} catchRate resolved to $resolved (key=$key${if (key in estimatedSpecies) ", ESTIMATE" else ""})"
+            "${species.name} catchRate resolved to ${resolved.catchRate} from ${resolved.source} (key=$key${if (resolved.isEstimate) ", ESTIMATE" else ""})"
         )
         return resolved
     }
 
-    /** True when the catch rate came from the fallback default, not from actual species data. */
-    fun isEstimate(species: Species): Boolean = speciesKey(species) in estimatedSpecies
+    /** True when the catch rate came from the unresolved fallback estimate, not from actual species data. */
+    fun isEstimate(species: Species): Boolean = getResolution(species).isEstimate
 
     /** Number of species currently cached. */
     fun cacheSize(): Int = cache.size
@@ -100,7 +117,6 @@ object SpeciesCatchRateCache {
     /** Clear the cache (e.g., on world change or disconnect). */
     fun invalidate() {
         cache.clear()
-        estimatedSpecies.clear()
         datapackOverrides.clear()
         datapacksScanned = false
         preloaded = false
@@ -109,14 +125,32 @@ object SpeciesCatchRateCache {
 
     // -- Resolution chain --
 
-    private fun resolve(species: Species): Int {
+    private fun resolve(species: Species): CatchRateResolution {
         ensureDatapacksScanned()
         val key = speciesKey(species)
-        datapackOverrides[key]?.let { return it }
-        loadFromClasspath(species)?.let { return it }
-        // No local data found — mark as estimate so the UI can indicate uncertainty
-        estimatedSpecies.add(key)
-        return DEFAULT_CATCH_RATE
+        datapackOverrides[key]?.let {
+            return CatchRateResolution(
+                catchRate = it.catchRate,
+                isEstimate = false,
+                source = "datapack",
+                sourcePath = it.sourcePath
+            )
+        }
+        loadFromClasspath(species)?.let {
+            return CatchRateResolution(
+                catchRate = it.catchRate,
+                isEstimate = false,
+                source = "classpath",
+                sourcePath = it.sourcePath
+            )
+        }
+        // No local data found — use a pessimistic estimate so the HUD avoids false guarantees.
+        return CatchRateResolution(
+            catchRate = DEFAULT_CATCH_RATE,
+            isEstimate = true,
+            source = "fallback",
+            sourcePath = null
+        )
     }
 
     // -- Datapack scanning --
@@ -171,7 +205,7 @@ object SpeciesCatchRateCache {
                 .forEach { file ->
                     extractCatchRate(Files.newInputStream(file))?.let { cr ->
                         val name = file.fileName.toString().removeSuffix(".json").lowercase()
-                        datapackOverrides[name] = cr
+                        datapackOverrides[name] = CatchRateSourceHit(cr, file.toString())
                     }
                 }
         }
@@ -186,7 +220,7 @@ object SpeciesCatchRateCache {
                     .forEach { entry ->
                         extractCatchRate(Files.newInputStream(entry))?.let { cr ->
                             val name = entry.fileName.toString().removeSuffix(".json").lowercase()
-                            datapackOverrides[name] = cr
+                            datapackOverrides[name] = CatchRateSourceHit(cr, "$zipPath!${entry.toString().replace('\\', '/')}")
                         }
                     }
             }
@@ -209,14 +243,14 @@ object SpeciesCatchRateCache {
         "generation6", "generation7", "generation7b", "generation8", "generation8a", "generation9"
     )
 
-    private fun loadFromClasspath(species: Species): Int? {
+    private fun loadFromClasspath(species: Species): CatchRateSourceHit? {
         val namespace = species.resourceIdentifier?.namespace ?: "cobblemon"
         val name = speciesKey(species)
 
         for (gen in generationFolders) {
             val path = "data/$namespace/species/$gen/$name.json"
             classpathStream(path)?.let { stream ->
-                extractCatchRate(stream)?.let { return it }
+                extractCatchRate(stream)?.let { return CatchRateSourceHit(it, path) }
             }
         }
 
@@ -224,7 +258,7 @@ object SpeciesCatchRateCache {
         for (prefix in listOf("", "custom/", "addon/")) {
             val path = "data/$namespace/species/$prefix$name.json"
             classpathStream(path)?.let { stream ->
-                extractCatchRate(stream)?.let { return it }
+                extractCatchRate(stream)?.let { return CatchRateSourceHit(it, path) }
             }
         }
 

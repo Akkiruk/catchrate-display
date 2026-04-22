@@ -34,7 +34,7 @@
   "catchrate.ball.guaranteed_catch": "Guaranteed catch",
   "catchrate.ball.multiplier_always": "",
   "catchrate.ball.special_effect": "Special effect on capture",
-  "catchrate.ball.ancient": "Ancient ball (throw power only)",
+  "catchrate.ball.ancient": "Ancient ball (no catch bonus)",
 
   "catchrate.ball.quick.not_in_battle": "Only works turn 1 in battle",
   "catchrate.ball.quick.effective": "First turn of battle",

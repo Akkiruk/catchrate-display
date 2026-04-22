@@ -55,6 +55,7 @@ object CatchRateMod {
         LOGGER.info("  Minecraft: ${getMinecraftVersion()}")
         LOGGER.info("  Loader: ${getLoaderInfo()}")
         LOGGER.info("  Cobblemon: ${getCobblemonVersion()}")
+        LOGGER.info("  Ancient Ball Rules: ${CobblemonVersionSupport.ancientBallProfileLabel()}")
         LOGGER.info("  Config debugLogging: $DEBUG_ENABLED")
         LOGGER.info("  Session override: $sessionDebugOverride")
         LOGGER.info("==================================================")
@@ -79,8 +80,6 @@ object CatchRateMod {
     }
     
     private fun getCobblemonVersion(): String {
-        return try {
-            com.cobblemon.mod.common.Cobblemon.VERSION
-        } catch (e: Throwable) { "unknown" }
+        return CobblemonVersionSupport.cobblemonVersion()
     }
 }

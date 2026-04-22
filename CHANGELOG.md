@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.8.17] - 2026-04-22
+
+### Changed
+- **Unresolved catch-rate fallback is now pessimistic.** When CatchRate Display cannot resolve a species from datapacks or classpath resources, it now uses a fallback catch rate of `3` instead of `45` so missing data no longer inflates odds into false guarantees.
+- **Real `45` catch-rate species are unchanged.** Only the unresolved fallback estimate changed; any species or form resolved from actual local data still uses its real configured catch rate.
+
+## [2.8.16] - 2026-04-22
+
+### Added
+- **New `/catchrate export-rates` audit command.** Saves a CSV under `catchrate-logs/` with one row per species form, the resolved catch rate used by CatchRate Display, whether that value fell back to an estimate, the local source path that supplied it, and the client registry's form catch rate for comparison.
+
+### Changed
+- **Catch rate cache now retains resolution source metadata.** Species lookups still use the same local resolution chain, but audit exports can now show whether each species came from a datapack, classpath resource, or the fallback default.
+
+## [2.8.15] - 2026-04-06
+
+### Fixed
+- **Ancient Ball rates are now version-aware.** Catch Rate Display now checks the installed Cobblemon version at runtime and uses the correct Ancient Ball table for that version instead of assuming one set of modifiers forever.
+- **Cobblemon 1.7.3 and earlier now stay on the legacy Ancient Ball behavior.** Ancient Great Ball = 1.5x, Ancient Ultra Ball = 2x, Ancient Origin Ball = guaranteed, and the other Ancient balls remain 1x catch rate.
+- **Post-1.7.3 Cobblemon builds now show the expanded Ancient Ball modifiers from upstream GitLab.** Ancient Leaden/Wing now show 1.5x, Ancient Gigaton/Jet now show 2x, while Ancient Heavy/Feather remain 1x.
+
 ## [2.8.14] - 2026-04-06
 
 ### Fixed

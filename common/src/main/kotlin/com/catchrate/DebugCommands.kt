@@ -27,6 +27,9 @@ object DebugCommands {
                 .then(Commands.literal("log")
                     .executes { ctx -> uploadLog(ctx) }
                 )
+                .then(Commands.literal("export-rates")
+                    .executes { ctx -> exportRates(ctx) }
+                )
         )
     }
     
@@ -66,6 +69,18 @@ object DebugCommands {
             ctx.source.sendSuccess({ Component.translatable("catchrate.command.log.saved_locally", localPath) }, false)
         } else {
             ctx.source.sendSuccess({ Component.translatable("catchrate.command.log.failed", "Could not save file") }, false)
+        }
+        return 1
+    }
+
+    private fun exportRates(ctx: CommandContext<CommandSourceStack>): Int {
+        ctx.source.sendSuccess({ Component.literal("§e[CatchRate] Exporting catch rate audit...") }, false)
+
+        val localPath = try { CatchRateAuditExport.saveCatchRateAudit() } catch (_: Throwable) { null }
+        if (localPath != null) {
+            ctx.source.sendSuccess({ Component.literal("§a[CatchRate] Catch rate audit saved to: §f$localPath") }, false)
+        } else {
+            ctx.source.sendSuccess({ Component.literal("§c[CatchRate] Failed to save catch rate audit.") }, false)
         }
         return 1
     }
