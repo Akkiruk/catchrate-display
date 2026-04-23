@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.8.18] - 2026-04-22
+
+### Fixed
+- **Fabric now registers `/catchrate export-rates` correctly.** The new audit export subcommand was present on NeoForge but the Fabric client entrypoint still had an older hardcoded `/catchrate` command tree, which caused Fabric clients to reject `export-rates` as an invalid argument.
+
 ## [2.8.17] - 2026-04-22
 
 ### Changed
