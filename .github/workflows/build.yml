@@ -32,14 +32,14 @@ jobs:
         run: ./gradlew :fabric:build :neoforge:build
 
       - name: Upload Fabric artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: fabric-build
           path: fabric/build/libs/*.jar
           retention-days: 7
 
       - name: Upload NeoForge artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: neoforge-build
           path: neoforge/build/libs/*.jar
