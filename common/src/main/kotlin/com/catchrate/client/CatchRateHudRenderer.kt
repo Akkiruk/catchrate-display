@@ -596,10 +596,10 @@ class CatchRateHudRenderer {
     }
     
     private fun isPokeball(itemStack: ItemStack): Boolean {
-        return CatchRateCalculator.getPokeBallFromItem(itemStack) != null
+        return CatchRateCalculator.getBallIdFromItem(itemStack) != null
     }
     
     private fun getBallId(itemStack: ItemStack): String {
-        return CatchRateCalculator.getPokeBallFromItem(itemStack)?.name?.path ?: ""
+        return CatchRateCalculator.getBallIdFromItem(itemStack) ?: ""
     }
 }

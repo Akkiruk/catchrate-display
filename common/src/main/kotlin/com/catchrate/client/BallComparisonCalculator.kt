@@ -7,6 +7,7 @@ import com.catchrate.CatchRatePredictionReliability
 import com.catchrate.CatchRateMod
 import com.catchrate.CatchRateFormula
 import com.catchrate.SpeciesCatchRateCache
+import com.catchrate.compat.AtmBallCompat
 import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
@@ -26,12 +27,14 @@ import net.minecraft.world.phys.HitResult
  */
 object BallComparisonCalculator {
     
-    private val comparableBalls = listOf(
+    private val baseComparableBalls = listOf(
         "quick_ball", "ultra_ball", "timer_ball", "dusk_ball", "net_ball", "dive_ball",
         "nest_ball", "repeat_ball", "great_ball", "level_ball", "love_ball", "heavy_ball",
         "fast_ball", "moon_ball", "dream_ball", "lure_ball", "friend_ball", "luxury_ball",
         "heal_ball", "premier_ball", "poke_ball", "safari_ball", "sport_ball", "beast_ball"
     )
+
+    private fun comparableBalls(): List<String> = AtmBallCompat.extendComparableBalls(baseComparableBalls)
     
     // Pokemon lookup cache to avoid expensive entity queries every frame
     private var cachedLookedAtPokemon: PokemonEntity? = null
@@ -96,7 +99,7 @@ object BallComparisonCalculator {
         val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
         val externalCatchRateMultiplier = CobbleCuisineCompat.getCatchRateMultiplier(player)
         
-        return comparableBalls.map { ballId ->
+        return comparableBalls().map { ballId ->
             val result = BallMultiplierCalculator.calculate(ballId, ctx)
             
             // Compute modified rate once per ball, derive percentage (avoids duplicate HP/modifier math x24 balls)
@@ -223,7 +226,7 @@ object BallComparisonCalculator {
         val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
         val externalCatchRateMultiplier = CobbleCuisineCompat.getCatchRateMultiplier(player)
         
-        return comparableBalls.map { ballId ->
+        return comparableBalls().map { ballId ->
             val result = BallMultiplierCalculator.calculate(ballId, ctx)
             
             val catchChance = CatchRateFormula.calculateCatchPercentage(

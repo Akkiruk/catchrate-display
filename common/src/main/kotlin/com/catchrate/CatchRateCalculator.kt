@@ -1,5 +1,6 @@
 package com.catchrate
 
+import com.catchrate.compat.AtmBallCompat
 import com.cobblemon.mod.common.api.pokeball.PokeBalls
 import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
@@ -8,6 +9,7 @@ import com.cobblemon.mod.common.pokeball.PokeBall
 import net.minecraft.client.Minecraft
 import net.minecraft.core.NonNullList
 import net.minecraft.core.component.DataComponents
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.item.ItemStack
 
@@ -35,11 +37,12 @@ object CatchRateCalculator {
     ): CatchRateResult {
         return try {
             val pokeBall = getPokeBallFromItem(itemStack)
-            val ballName = pokeBall?.name?.path ?: itemStack.item.toString().substringAfter(":").substringBefore("}")
+            val ballName = getBallIdFromItem(itemStack)
+                ?: itemStack.item.toString().substringAfter(":").substringBefore("}")
             calculateCatchRateInternal(pokemon, pokeBall, ballName, turnCount, playerHighestLevel, inBattle)
         } catch (e: Throwable) {
             CatchRateMod.debugOnChange("CalcErr", "fallback", "calculateCatchRate failed: ${e.javaClass.simpleName}: ${e.message}")
-            val ballName = try { getPokeBallFromItem(itemStack)?.name?.path } catch (_: Throwable) { null }
+            val ballName = try { getBallIdFromItem(itemStack) } catch (_: Throwable) { null }
                 ?: itemStack.item.toString().substringAfter(":").substringBefore("}")
             buildFallbackResult(pokemon, ballName, turnCount)
         }
@@ -170,18 +173,37 @@ object CatchRateCalculator {
      * Also checks inside container items (e.g., Berry Pouch Pokéball Launcher)
      * for a selected pokéball using vanilla DataComponents.
      */
+    fun getBallIdFromItem(itemStack: ItemStack): String? {
+        val item = itemStack.item
+        if (item is PokeBallItem) return item.pokeBall.name.path
+
+        getSelectedBallIdFromContainer(itemStack)?.let { return it }
+
+        val ballName = getRegisteredItemPath(itemStack) ?: return null
+        val pokeBall = try {
+            PokeBalls.getPokeBall(ResourceLocation.fromNamespaceAndPath("cobblemon", ballName))
+        } catch (_: Throwable) {
+            null
+        }
+        if (pokeBall != null) {
+            return pokeBall.name.path
+        }
+
+        return ballName.takeIf { AtmBallCompat.isSupportedBall(it) }
+    }
+
     fun getPokeBallFromItem(itemStack: ItemStack): PokeBall? {
         val item = itemStack.item
         if (item is PokeBallItem) return item.pokeBall
         
         // Check for a selected pokéball in the item's container (Pokéball Launcher, etc.)
-        getSelectedBallFromContainer(itemStack)?.let { return it }
+        getSelectedPokeBallFromContainer(itemStack)?.let { return it }
         
-        val ballName = itemStack.item.toString().substringAfter(":").substringBefore("}").trim()
+        val ballName = getRegisteredItemPath(itemStack) ?: return null
         return try {
             PokeBalls.getPokeBall(ResourceLocation.fromNamespaceAndPath("cobblemon", ballName))
-        } catch (e: Throwable) { 
-            null 
+        } catch (_: Throwable) {
+            null
         }
     }
     
@@ -189,7 +211,33 @@ object CatchRateCalculator {
      * Try to extract the selected PokeBall from a container item's data components.
      * Works with any mod that stores pokéballs in CONTAINER and tracks selection via CUSTOM_DATA.
      */
-    private fun getSelectedBallFromContainer(itemStack: ItemStack): PokeBall? {
+    private fun getSelectedPokeBallFromContainer(itemStack: ItemStack): PokeBall? {
+        val selected = getSelectedContainerItem(itemStack) ?: return null
+        return (selected.item as? PokeBallItem)?.pokeBall
+    }
+
+    private fun getSelectedBallIdFromContainer(itemStack: ItemStack): String? {
+        val selected = getSelectedContainerItem(itemStack) ?: return null
+
+        val selectedBall = (selected.item as? PokeBallItem)?.pokeBall
+        if (selectedBall != null) {
+            return selectedBall.name.path
+        }
+
+        val ballName = getRegisteredItemPath(selected) ?: return null
+        val pokeBall = try {
+            PokeBalls.getPokeBall(ResourceLocation.fromNamespaceAndPath("cobblemon", ballName))
+        } catch (_: Throwable) {
+            null
+        }
+        if (pokeBall != null) {
+            return pokeBall.name.path
+        }
+
+        return ballName.takeIf { AtmBallCompat.isSupportedBall(it) }
+    }
+
+    private fun getSelectedContainerItem(itemStack: ItemStack): ItemStack? {
         val container = itemStack.get(DataComponents.CONTAINER) ?: return null
         
         val items = NonNullList.withSize(9, ItemStack.EMPTY)
@@ -207,7 +255,17 @@ object CatchRateCalculator {
         val selected = items[selectedIndex]
         if (selected.isEmpty) return null
         
-        return (selected.item as? PokeBallItem)?.pokeBall
+        return selected
+    }
+
+    private fun getRegisteredItemPath(itemStack: ItemStack): String? {
+        if (itemStack.isEmpty) {
+            return null
+        }
+
+        return BuiltInRegistries.ITEM.getKey(itemStack.item)
+            .path
+            .takeIf { it.isNotBlank() }
     }
     
     private fun getBallResult(

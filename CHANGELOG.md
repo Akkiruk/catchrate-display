@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.8.19] - 2026-04-22
+
+### Added
+- **Added optional AllTheMons custom ball compatibility.** Catch Rate Display now recognizes supported AllTheMons balls by item ID without adding a hard dependency, applies their custom multipliers in the shared ball calculator, and only adds them to the comparison panel when those item IDs actually exist in the loaded item registry.
+
 ## [2.8.18] - 2026-04-22
 
 ### Fixed

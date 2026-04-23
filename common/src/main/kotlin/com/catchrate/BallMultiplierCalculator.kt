@@ -1,5 +1,6 @@
 package com.catchrate
 
+import com.catchrate.compat.AtmBallCompat
 import com.cobblemon.mod.common.api.pokeball.PokeBalls
 import com.cobblemon.mod.common.pokeball.PokeBall
 import com.cobblemon.mod.common.pokemon.Gender
@@ -118,6 +119,15 @@ object BallMultiplierCalculator {
     
     fun calculate(ballId: String, ctx: BallContext): BallResult {
         val lower = ballId.lowercase()
+
+        AtmBallCompat.getCustomResult(lower, ctx)?.let { result ->
+            CatchRateMod.debugOnChange(
+                "Ball/$lower",
+                "atm_${result.multiplier}_${result.conditionMet}",
+                "$lower: ATM compat ${result.reason} -> ${result.multiplier}x [${if (result.conditionMet) "✓" else "✗"}]"
+            )
+            return result
+        }
         
         // Hardcoded overrides — these NEVER depend on Cobblemon API lookups
         when (lower) {
