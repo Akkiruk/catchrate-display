@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.8.20] - 2026-04-22
+
+### Fixed
+- **Soul Lava Ball reason text no longer claims a capture effect.** The ATM Soul Lava balls still use their real Fire/Water conditional multipliers, but the HUD and comparison panel no longer show the generic `Special effect on capture` label for them.
+- **Unobtainium ball wording stays aligned with other real capture-effect balls.** The ATM Unobtainium balls keep the same generic capture-effect wording path used by Heal Ball, since upstream actually gives them Cobblemon's `FULL_RESTORE` capture effect.
+
 ## [2.8.19] - 2026-04-22
 
 ### Added

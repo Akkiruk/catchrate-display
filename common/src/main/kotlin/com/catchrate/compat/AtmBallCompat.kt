@@ -35,7 +35,7 @@ object AtmBallCompat {
             "vibranium_ball", "ancient_vibranium_ball" -> fixed(6F)
             "unobtainium_ball", "ancient_unobtainium_ball" -> {
                 val boosted = hasLegendaryOrPiglich(ctx)
-                special(if (boosted) 30F else 10F, boosted)
+                captureEffect(if (boosted) 30F else 10F, boosted)
             }
             "soul_lava_ball", "ancient_soul_lava_ball" -> soulLava(ctx)
             else -> null
@@ -73,8 +73,12 @@ object AtmBallCompat {
         return BallResult(multiplier, true, BallTranslations.multiplierAlways())
     }
 
-    private fun special(multiplier: Float, conditionMet: Boolean): BallResult {
+    private fun captureEffect(multiplier: Float, conditionMet: Boolean): BallResult {
         return BallResult(multiplier, conditionMet, BallTranslations.specialEffect())
+    }
+
+    private fun conditional(multiplier: Float, conditionMet: Boolean): BallResult {
+        return BallResult(multiplier, conditionMet, BallTranslations.multiplierAlways())
     }
 
     private fun soulLava(ctx: BallContext): BallResult {
@@ -82,9 +86,9 @@ object AtmBallCompat {
         val water = hasType(ctx, "water")
 
         return when {
-            fire -> special(50F, true)
-            water -> special(0F, true)
-            else -> special(2F, false)
+            fire -> conditional(50F, true)
+            water -> conditional(0F, true)
+            else -> conditional(2F, false)
         }
     }
 
