@@ -40,6 +40,13 @@ object BallContextFactory {
         val species = pokemon.species
         val timeOfDay = level.dayTime % 24000
         val aspects = getPokemonAspectsFromBattle(pokemon)
+        val targetEntity = getBattleTargetEntity(pokemon, battle, player, level)
+        val targetUnderwater = targetEntity?.isUnderWater ?: false
+        CatchRateMod.debugOnChange(
+            "BattleTargetWater",
+            "${pokemon.uuid}_${targetEntity?.uuid}_${targetUnderwater}",
+            "Battle target ${species.name}: entity=${targetEntity?.uuid ?: "none"}, underwater=$targetUnderwater"
+        )
         
         return BallContext(
             speciesId = species.resourceIdentifier.toString(),
@@ -54,7 +61,7 @@ object BallContextFactory {
             lightLevel = level.getMaxLocalRawBrightness(player.blockPosition()),
             isNight = timeOfDay in NIGHT_START_TICK..NIGHT_END_TICK,
             moonPhase = level.moonPhase,
-            isTargetUnderwater = player.isUnderWater,
+            isTargetUnderwater = targetUnderwater,
             isPlayerUnderwater = player.isUnderWater,
             inBattle = true,
             turnCount = turnCount,
@@ -203,6 +210,33 @@ object BallContextFactory {
             } else null
         } catch (e: Throwable) {
             CatchRateMod.debugOnChange("BattleErr", "activeBattler", "Could not access active battler: ${e.message}")
+            null
+        }
+    }
+
+    private fun getBattleTargetEntity(
+        pokemon: ClientBattlePokemon,
+        battle: ClientBattle?,
+        player: Player,
+        level: Level
+    ): PokemonEntity? {
+        val battleId = battle?.battleId ?: return null
+        return try {
+            val wildEntities = level.getEntitiesOfClass(
+                PokemonEntity::class.java,
+                player.boundingBox.inflate(128.0)
+            ) {
+                it.isAlive &&
+                    it.battleId == battleId &&
+                    it.ownerUUID == null &&
+                    it.pokemon.getOwnerUUID() == null
+            }
+
+            wildEntities.firstOrNull { it.pokemon.uuid == pokemon.uuid }
+                ?: battle.wildActor?.uuid?.let { wildUuid -> wildEntities.firstOrNull { it.pokemon.uuid == wildUuid } }
+                ?: wildEntities.singleOrNull()
+        } catch (e: Throwable) {
+            CatchRateMod.debugOnChange("BattleTargetErr", pokemon.uuid.toString(), "Could not resolve battle target entity: ${e.message}")
             null
         }
     }

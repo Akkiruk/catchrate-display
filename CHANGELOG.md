@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.8.21] - 2026-04-25
+
+### Fixed
+- **Dive Ball battle catch rates now follow Cobblemon's actual target-entity check.** Decompiling Cobblemon 1.7.3 confirmed Dive Ball uses the wild Pokemon entity's `isUnderWater()` state, not the thrower's/player's water state, so in-battle HUD and comparison rates now resolve the active wild battle entity before applying the 3.5x bonus.
+
 ## [2.8.20] - 2026-04-22
 
 ### Fixed

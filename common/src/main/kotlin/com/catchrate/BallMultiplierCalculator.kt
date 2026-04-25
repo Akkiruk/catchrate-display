@@ -252,7 +252,7 @@ object BallMultiplierCalculator {
     }
     
     private fun calculateDiveBall(ctx: BallContext): BallResult {
-        val targetUnderwater = if (ctx.inBattle) ctx.isPlayerUnderwater else ctx.isTargetUnderwater
+        val targetUnderwater = ctx.isTargetUnderwater
         val mult = if (targetUnderwater) 3.5F else 1F
         return BallResult(mult, targetUnderwater,
             if (targetUnderwater) BallTranslations.diveUnderwater() else BallTranslations.diveNeedUnderwater())
