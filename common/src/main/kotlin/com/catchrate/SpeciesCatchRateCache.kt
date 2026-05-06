@@ -28,8 +28,16 @@ object SpeciesCatchRateCache {
         val sourcePath: String? = null
     )
 
+    private data class FormCatchRateOverride(
+        val formName: String,
+        val formShowdownId: String,
+        val aspects: Set<String>,
+        val catchRate: Int
+    )
+
     private data class CatchRateSourceHit(
         val catchRate: Int,
+        val formOverrides: List<FormCatchRateOverride>,
         val sourcePath: String
     )
 
@@ -44,22 +52,33 @@ object SpeciesCatchRateCache {
     private fun speciesKey(species: Species): String =
         species.resourceIdentifier?.path?.lowercase()
             ?: species.name.lowercase().replace(Regex("[^a-z0-9]"), "")
+
+    private fun resolutionKey(species: Species, aspects: Set<String>): String {
+        val normalizedAspects = normalizeAspects(aspects)
+        if (normalizedAspects.isEmpty()) return speciesKey(species)
+        return speciesKey(species) + "::" + normalizedAspects.sorted().joinToString("&")
+    }
+
+    private fun normalizeAspects(aspects: Set<String>): Set<String> = aspects.map { it.lowercase() }.toSet()
+
+    private fun showdownId(name: String): String = name.lowercase().replace(Regex("[^a-z0-9]"), "")
+
     @Volatile private var datapacksScanned = false
     private val datapackOverrides = ConcurrentHashMap<String, CatchRateSourceHit>()
     @Volatile private var preloading = false
     @Volatile private var preloaded = false
 
-    fun getCatchRate(species: Species): Int {
-        return getResolution(species).catchRate
+    fun getCatchRate(species: Species, aspects: Set<String> = emptySet()): Int {
+        return getResolution(species, aspects).catchRate
     }
 
     fun fallbackCatchRate(): Int = DEFAULT_CATCH_RATE
 
-    fun getResolution(species: Species): CatchRateResolution {
-        val key = speciesKey(species)
+    fun getResolution(species: Species, aspects: Set<String> = emptySet()): CatchRateResolution {
+        val key = resolutionKey(species, aspects)
         cache[key]?.let { return it }
 
-        val resolved = resolve(species)
+        val resolved = resolve(species, aspects)
         cache[key] = resolved
         CatchRateMod.debugOnChange(
             "CatchRate", key,
@@ -69,7 +88,7 @@ object SpeciesCatchRateCache {
     }
 
     /** True when the catch rate came from the unresolved fallback estimate, not from actual species data. */
-    fun isEstimate(species: Species): Boolean = getResolution(species).isEstimate
+    fun isEstimate(species: Species, aspects: Set<String> = emptySet()): Boolean = getResolution(species, aspects).isEstimate
 
     /** Number of species currently cached. */
     fun cacheSize(): Int = cache.size
@@ -93,7 +112,7 @@ object SpeciesCatchRateCache {
                 for (species in allSpecies) {
                     val key = speciesKey(species)
                     if (!cache.containsKey(key)) {
-                        val rate = resolve(species)
+                        val rate = resolve(species, emptySet())
                         cache[key] = rate
                         resolved++
                     }
@@ -125,22 +144,24 @@ object SpeciesCatchRateCache {
 
     // -- Resolution chain --
 
-    private fun resolve(species: Species): CatchRateResolution {
+    private fun resolve(species: Species, aspects: Set<String>): CatchRateResolution {
         ensureDatapacksScanned()
         val key = speciesKey(species)
         datapackOverrides[key]?.let {
+            val formOverride = selectFormOverride(species, aspects, it)
             return CatchRateResolution(
-                catchRate = it.catchRate,
+                catchRate = formOverride?.catchRate ?: it.catchRate,
                 isEstimate = false,
-                source = "datapack",
+                source = formOverride?.let { override -> "datapack:${override.formShowdownId}" } ?: "datapack",
                 sourcePath = it.sourcePath
             )
         }
         loadFromClasspath(species)?.let {
+            val formOverride = selectFormOverride(species, aspects, it)
             return CatchRateResolution(
-                catchRate = it.catchRate,
+                catchRate = formOverride?.catchRate ?: it.catchRate,
                 isEstimate = false,
-                source = "classpath",
+                source = formOverride?.let { override -> "classpath:${override.formShowdownId}" } ?: "classpath",
                 sourcePath = it.sourcePath
             )
         }
@@ -151,6 +172,29 @@ object SpeciesCatchRateCache {
             source = "fallback",
             sourcePath = null
         )
+    }
+
+    private fun selectFormOverride(
+        species: Species,
+        aspects: Set<String>,
+        hit: CatchRateSourceHit
+    ): FormCatchRateOverride? {
+        if (aspects.isEmpty() || hit.formOverrides.isEmpty()) return null
+
+        val normalizedAspects = normalizeAspects(aspects)
+        val resolvedFormId = try {
+            species.getForm(normalizedAspects).formOnlyShowdownId()
+        } catch (_: Throwable) {
+            null
+        }
+
+        if (resolvedFormId != null) {
+            hit.formOverrides.firstOrNull { it.formShowdownId == resolvedFormId }?.let { return it }
+        }
+
+        return hit.formOverrides
+            .filter { it.aspects.isNotEmpty() && it.aspects.all(normalizedAspects::contains) }
+            .maxByOrNull { it.aspects.size }
     }
 
     // -- Datapack scanning --
@@ -203,9 +247,9 @@ object SpeciesCatchRateCache {
             stream.filter { Files.isRegularFile(it) && it.toString().endsWith(".json") }
                 .filter { isSpeciesPath(root.relativize(it).toString().replace('\\', '/')) }
                 .forEach { file ->
-                    extractCatchRate(Files.newInputStream(file))?.let { cr ->
+                    extractCatchRateData(Files.newInputStream(file))?.let { hit ->
                         val name = file.fileName.toString().removeSuffix(".json").lowercase()
-                        datapackOverrides[name] = CatchRateSourceHit(cr, file.toString())
+                        datapackOverrides[name] = hit.copy(sourcePath = file.toString())
                     }
                 }
         }
@@ -218,9 +262,9 @@ object SpeciesCatchRateCache {
                 stream.filter { Files.isRegularFile(it) && it.toString().endsWith(".json") }
                     .filter { isSpeciesPath(it.toString().removePrefix("/").replace('\\', '/')) }
                     .forEach { entry ->
-                        extractCatchRate(Files.newInputStream(entry))?.let { cr ->
+                        extractCatchRateData(Files.newInputStream(entry))?.let { hit ->
                             val name = entry.fileName.toString().removeSuffix(".json").lowercase()
-                            datapackOverrides[name] = CatchRateSourceHit(cr, "$zipPath!${entry.toString().replace('\\', '/')}")
+                            datapackOverrides[name] = hit.copy(sourcePath = "$zipPath!${entry.toString().replace('\\', '/')}")
                         }
                     }
             }
@@ -250,7 +294,7 @@ object SpeciesCatchRateCache {
         for (gen in generationFolders) {
             val path = "data/$namespace/species/$gen/$name.json"
             classpathStream(path)?.let { stream ->
-                extractCatchRate(stream)?.let { return CatchRateSourceHit(it, path) }
+                extractCatchRateData(stream)?.let { return it.copy(sourcePath = path) }
             }
         }
 
@@ -258,7 +302,7 @@ object SpeciesCatchRateCache {
         for (prefix in listOf("", "custom/", "addon/")) {
             val path = "data/$namespace/species/$prefix$name.json"
             classpathStream(path)?.let { stream ->
-                extractCatchRate(stream)?.let { return CatchRateSourceHit(it, path) }
+                extractCatchRateData(stream)?.let { return it.copy(sourcePath = path) }
             }
         }
 
@@ -271,11 +315,43 @@ object SpeciesCatchRateCache {
 
     // -- JSON parsing --
 
-    private fun extractCatchRate(stream: InputStream): Int? {
+    private fun extractCatchRateData(stream: InputStream): CatchRateSourceHit? {
         return try {
             stream.use { s ->
                 val obj = JsonParser.parseString(s.bufferedReader().readText()).asJsonObject
-                if (obj.has("catchRate")) obj.get("catchRate").asInt else null
+                val baseCatchRate = if (obj.has("catchRate")) obj.get("catchRate").asInt else null
+                val formOverrides = mutableListOf<FormCatchRateOverride>()
+
+                if (obj.has("forms") && obj.get("forms").isJsonArray) {
+                    obj.getAsJsonArray("forms").forEach { formElement ->
+                        val formObject = formElement.asJsonObject
+                        if (!formObject.has("catchRate")) return@forEach
+
+                        val formName = if (formObject.has("name")) formObject.get("name").asString else return@forEach
+                        val aspects = if (formObject.has("aspects") && formObject.get("aspects").isJsonArray) {
+                            formObject.getAsJsonArray("aspects").map { it.asString.lowercase() }.toSet()
+                        } else {
+                            emptySet()
+                        }
+
+                        formOverrides += FormCatchRateOverride(
+                            formName = formName,
+                            formShowdownId = showdownId(formName),
+                            aspects = aspects,
+                            catchRate = formObject.get("catchRate").asInt
+                        )
+                    }
+                }
+
+                if (baseCatchRate == null && formOverrides.isEmpty()) {
+                    null
+                } else {
+                    CatchRateSourceHit(
+                        catchRate = baseCatchRate ?: DEFAULT_CATCH_RATE,
+                        formOverrides = formOverrides,
+                        sourcePath = ""
+                    )
+                }
             }
         } catch (_: Throwable) { null }
     }

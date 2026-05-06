@@ -75,8 +75,9 @@ object CatchRateCalculator {
     ): CatchRateResult {
         val reliability = CatchRatePredictionReliability.analyzeBattleTarget(pokemon, CobblemonClient.battle)
         val effectiveSpecies = reliability.effectiveSpecies ?: pokemon.species
-        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(effectiveSpecies)
-        val isEstimate = SpeciesCatchRateCache.isEstimate(effectiveSpecies)
+        val pokemonAspects = pokemon.state.currentAspects
+        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(effectiveSpecies, pokemonAspects)
+        val isEstimate = SpeciesCatchRateCache.isEstimate(effectiveSpecies, pokemonAspects)
         val preservedSpecies = effectiveSpecies.resourceIdentifier != pokemon.species.resourceIdentifier
         if (!reliability.isReliable || preservedSpecies) {
             CatchRateMod.debugOnChange(
@@ -153,7 +154,7 @@ object CatchRateCalculator {
     }
 
     private fun buildFallbackResult(pokemon: ClientBattlePokemon, ballName: String, turnCount: Int): CatchRateResult {
-        val baseCatchRate = try { SpeciesCatchRateCache.getCatchRate(pokemon.species) } catch (_: Throwable) { SpeciesCatchRateCache.fallbackCatchRate() }
+        val baseCatchRate = try { SpeciesCatchRateCache.getCatchRate(pokemon.species, pokemon.state.currentAspects) } catch (_: Throwable) { SpeciesCatchRateCache.fallbackCatchRate() }
         return CatchRateResult(
             percentage = CatchRateFormula.modifiedRateToPercentage(baseCatchRate.toFloat()).toDouble().coerceIn(0.0, 100.0),
             hpPercentage = 100.0,

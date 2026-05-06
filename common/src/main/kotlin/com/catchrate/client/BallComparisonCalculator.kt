@@ -93,8 +93,8 @@ object BallComparisonCalculator {
             isFlat = pokemon.isHpFlat
         )
         
-        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(effectiveSpecies).toFloat()
-        val isEstimate = SpeciesCatchRateCache.isEstimate(effectiveSpecies)
+        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(effectiveSpecies, ctx.pokemonAspects).toFloat()
+        val isEstimate = SpeciesCatchRateCache.isEstimate(effectiveSpecies, ctx.pokemonAspects)
         val statusMult = CatchRateFormula.getStatusMultiplier(pokemon.status?.name?.path)
         val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
         val externalCatchRateMultiplier = CobbleCuisineCompat.getCatchRateMultiplier(player)
@@ -154,8 +154,8 @@ object BallComparisonCalculator {
         val result = BallMultiplierCalculator.calculate(ballId, ctx)
         val reliability = CatchRatePredictionReliability.analyzeWorldTarget(entity)
         
-        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species).toFloat()
-        val isEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species)
+        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species, ctx.pokemonAspects).toFloat()
+        val isEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species, ctx.pokemonAspects)
         val maxHp = pokemon.maxHealth.toFloat()
         val currentHp = pokemon.currentHealth.toFloat()
         val statusMult = CatchRateFormula.getStatusMultiplier(BallContextFactory.getEffectiveStatusPath(entity))
@@ -218,8 +218,8 @@ object BallComparisonCalculator {
         val ctx = BallContextFactory.fromWorldPokemon(entity, player, level)
         val reliability = CatchRatePredictionReliability.analyzeWorldTarget(entity)
         
-        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species).toFloat()
-        val isEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species)
+        val baseCatchRate = SpeciesCatchRateCache.getCatchRate(pokemon.species, ctx.pokemonAspects).toFloat()
+        val isEstimate = SpeciesCatchRateCache.isEstimate(pokemon.species, ctx.pokemonAspects)
         val maxHp = pokemon.maxHealth.toFloat()
         val currentHp = pokemon.currentHealth.toFloat()
         val statusMult = CatchRateFormula.getStatusMultiplier(BallContextFactory.getEffectiveStatusPath(entity))

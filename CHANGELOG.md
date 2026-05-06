@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.8.22] - 2026-05-06
+
+### Fixed
+- **Form-specific catch rates now override the base species rate in the HUD and ball comparison panel.** Catch Rate Display now resolves the active form from visible aspects and applies local JSON `forms[].catchRate` overrides instead of always using the top-level species catch rate, which fixes false guarantees like Meteor-form Minior being shown as 255 catch rate instead of its real 30.
+
 ## [2.8.21] - 2026-04-25
 
 ### Fixed
