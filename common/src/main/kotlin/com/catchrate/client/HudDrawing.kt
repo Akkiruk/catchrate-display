@@ -13,6 +13,7 @@ import kotlin.math.roundToInt
  * consistent styling across all HUD modes.
  */
 object HudDrawing {
+    private val BAR_TICKS = intArrayOf(25, 50, 75)
     
     // ==================== PANEL DRAWING ====================
     
@@ -94,8 +95,8 @@ object HudDrawing {
         }
         
         // Tick marks at 25%, 50%, 75%
-        for (tick in listOf(0.25, 0.5, 0.75)) {
-            val tickX = x + ((width - 2) * tick).roundToInt()
+        for (tick in BAR_TICKS) {
+            val tickX = x + ((width - 2) * tick) / 100
             guiGraphics.vLine(tickX, y + 1, y + barHeight - 2, Colors.BAR_TICK_MARK)
         }
     }

@@ -57,22 +57,19 @@ class CatchRateHudRenderer {
     private var lastStatusName: String? = null
     
     private var cachedClientResult: CatchRateResult? = null
-    private var lastClientCalcTick = 0L
     
     private var cachedComparison: List<BallComparisonCalculator.BallCatchRate>? = null
-    private var lastComparisonTick = 0L
     private var lastComparisonTurnCount = 0
+    private var lastComparisonStatusName: String? = null
     
     private var cachedWorldComparison: List<BallComparisonCalculator.BallCatchRate>? = null
-    private var lastWorldComparisonTick = 0L
     private var lastWorldPokemonUuid: java.util.UUID? = null
+    private var lastWorldComparisonHp: Int = -1
+    private var lastWorldComparisonStatusName: String? = null
     
     private var tickCounter = 0L
     
-    companion object {
-        private const val CLIENT_CALC_INTERVAL_TICKS = 5L
-        private const val COMPARISON_CALC_INTERVAL_TICKS = 10L
-    }
+    companion object
     
     /**
      * Main render method. Called by platform-specific HUD render events.
@@ -190,8 +187,11 @@ class CatchRateHudRenderer {
         lastStatusName = null
         cachedClientResult = null
         cachedComparison = null
+        lastComparisonStatusName = null
         cachedWorldComparison = null
         lastWorldPokemonUuid = null
+        lastWorldComparisonHp = -1
+        lastWorldComparisonStatusName = null
     }
     
     /**
@@ -211,7 +211,7 @@ class CatchRateHudRenderer {
     
     private fun getClientCalculation(pokemon: ClientBattlePokemon, heldItem: ItemStack): CatchRateResult? {
         val turnCount = CatchRateBattleMonitor.getTurnCount()
-        if (cachedClientResult == null || (tickCounter - lastClientCalcTick) > CLIENT_CALC_INTERVAL_TICKS) {
+        if (cachedClientResult == null) {
             val result = try {
                 CatchRateCalculator.calculateCatchRate(pokemon, heldItem, turnCount, null, true)
             } catch (e: Throwable) {
@@ -219,7 +219,6 @@ class CatchRateHudRenderer {
                 null
             }
             cachedClientResult = result
-            lastClientCalcTick = tickCounter
             
             // Log detailed calculation and track guaranteed predictions
             if (result != null) {
@@ -478,11 +477,13 @@ class CatchRateHudRenderer {
     
     private fun renderBallComparisonPanel(guiGraphics: GuiGraphics, minecraft: Minecraft, pokemon: ClientBattlePokemon, battle: ClientBattle) {
         val turnCount = CatchRateBattleMonitor.getTurnCount(battle.battleId)
+        val statusName = pokemon.status?.name?.path
         val turnChanged = turnCount != lastComparisonTurnCount
-        if (cachedComparison == null || turnChanged || (tickCounter - lastComparisonTick) > COMPARISON_CALC_INTERVAL_TICKS) {
+        val statusChanged = statusName != lastComparisonStatusName
+        if (cachedComparison == null || turnChanged || statusChanged) {
             cachedComparison = BallComparisonCalculator.calculateAllBalls(pokemon, turnCount, battle)
-            lastComparisonTick = tickCounter
             lastComparisonTurnCount = turnCount
+            lastComparisonStatusName = statusName
         }
         val comparison = cachedComparison ?: return
         renderComparisonPanelContent(guiGraphics, minecraft, comparison, HudTranslations.ballComparison(turnCount), showPenaltyNote = false)
@@ -490,13 +491,19 @@ class CatchRateHudRenderer {
     
     private fun renderWorldComparisonPanel(guiGraphics: GuiGraphics, minecraft: Minecraft, entity: com.cobblemon.mod.common.entity.pokemon.PokemonEntity) {
         val entityUuid = entity.uuid
+        val pokemon = entity.pokemon
+        val currentHp = pokemon.currentHealth
+        val statusName = BallContextFactory.getEffectiveStatusPath(entity)
         if (entityUuid != lastWorldPokemonUuid) {
             cachedWorldComparison = null
             lastWorldPokemonUuid = entityUuid
         }
-        if (cachedWorldComparison == null || (tickCounter - lastWorldComparisonTick) > COMPARISON_CALC_INTERVAL_TICKS) {
+        val hpChanged = currentHp != lastWorldComparisonHp
+        val statusChanged = statusName != lastWorldComparisonStatusName
+        if (cachedWorldComparison == null || hpChanged || statusChanged) {
             cachedWorldComparison = BallComparisonCalculator.calculateAllBallsForWorld(entity)
-            lastWorldComparisonTick = tickCounter
+            lastWorldComparisonHp = currentHp
+            lastWorldComparisonStatusName = statusName
         }
         val comparison = cachedWorldComparison ?: return
         renderComparisonPanelContent(guiGraphics, minecraft, comparison, HudTranslations.ballComparisonWild(), showPenaltyNote = true)

@@ -24,6 +24,7 @@ import kotlin.math.roundToInt
  * and CatchRateHudRenderer.
  */
 object CatchRateFormula {
+    private val ballNameCache = java.util.concurrent.ConcurrentHashMap<String, String>()
     
     // ==================== MAIN CATCH RATE CALCULATION ====================
     
@@ -244,12 +245,17 @@ object CatchRateFormula {
      * Format a ball name using Cobblemon's item translations for proper localization.
      */
     fun formatBallName(name: String): String {
-        val cleanName = name.replace("cobblemon:", "")
-        val translated = Component.translatable("item.cobblemon.$cleanName").string
-        if (translated != "item.cobblemon.$cleanName") return translated
-        return cleanName.replace("_", " ")
-            .split(" ")
-            .joinToString(" ") { it.replaceFirstChar { c -> c.uppercaseChar() } }
+        return ballNameCache.getOrPut(name) {
+            val cleanName = name.removePrefix("cobblemon:")
+            val translated = Component.translatable("item.cobblemon.$cleanName").string
+            if (translated != "item.cobblemon.$cleanName") {
+                translated
+            } else {
+                cleanName.replace("_", " ")
+                    .split(" ")
+                    .joinToString(" ") { it.replaceFirstChar { c -> c.uppercaseChar() } }
+            }
+        }
     }
     
 }

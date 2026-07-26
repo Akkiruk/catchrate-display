@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.23] - 2026-07-25
+
+### Changed
+- **Reduced redundant HUD recalculation.** In-battle single-ball catch calculations now stay cached until the target, held ball, HP, or status actually changes instead of being refreshed on a fixed timer.
+- **Reduced redundant comparison-panel recalculation.** Battle and wild comparison panels now rebuild only when relevant catch-state inputs change, which cuts repeated per-ball multiplier and percentage work while the panel is held open.
+- **Cached localized ball display names.** Ball-name translation results are now memoized instead of being rebuilt every comparison refresh.
+
 ## [2.8.22] - 2026-05-06
 
 ### Fixed
