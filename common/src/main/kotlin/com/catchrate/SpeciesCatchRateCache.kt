@@ -1,32 +1,65 @@
 package com.catchrate
 
 import com.catchrate.platform.PlatformHelper
+import com.cobblemon.mod.common.api.pokemon.PokemonSpecies
 import com.cobblemon.mod.common.pokemon.Species
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import net.minecraft.client.Minecraft
 import java.io.InputStream
+import java.net.URI
+import java.nio.file.FileSystemAlreadyExistsException
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Local-only catch rate cache. Cobblemon doesn't sync catchRate to the client
- * (Species.encode/decode omits it), so the registry always has the constructor
- * default of 45. We resolve every species from local data instead:
+ * Resolves the base catch rate for a species, form-aware, from the most authoritative
+ * source available in the current environment.
  *
- *   1. Local datapacks (game dir /datapacks/) — ZIP and folder packs
- *   2. World save datapacks (saves/<world>/datapacks/) — per-world overrides
- *   3. Mod JARs on classpath — Cobblemon + addon mods
- *   4. Fallback: 3 (pessimistic unresolved estimate to avoid false guarantees)
+ * Resolution order:
+ *
+ *   1. Cobblemon's live species registry — but ONLY when it is provably trustworthy.
+ *      Cobblemon does not encode catchRate in Species.encode/decode, so a client
+ *      connected to a dedicated server sees the constructor default (45) for every
+ *      species. It does, however, skip the whole data sync for memory connections
+ *      (CobblemonDataProvider.sync bails on Connection.isMemoryConnection), which
+ *      means singleplayer and LAN hosts keep the real datapack-loaded values.
+ *      When trusted this tier is exact for anything Cobblemon loaded: custom species
+ *      from datapacks or mods, form overrides, and species_additions alike.
+ *
+ *   2. Local files — world datapacks, game datapacks, and mod JARs, scanned for
+ *      the data/<ns>/species/ and data/<ns>/species_additions/ subtrees. This
+ *      carries remote-server play, where the client normally has the same packs
+ *      installed locally even though the registry is defaulted.
+ *
+ *   3. Unknown. Deliberately NOT a made-up number: callers must render this as
+ *      "unknown" rather than show a fabricated percentage.
+ *
+ * The only case that cannot be resolved is a datapack that exists solely on a remote
+ * server. That needs a server-side component to fix and reports as unknown instead.
  */
 object SpeciesCatchRateCache {
 
+    enum class Source(val rank: Int, val label: String) {
+        REGISTRY(4, "registry"),
+        DATAPACK(3, "datapack"),
+        MOD_JAR(2, "mod_jar"),
+        CLASSPATH(1, "classpath"),
+        UNRESOLVED(0, "unresolved")
+    }
+
     data class CatchRateResolution(
         val catchRate: Int,
-        val isEstimate: Boolean,
+        /** False when no source could supply a real value. Callers must not display a number. */
+        val isKnown: Boolean,
         val source: String,
         val sourcePath: String? = null
-    )
+    ) {
+        /** Retained name for existing call sites: an unresolved rate is not a real rate. */
+        val isEstimate: Boolean get() = !isKnown
+    }
 
     private data class FormCatchRateOverride(
         val formName: String,
@@ -35,93 +68,163 @@ object SpeciesCatchRateCache {
         val catchRate: Int
     )
 
-    private data class CatchRateSourceHit(
-        val catchRate: Int,
+    private data class SpeciesFileData(
+        val catchRate: Int?,
         val formOverrides: List<FormCatchRateOverride>,
-        val sourcePath: String
+        val sourcePath: String,
+        val source: Source
     )
 
-    private const val DEFAULT_CATCH_RATE = 3
-    private val cache = ConcurrentHashMap<String, CatchRateResolution>()
-
     /**
-     * Normalize a species name to match Cobblemon's JSON filename format.
-     * Cobblemon filenames strip ALL non-alphanumeric characters:
-     * "Tapu Lele" → "tapulele", "Mr. Mime" → "mrmime", "Ho-Oh" → "hooh"
+     * Nominal value used when nothing could be resolved. It exists only so downstream
+     * math does not divide by zero — every display path must check isKnown and show
+     * "unknown" instead of rendering a percentage derived from this.
      */
-    private fun speciesKey(species: Species): String =
-        species.resourceIdentifier?.path?.lowercase()
-            ?: species.name.lowercase().replace(Regex("[^a-z0-9]"), "")
+    private const val UNRESOLVED_PLACEHOLDER = 3
 
-    private fun resolutionKey(species: Species, aspects: Set<String>): String {
-        val normalizedAspects = normalizeAspects(aspects)
-        if (normalizedAspects.isEmpty()) return speciesKey(species)
-        return speciesKey(species) + "::" + normalizedAspects.sorted().joinToString("&")
-    }
+    /** Species.catchRate's constructor default, and therefore the value an unsynced client sees. */
+    private const val COBBLEMON_DEFAULT_CATCH_RATE = 45
 
-    private fun normalizeAspects(aspects: Set<String>): Set<String> = aspects.map { it.lowercase() }.toSet()
+    /** Below this many registered species the registry is too small to judge as trustworthy. */
+    private const val TRUST_SAMPLE_MIN = 20
 
-    private fun showdownId(name: String): String = name.lowercase().replace(Regex("[^a-z0-9]"), "")
+    private val cache = ConcurrentHashMap<String, CatchRateResolution>()
+    private val speciesIndex = ConcurrentHashMap<String, SpeciesFileData>()
+    private val additionIndex = ConcurrentHashMap<String, SpeciesFileData>()
 
-    @Volatile private var datapacksScanned = false
-    private val datapackOverrides = ConcurrentHashMap<String, CatchRateSourceHit>()
+    @Volatile private var localFilesScanned = false
+    @Volatile private var scanning = false
     @Volatile private var preloading = false
     @Volatile private var preloaded = false
 
-    fun getCatchRate(species: Species, aspects: Set<String> = emptySet()): Int {
-        return getResolution(species, aspects).catchRate
-    }
+    @Volatile private var registryTrustResolved = false
+    @Volatile private var registryTrusted = false
+    @Volatile private var lastSession: Any? = null
 
-    fun fallbackCatchRate(): Int = DEFAULT_CATCH_RATE
+    /**
+     * Bumped on every invalidation. A scan that was already running when the player
+     * changed world publishes nothing, so the index can never be a mix of two sessions'
+     * datapacks or be marked complete when it is only partly filled.
+     */
+    @Volatile private var generation = 0
+
+    // ==================== PUBLIC API ====================
+
+    fun getCatchRate(species: Species, aspects: Set<String> = emptySet()): Int =
+        getResolution(species, aspects).catchRate
+
+    fun isEstimate(species: Species, aspects: Set<String> = emptySet()): Boolean =
+        !getResolution(species, aspects).isKnown
+
+    fun isKnown(species: Species, aspects: Set<String> = emptySet()): Boolean =
+        getResolution(species, aspects).isKnown
+
+    fun fallbackCatchRate(): Int = UNRESOLVED_PLACEHOLDER
+
+    fun cacheSize(): Int = cache.size
+
+    fun indexedSpeciesCount(): Int = speciesIndex.size
+
+    fun indexedAdditionCount(): Int = additionIndex.size
+
+    /** Human-readable name of the tier currently answering lookups, for diagnostics. */
+    fun resolutionTierName(): String =
+        if (isRegistryTrusted()) "registry (integrated server)" else "local files (remote server)"
 
     fun getResolution(species: Species, aspects: Set<String> = emptySet()): CatchRateResolution {
         val key = resolutionKey(species, aspects)
         cache[key]?.let { return it }
 
         val resolved = resolve(species, aspects)
-        cache[key] = resolved
-        CatchRateMod.debugOnChange(
-            "CatchRate", key,
-            "${species.name} catchRate resolved to ${resolved.catchRate} from ${resolved.source} (key=$key${if (resolved.isEstimate) ", ESTIMATE" else ""})"
-        )
+
+        // Unknowns are never cached: a background scan or a world load can still supply
+        // the answer, and a cached unknown would freeze the species as unknown forever.
+        if (resolved.isKnown) {
+            cache[key] = resolved
+            CatchRateMod.debugOnChange(
+                "CatchRate", key,
+                "${species.name} catchRate=${resolved.catchRate} from ${resolved.source} (key=$key)"
+            )
+        }
         return resolved
     }
 
-    /** True when the catch rate came from the unresolved fallback estimate, not from actual species data. */
-    fun isEstimate(species: Species, aspects: Set<String> = emptySet()): Boolean = getResolution(species, aspects).isEstimate
-
-    /** Number of species currently cached. */
-    fun cacheSize(): Int = cache.size
+    /**
+     * True when Cobblemon's species registry holds real catch rates rather than the
+     * unsynced default. See the class docs for why this is knowable rather than guessed.
+     */
+    fun isRegistryTrusted(): Boolean {
+        if (registryTrustResolved) return registryTrusted
+        val decided = computeRegistryTrust() ?: return false // undecided — re-check later
+        registryTrusted = decided
+        registryTrustResolved = true
+        CatchRateMod.LOGGER.info(
+            "[CatchRate] Species registry ${if (decided) "TRUSTED (integrated server)" else "NOT trusted (remote server) — using local files"}"
+        )
+        return decided
+    }
 
     /**
-     * Preload the cache on a background thread. Scans datapacks and resolves
-     * all known Cobblemon species so the first render-thread lookup is instant.
+     * Returns null while the answer is not yet decidable (no world loaded, registry empty),
+     * so the negative result is not memoized before the game has finished loading.
      */
+    private fun computeRegistryTrust(): Boolean? {
+        val minecraft = try { Minecraft.getInstance() } catch (_: Throwable) { return null }
+        if (minecraft.level == null) return null
+
+        val integratedServer = try { minecraft.hasSingleplayerServer() } catch (_: Throwable) { false }
+        if (!integratedServer) return false
+
+        // Second, independent gate: a defaulted registry reports 45 for literally every
+        // species. Real data always has variety. This catches the case even if the
+        // integrated-server check above were ever wrong.
+        val all = try { PokemonSpecies.species } catch (_: Throwable) { return null }
+        if (all.size < TRUST_SAMPLE_MIN) return null
+
+        val distinct = HashSet<Int>()
+        var sawNonDefault = false
+        for (species in all) {
+            val rate = try { species.catchRate } catch (_: Throwable) { continue }
+            distinct.add(rate)
+            if (rate != COBBLEMON_DEFAULT_CATCH_RATE) sawNonDefault = true
+            if (distinct.size > 1 && sawNonDefault) return true
+        }
+        return false
+    }
+
+    /** Preload on a background thread so the first render-thread lookup is instant. */
     fun preloadAsync() {
         if (preloaded || preloading) return
         preloading = true
         Thread {
             try {
                 val start = System.nanoTime()
-                ensureDatapacksScanned()
-                // Resolve every registered species from Cobblemon
-                val allSpecies = try {
-                    com.cobblemon.mod.common.api.pokemon.PokemonSpecies.species.toList()
-                } catch (_: Throwable) { emptyList() }
+                val startGeneration = generation
+                // When the registry is trusted it answers every species exactly, so the
+                // file index is dead weight. Anything the registry somehow misses still
+                // triggers a lazy scan further down, on this same background thread.
+                if (!isRegistryTrusted()) ensureLocalFilesScanned()
+                if (generation != startGeneration) return@Thread
+                val allSpecies = try { PokemonSpecies.species.toList() } catch (_: Throwable) { emptyList() }
                 var resolved = 0
                 for (species in allSpecies) {
-                    val key = speciesKey(species)
-                    if (!cache.containsKey(key)) {
-                        val rate = resolve(species, emptySet())
-                        cache[key] = rate
-                        resolved++
-                    }
+                    if (getResolution(species).isKnown) resolved++
                 }
                 val elapsed = (System.nanoTime() - start) / 1_000_000
-                CatchRateMod.LOGGER.info("[CatchRate] Background preload complete: $resolved species in ${elapsed}ms (${cache.size} total cached)")
+                CatchRateMod.LOGGER.info(
+                    "[CatchRate] Preload complete: $resolved/${allSpecies.size} species resolved in ${elapsed}ms " +
+                        "(source=${resolutionTierName()}, ${speciesIndex.size} indexed from files, " +
+                        "${additionIndex.size} species_additions)"
+                )
+                val unresolved = allSpecies.size - resolved
+                if (unresolved > 0) {
+                    CatchRateMod.LOGGER.warn(
+                        "[CatchRate] $unresolved species have no resolvable catch rate and will display as unknown"
+                    )
+                }
                 preloaded = true
             } catch (e: Throwable) {
-                CatchRateMod.LOGGER.warn("[CatchRate] Background preload failed: ${e.message}")
+                CatchRateMod.LOGGER.warn("[CatchRate] Preload failed: ${e.message}")
             } finally {
                 preloading = false
             }
@@ -133,53 +236,101 @@ object SpeciesCatchRateCache {
         }
     }
 
-    /** Clear the cache (e.g., on world change or disconnect). */
+    /**
+     * Watches for session changes. Datapacks, and whether the registry can be trusted at
+     * all, are both per-session, so everything is rebuilt when the player joins a
+     * different world or server.
+     *
+     * Keyed on the network connection rather than the level: the level object is replaced
+     * on every dimension change, which would otherwise throw away a good index and
+     * re-scan every mod JAR each time somebody stepped through a nether portal.
+     */
+    fun onClientTick() {
+        val connection = try { Minecraft.getInstance().connection } catch (_: Throwable) { null }
+        if (connection === lastSession) return
+        lastSession = connection
+        invalidate()
+        if (connection != null) preloadAsync()
+    }
+
     fun invalidate() {
+        generation++
         cache.clear()
-        datapackOverrides.clear()
-        datapacksScanned = false
+        speciesIndex.clear()
+        additionIndex.clear()
+        localFilesScanned = false
         preloaded = false
+        registryTrustResolved = false
+        registryTrusted = false
         CatchRateMod.debug("Cache", "Catch rate cache invalidated")
     }
 
-    // -- Resolution chain --
+    // ==================== RESOLUTION ====================
 
     private fun resolve(species: Species, aspects: Set<String>): CatchRateResolution {
-        ensureDatapacksScanned()
-        val key = speciesKey(species)
-        datapackOverrides[key]?.let {
-            val formOverride = selectFormOverride(species, aspects, it)
-            return CatchRateResolution(
-                catchRate = formOverride?.catchRate ?: it.catchRate,
-                isEstimate = false,
-                source = formOverride?.let { override -> "datapack:${override.formShowdownId}" } ?: "datapack",
-                sourcePath = it.sourcePath
-            )
+        // 1. Live registry, when it is provably real.
+        if (isRegistryTrusted()) {
+            registryCatchRate(species, aspects)?.let { rate ->
+                return CatchRateResolution(rate, isKnown = true, source = Source.REGISTRY.label)
+            }
         }
-        loadFromClasspath(species)?.let {
-            val formOverride = selectFormOverride(species, aspects, it)
-            return CatchRateResolution(
-                catchRate = formOverride?.catchRate ?: it.catchRate,
-                isEstimate = false,
-                source = formOverride?.let { override -> "classpath:${override.formShowdownId}" } ?: "classpath",
-                sourcePath = it.sourcePath
-            )
+
+        // 2. Local files.
+        ensureLocalFilesScanned()
+        resolveFromFiles(species, aspects)?.let { return it }
+
+        // 3. Honest unknown.
+        return CatchRateResolution(UNRESOLVED_PLACEHOLDER, isKnown = false, source = Source.UNRESOLVED.label)
+    }
+
+    /**
+     * Reads the registry form-aware. FormData.getCatchRate() already falls back to the
+     * species value when a form does not override it, so this handles regional forms,
+     * megas and Minior-style form rates without any of our own aspect matching.
+     */
+    private fun registryCatchRate(species: Species, aspects: Set<String>): Int? {
+        return try {
+            val form = if (aspects.isEmpty()) species.standardForm else species.getForm(normalizeAspects(aspects))
+            form.catchRate.takeIf { it > 0 }
+        } catch (_: Throwable) {
+            try { species.catchRate.takeIf { it > 0 } } catch (_: Throwable) { null }
         }
-        // No local data found — use a pessimistic estimate so the HUD avoids false guarantees.
-        return CatchRateResolution(
-            catchRate = DEFAULT_CATCH_RATE,
-            isEstimate = true,
-            source = "fallback",
-            sourcePath = null
-        )
+    }
+
+    private fun resolveFromFiles(species: Species, aspects: Set<String>): CatchRateResolution? {
+        val id = speciesId(species)
+        val base = speciesIndex[id] ?: loadFromClasspath(species)?.also { speciesIndex[id] = it }
+        val addition = additionIndex[id]
+
+        // species_additions are applied on top of the base file by Cobblemon, so they win here too.
+        val effective = when {
+            addition == null -> base
+            base == null -> addition
+            else -> SpeciesFileData(
+                catchRate = addition.catchRate ?: base.catchRate,
+                formOverrides = addition.formOverrides.ifEmpty { base.formOverrides },
+                sourcePath = addition.sourcePath,
+                source = addition.source
+            )
+        } ?: return null
+
+        val formOverride = selectFormOverride(species, aspects, effective.formOverrides)
+        val rate = formOverride?.catchRate ?: effective.catchRate ?: return null
+
+        val sourceLabel = buildString {
+            append(effective.source.label)
+            if (addition != null) append("+addition")
+            formOverride?.let { append(':').append(it.formShowdownId) }
+        }
+        return CatchRateResolution(rate, isKnown = true, source = sourceLabel, sourcePath = effective.sourcePath)
     }
 
     private fun selectFormOverride(
         species: Species,
         aspects: Set<String>,
-        hit: CatchRateSourceHit
+        overrides: List<FormCatchRateOverride>
     ): FormCatchRateOverride? {
-        if (aspects.isEmpty() || hit.formOverrides.isEmpty()) return null
+        if (aspects.isEmpty() || overrides.isEmpty()) return null
 
         val normalizedAspects = normalizeAspects(aspects)
         val resolvedFormId = try {
@@ -189,171 +340,270 @@ object SpeciesCatchRateCache {
         }
 
         if (resolvedFormId != null) {
-            hit.formOverrides.firstOrNull { it.formShowdownId == resolvedFormId }?.let { return it }
+            overrides.firstOrNull { it.formShowdownId == resolvedFormId }?.let { return it }
         }
 
-        return hit.formOverrides
+        return overrides
             .filter { it.aspects.isNotEmpty() && it.aspects.all(normalizedAspects::contains) }
             .maxByOrNull { it.aspects.size }
     }
 
-    // -- Datapack scanning --
+    // ==================== KEYS ====================
 
-    private fun ensureDatapacksScanned() {
-        if (datapacksScanned) return
-        datapacksScanned = true
+    /** Fully qualified "namespace:path" so two packs cannot collide on a shared file name. */
+    private fun speciesId(species: Species): String {
+        val identifier = species.resourceIdentifier
+        if (identifier != null) return "${identifier.namespace}:${identifier.path}".lowercase()
+        return "cobblemon:" + species.name.lowercase().replace(Regex("[^a-z0-9]"), "")
+    }
+
+    private fun resolutionKey(species: Species, aspects: Set<String>): String {
+        val normalizedAspects = normalizeAspects(aspects)
+        if (normalizedAspects.isEmpty()) return speciesId(species)
+        return speciesId(species) + "::" + normalizedAspects.sorted().joinToString("&")
+    }
+
+    private fun normalizeAspects(aspects: Set<String>): Set<String> = aspects.map { it.lowercase() }.toSet()
+
+    private fun showdownId(name: String): String = name.lowercase().replace(Regex("[^a-z0-9]"), "")
+
+    // ==================== FILE SCANNING ====================
+
+    private fun ensureLocalFilesScanned() {
+        if (localFilesScanned || scanning) return
+        synchronized(this) {
+            if (localFilesScanned || scanning) return
+            scanning = true
+        }
         try {
+            val startGeneration = generation
             val gameDir = PlatformHelper.getGameDir()
-            scanDatapackDir(gameDir.resolve("datapacks"))
-            // Also scan world-level datapacks in saves/
+            val target = ScanTarget()
+
+            // Mod JARs first, then datapacks: rank ordering means a later scan cannot
+            // demote a higher-priority source, so this order is only an optimisation.
+            scanModJars(gameDir.resolve("mods"), target)
+            scanDatapackDir(gameDir.resolve("datapacks"), target)
             val savesDir = gameDir.resolve("saves")
             if (Files.isDirectory(savesDir)) {
                 Files.list(savesDir).use { worlds ->
-                    worlds.forEach { worldDir ->
-                        scanDatapackDir(worldDir.resolve("datapacks"))
-                    }
+                    worlds.forEach { world -> scanDatapackDir(world.resolve("datapacks"), target) }
                 }
             }
+
+            // Publish only if this scan still describes the current session.
+            if (generation != startGeneration) {
+                CatchRateMod.debug("Cache", "Discarding superseded catch rate scan")
+                return
+            }
+            speciesIndex.putAll(target.species)
+            additionIndex.putAll(target.additions)
+            localFilesScanned = true
+            CatchRateMod.LOGGER.info(
+                "[CatchRate] Indexed ${target.species.size} species and ${target.additions.size} species_additions from local files"
+            )
         } catch (e: Throwable) {
-            CatchRateMod.debug("Cache", "Datapack scan failed: ${e.message}")
-        }
-        if (datapackOverrides.isNotEmpty()) {
-            CatchRateMod.LOGGER.info("[CatchRate] Loaded ${datapackOverrides.size} catch rate(s) from local datapacks")
+            CatchRateMod.debug("Cache", "Local file scan failed: ${e.message}")
+        } finally {
+            scanning = false
         }
     }
 
-    private fun scanDatapackDir(dir: Path) {
+    /** Scratch index for one scan pass, published only once the pass completes. */
+    private class ScanTarget {
+        val species = HashMap<String, SpeciesFileData>()
+        val additions = HashMap<String, SpeciesFileData>()
+    }
+
+    private fun scanModJars(modsDir: Path, target: ScanTarget) {
+        if (!Files.isDirectory(modsDir)) return
+        try {
+            Files.list(modsDir).use { entries ->
+                entries.filter { it.toString().endsWith(".jar", ignoreCase = true) }
+                    .forEach { jar -> scanArchive(jar, Source.MOD_JAR, target) }
+            }
+        } catch (e: Throwable) {
+            CatchRateMod.debug("Cache", "Mod JAR scan failed: ${e.message}")
+        }
+    }
+
+    private fun scanDatapackDir(dir: Path, target: ScanTarget) {
         if (!Files.isDirectory(dir)) return
         try {
             Files.list(dir).use { entries ->
                 entries.forEach { entry ->
                     try {
                         when {
-                            Files.isDirectory(entry) -> scanDatapackFolder(entry)
-                            entry.toString().endsWith(".zip", ignoreCase = true) -> scanDatapackZip(entry)
+                            Files.isDirectory(entry) -> scanDataRoot(entry.resolve("data"), Source.DATAPACK, entry.toString(), target)
+                            entry.toString().endsWith(".zip", ignoreCase = true) -> scanArchive(entry, Source.DATAPACK, target)
                         }
                     } catch (e: Throwable) {
-                        CatchRateMod.debug("Cache", "Failed to scan datapack ${entry.fileName}: ${e.message}")
+                        CatchRateMod.debug("Cache", "Failed to scan ${entry.fileName}: ${e.message}")
                     }
                 }
             }
         } catch (_: Throwable) { }
     }
 
-    private fun scanDatapackFolder(root: Path) {
-        val dataDir = root.resolve("data")
-        if (!Files.isDirectory(dataDir)) return
-        Files.walk(dataDir).use { stream ->
-            stream.filter { Files.isRegularFile(it) && it.toString().endsWith(".json") }
-                .filter { isSpeciesPath(root.relativize(it).toString().replace('\\', '/')) }
-                .forEach { file ->
-                    extractCatchRateData(Files.newInputStream(file))?.let { hit ->
-                        val name = file.fileName.toString().removeSuffix(".json").lowercase()
-                        datapackOverrides[name] = hit.copy(sourcePath = file.toString())
-                    }
-                }
+    private fun scanArchive(archive: Path, source: Source, target: ScanTarget) {
+        withArchiveRoot(archive) { root ->
+            scanDataRoot(root.resolve("data"), source, archive.toString(), target)
         }
     }
 
-    private fun scanDatapackZip(zipPath: Path) {
-        FileSystems.newFileSystem(zipPath, emptyMap<String, Any>()).use { fs ->
-            val root = fs.getPath("/")
-            Files.walk(root).use { stream ->
-                stream.filter { Files.isRegularFile(it) && it.toString().endsWith(".json") }
-                    .filter { isSpeciesPath(it.toString().removePrefix("/").replace('\\', '/')) }
-                    .forEach { entry ->
-                        extractCatchRateData(Files.newInputStream(entry))?.let { hit ->
-                            val name = entry.fileName.toString().removeSuffix(".json").lowercase()
-                            datapackOverrides[name] = hit.copy(sourcePath = "$zipPath!${entry.toString().replace('\\', '/')}")
-                        }
-                    }
+    /**
+     * Indexes the species and species_additions subtrees under one data root, recursively.
+     *
+     * Only those two subtrees are walked rather than the whole data directory, which keeps
+     * the cost of scanning several hundred mod JARs down to a directory probe for the
+     * mods that carry no species data at all.
+     */
+    private fun scanDataRoot(dataDir: Path, source: Source, displayRoot: String, target: ScanTarget) {
+        if (!Files.isDirectory(dataDir)) return
+        Files.list(dataDir).use { namespaces ->
+            namespaces.filter { Files.isDirectory(it) }.forEach { namespaceDir ->
+                val namespace = namespaceDir.fileName.toString().trim('/').lowercase()
+                indexTree(namespaceDir.resolve("species"), namespace, source, displayRoot, false, target)
+                indexTree(namespaceDir.resolve("species_additions"), namespace, source, displayRoot, true, target)
             }
         }
     }
 
-    /** Match paths like data/{namespace}/species/generation{N}/{name}.json */
-    private fun isSpeciesPath(relativePath: String): Boolean {
-        val parts = relativePath.split('/')
-        // data/<ns>/species/.../<name>.json — at least 4 segments
-        return parts.size >= 4 && parts[0] == "data" && parts[2] == "species"
+    private fun indexTree(
+        root: Path,
+        namespace: String,
+        source: Source,
+        displayRoot: String,
+        isAddition: Boolean,
+        target: ScanTarget
+    ) {
+        if (!Files.isDirectory(root)) return
+        try {
+            Files.walk(root).use { stream ->
+                stream.filter { Files.isRegularFile(it) && it.toString().endsWith(".json", ignoreCase = true) }
+                    .forEach { file ->
+                        try {
+                            indexFile(file, namespace, source, displayRoot, isAddition, target)
+                        } catch (_: Throwable) { }
+                    }
+            }
+        } catch (e: Throwable) {
+            CatchRateMod.debug("Cache", "Failed to walk $root: ${e.message}")
+        }
     }
 
-    // -- Classpath loading --
+    private fun indexFile(
+        file: Path,
+        namespace: String,
+        source: Source,
+        displayRoot: String,
+        isAddition: Boolean,
+        target: ScanTarget
+    ) {
+        val json = Files.newInputStream(file).use { parseJson(it) } ?: return
+        val data = extractCatchRateData(json, "$displayRoot!${file.toString().replace('\\', '/')}", source) ?: return
 
-    // All known Cobblemon generation folders — includes sub-generations like 7b (Meltan/Melmetal)
-    // and 8a (Legends: Arceus Pokémon). Checked against Cobblemon 1.7.3 jar.
+        val id = if (isAddition) {
+            // species_additions carry an explicit "target" such as "cobblemon:aerodactyl".
+            val target = json.takeIf { it.has("target") }?.get("target")?.asString?.lowercase() ?: return
+            if (target.contains(':')) target else "cobblemon:$target"
+        } else {
+            val fileName = file.fileName.toString().removeSuffix(".json").removeSuffix(".JSON").lowercase()
+            "$namespace:$fileName"
+        }
+
+        val index = if (isAddition) target.additions else target.species
+        val existing = index[id]
+        if (existing == null || source.rank >= existing.source.rank) {
+            index[id] = data
+        }
+    }
+
+    private fun <T> withArchiveRoot(archive: Path, block: (Path) -> T): T? {
+        return try {
+            FileSystems.newFileSystem(archive, emptyMap<String, Any>()).use { fs -> block(fs.getPath("/")) }
+        } catch (_: FileSystemAlreadyExistsException) {
+            // Already mounted by the loader (common for mod JARs) — reuse it and do not close it.
+            try {
+                val fs = FileSystems.getFileSystem(URI.create("jar:" + archive.toUri()))
+                block(fs.getPath("/"))
+            } catch (_: Throwable) { null }
+        } catch (_: Throwable) {
+            null
+        }
+    }
+
+    // ==================== CLASSPATH FAST PATH ====================
+
     private val generationFolders = listOf(
         "generation1", "generation2", "generation3", "generation4", "generation5",
         "generation6", "generation7", "generation7b", "generation8", "generation8a", "generation9"
     )
 
-    private fun loadFromClasspath(species: Species): CatchRateSourceHit? {
-        val namespace = species.resourceIdentifier?.namespace ?: "cobblemon"
-        val name = speciesKey(species)
+    /**
+     * Direct classpath lookup for the standard Cobblemon layout. The JAR walk above already
+     * covers everything this does, but this stays as a cheap safety net for environments
+     * where mods are not loaded from the mods directory (dev workspaces, custom launchers).
+     */
+    private fun loadFromClasspath(species: Species): SpeciesFileData? {
+        val identifier = species.resourceIdentifier
+        val namespace = identifier?.namespace ?: "cobblemon"
+        val name = identifier?.path?.lowercase()
+            ?: species.name.lowercase().replace(Regex("[^a-z0-9]"), "")
 
-        for (gen in generationFolders) {
-            val path = "data/$namespace/species/$gen/$name.json"
-            classpathStream(path)?.let { stream ->
-                extractCatchRateData(stream)?.let { return it.copy(sourcePath = path) }
-            }
+        val candidates = generationFolders.map { "data/$namespace/species/$it/$name.json" } +
+            listOf("", "custom/", "addon/").map { "data/$namespace/species/$it$name.json" }
+
+        for (path in candidates) {
+            val json = classpathStream(path)?.use { parseJson(it) } ?: continue
+            extractCatchRateData(json, path, Source.CLASSPATH)?.let { return it }
         }
-
-        // Addon species without generation prefix
-        for (prefix in listOf("", "custom/", "addon/")) {
-            val path = "data/$namespace/species/$prefix$name.json"
-            classpathStream(path)?.let { stream ->
-                extractCatchRateData(stream)?.let { return it.copy(sourcePath = path) }
-            }
-        }
-
         return null
     }
 
     private fun classpathStream(path: String): InputStream? =
-        Thread.currentThread().contextClassLoader.getResourceAsStream(path)
-            ?: SpeciesCatchRateCache::class.java.classLoader.getResourceAsStream(path)
+        Thread.currentThread().contextClassLoader?.getResourceAsStream(path)
+            ?: SpeciesCatchRateCache::class.java.classLoader?.getResourceAsStream(path)
 
-    // -- JSON parsing --
+    // ==================== JSON ====================
 
-    private fun extractCatchRateData(stream: InputStream): CatchRateSourceHit? {
+    private fun parseJson(stream: InputStream): JsonObject? = try {
+        JsonParser.parseString(stream.bufferedReader().readText()).asJsonObject
+    } catch (_: Throwable) {
+        null
+    }
+
+    private fun extractCatchRateData(obj: JsonObject, sourcePath: String, source: Source): SpeciesFileData? {
         return try {
-            stream.use { s ->
-                val obj = JsonParser.parseString(s.bufferedReader().readText()).asJsonObject
-                val baseCatchRate = if (obj.has("catchRate")) obj.get("catchRate").asInt else null
-                val formOverrides = mutableListOf<FormCatchRateOverride>()
+            val baseCatchRate = if (obj.has("catchRate")) obj.get("catchRate").asInt else null
+            val formOverrides = mutableListOf<FormCatchRateOverride>()
 
-                if (obj.has("forms") && obj.get("forms").isJsonArray) {
-                    obj.getAsJsonArray("forms").forEach { formElement ->
-                        val formObject = formElement.asJsonObject
-                        if (!formObject.has("catchRate")) return@forEach
-
-                        val formName = if (formObject.has("name")) formObject.get("name").asString else return@forEach
-                        val aspects = if (formObject.has("aspects") && formObject.get("aspects").isJsonArray) {
-                            formObject.getAsJsonArray("aspects").map { it.asString.lowercase() }.toSet()
-                        } else {
-                            emptySet()
-                        }
-
-                        formOverrides += FormCatchRateOverride(
-                            formName = formName,
-                            formShowdownId = showdownId(formName),
-                            aspects = aspects,
-                            catchRate = formObject.get("catchRate").asInt
-                        )
+            if (obj.has("forms") && obj.get("forms").isJsonArray) {
+                obj.getAsJsonArray("forms").forEach { formElement ->
+                    val formObject = formElement.asJsonObject
+                    if (!formObject.has("catchRate")) return@forEach
+                    val formName = if (formObject.has("name")) formObject.get("name").asString else return@forEach
+                    val aspects = if (formObject.has("aspects") && formObject.get("aspects").isJsonArray) {
+                        formObject.getAsJsonArray("aspects").map { it.asString.lowercase() }.toSet()
+                    } else {
+                        emptySet()
                     }
-                }
-
-                if (baseCatchRate == null && formOverrides.isEmpty()) {
-                    null
-                } else {
-                    CatchRateSourceHit(
-                        catchRate = baseCatchRate ?: DEFAULT_CATCH_RATE,
-                        formOverrides = formOverrides,
-                        sourcePath = ""
+                    formOverrides += FormCatchRateOverride(
+                        formName = formName,
+                        formShowdownId = showdownId(formName),
+                        aspects = aspects,
+                        catchRate = formObject.get("catchRate").asInt
                     )
                 }
             }
-        } catch (_: Throwable) { null }
-    }
 
+            if (baseCatchRate == null && formOverrides.isEmpty()) {
+                null
+            } else {
+                SpeciesFileData(baseCatchRate, formOverrides, sourcePath, source)
+            }
+        } catch (_: Throwable) {
+            null
+        }
+    }
 }

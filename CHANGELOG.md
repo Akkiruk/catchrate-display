@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.9.0] - 2026-08-22
+
+### Changed
+- **Catch rates now come from Cobblemon's own species registry whenever it is trustworthy.** Cobblemon never sends `catchRate` over the network, so a client on a dedicated server sees the default 45 for every species — but it also skips its data sync entirely for memory connections, which means singleplayer and LAN hosts keep the real datapack-loaded values. Catch Rate Display now detects this and reads the registry directly in that case, exactly like the Pokedex mods do. Custom species from any datapack or mod resolve correctly regardless of how their files are laid out.
+
+### Fixed
+- **Custom/fake Pokemon in non-standard folders now resolve.** The previous file lookup only checked eleven hardcoded `generationN` folders plus `custom/` and `addon/` inside mod JARs, so a species in any other subfolder silently fell back to a guess — while the same species shipped in a datapack worked, because datapacks were scanned recursively. Mod JARs are now scanned recursively too, so layout no longer matters.
+- **`species_additions` are now read.** Packs that adjust a catch rate through `data/<namespace>/species_additions/` were previously invisible, leaving the base value on screen.
+- **Species files can no longer collide across packs.** The file index was keyed by bare filename, so two packs shipping the same filename in different namespaces overwrote each other. Entries are now keyed by full `namespace:path`, and a datapack correctly outranks a mod JAR for the same species.
+
+### Removed
+- **Unresolvable catch rates no longer display a fabricated number.** The fallback used to be a hardcoded `3`, which is a plausible real catch rate — an unresolved species rendered as a confident ~1% that was indistinguishable from a correct answer. The HUD and comparison panel now show the rate as unknown instead, and never claim GUARANTEED from a value that was never resolved. Ball multipliers, HP and status are still shown, since those remain accurate.
+
+### Added
+- `/catchrate info` and the debug log now report which source is answering lookups and how many species and `species_additions` are indexed from files.
+- `/catchrate export-rates` gained `is_known` and `registry_trusted` columns for comparing resolved values against the registry.
+
+### Known limitation
+- A datapack that exists **only** on a remote server still cannot be resolved, because the client has neither the registry values nor the files. Those species now report as unknown rather than showing a wrong number. Fixing this would require a server-side component, which this mod deliberately does not have.
+
 ## [2.8.24] - 2026-08-22
 
 ### Fixed

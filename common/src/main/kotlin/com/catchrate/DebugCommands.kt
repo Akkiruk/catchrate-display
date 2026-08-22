@@ -69,6 +69,16 @@ object DebugCommands {
         feedback(source, Component.translatable("catchrate.command.info.hud_enabled", config.hudEnabled.toString()))
         feedback(source, Component.translatable("catchrate.command.info.show_ooc", config.showOutOfCombat.toString()))
         feedback(source, Component.translatable("catchrate.command.info.hide_unencountered", config.hideUnencounteredInfo.toString()))
+
+        // Literal rather than translatable: this is a diagnostic line, and adding a key
+        // here would show as a raw key in every locale that has not been updated yet.
+        val tier = try { SpeciesCatchRateCache.resolutionTierName() } catch (_: Throwable) { "unavailable" }
+        val indexed = try {
+            "${SpeciesCatchRateCache.indexedSpeciesCount()} species / ${SpeciesCatchRateCache.indexedAdditionCount()} additions"
+        } catch (_: Throwable) { "unavailable" }
+        feedback(source, Component.literal("§7Catch rate source: §f$tier"))
+        feedback(source, Component.literal("§7File index: §f$indexed"))
+
         feedback(source, Component.translatable("catchrate.command.info.footer"))
 
         CatchRateMod.logEnvironmentInfo()

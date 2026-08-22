@@ -419,7 +419,9 @@ object CatchRateDebugLog {
     private fun getCacheInfo(): String {
         return try {
             val cacheSize = SpeciesCatchRateCache.cacheSize()
-            "  Cache size: $cacheSize species cached"
+            """  Cache size: $cacheSize species cached
+  Resolution source: ${SpeciesCatchRateCache.resolutionTierName()}
+  Indexed from files: ${SpeciesCatchRateCache.indexedSpeciesCount()} species, ${SpeciesCatchRateCache.indexedAdditionCount()} species_additions"""
         } catch (_: Throwable) {
             "  (unable to read cache info)"
         }

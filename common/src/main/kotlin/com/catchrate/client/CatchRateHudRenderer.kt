@@ -372,15 +372,24 @@ class CatchRateHudRenderer {
         val wildText = if (data.isWild) HudTranslations.wild() else null
         val hpText = "${HudTranslations.hp()} ${String.format("%.2f", data.hpMultiplier)}x"
         
-        // Don't claim GUARANTEED when the catch rate is an estimate or the client-side
+        // The base catch rate could not be resolved from any source. Show that plainly
+        // rather than a percentage derived from a placeholder, which would look like a
+        // real (and very low) chance. See SpeciesCatchRateCache for the resolution order.
+        val rateUnknown = data.isCatchRateEstimate
+
+        // Don't claim GUARANTEED when the catch rate is unknown or the client-side
         // target data is not trustworthy (for example, disguised Pokemon).
-        val effectiveGuaranteed = data.isGuaranteed && !data.isCatchRateEstimate && data.isPredictionReliable
-        val percentText = if (effectiveGuaranteed) {
-            HudTranslations.guaranteedShort()
-        } else {
-            val approx = if (data.isCatchRateEstimate || !data.isPredictionReliable) "~" else ""
-            "$approx${CatchRateFormula.formatCatchPercentage(data.catchPercentage, effectiveGuaranteed)}%"
+        val effectiveGuaranteed = data.isGuaranteed && !rateUnknown && data.isPredictionReliable
+        val percentText = when {
+            rateUnknown -> HudTranslations.unknownRate()
+            effectiveGuaranteed -> HudTranslations.guaranteedShort()
+            else -> {
+                val approx = if (!data.isPredictionReliable) "~" else ""
+                "$approx${CatchRateFormula.formatCatchPercentage(data.catchPercentage, false)}%"
+            }
         }
+        // Bar and panel styling follow the same rule: nothing to fill when nothing is known.
+        val displayPercentage = if (rateUnknown) 0.0 else data.catchPercentage
         
         val hasStatus = data.statusMultiplier > 1.0
         val statusIcon = HudDrawing.getStatusIcon(data.statusName)
@@ -413,7 +422,7 @@ class CatchRateHudRenderer {
         val boxHeight = 40 + detailRows * 10 + 6
         val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
         
-        HudDrawing.drawStyledPanel(guiGraphics, x, y, boxWidth, boxHeight, data.catchPercentage, isWild = data.isWild)
+        HudDrawing.drawStyledPanel(guiGraphics, x, y, boxWidth, boxHeight, displayPercentage, isWild = data.isWild)
         
         // Header: Pokemon name + level, optional WILD tag
         guiGraphics.drawString(font, nameText, x + 6, y + 4, Colors.TEXT_WHITE)
@@ -427,8 +436,9 @@ class CatchRateHudRenderer {
             HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, 100.0, true)
             guiGraphics.drawString(font, percentText, x + 6, barY + 12, Colors.TEXT_GREEN)
         } else {
-            HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, data.catchPercentage, false)
-            guiGraphics.drawString(font, percentText, x + 6, barY + 12, HudDrawing.getChanceColorInt(data.catchPercentage))
+            HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, displayPercentage, false)
+            val percentColor = if (rateUnknown) Colors.TEXT_ORANGE else HudDrawing.getChanceColorInt(displayPercentage)
+            guiGraphics.drawString(font, percentText, x + 6, barY + 12, percentColor)
         }
         
         // Detail rows
@@ -568,10 +578,16 @@ class CatchRateHudRenderer {
             }
             
             val ballText = Component.literal("$medal${ball.displayName}")
-            val rateColor = HudDrawing.getChanceFormatting(ball.catchRate)
             val effectiveGuaranteed = ball.isGuaranteed && ball.isPredictionReliable && !ball.isCatchRateEstimate
-            val approx = if (ball.isCatchRateEstimate || !ball.isPredictionReliable) "~" else ""
-            val rateText = Component.literal("$approx${CatchRateFormula.formatCatchPercentage(ball.catchRate, effectiveGuaranteed)}%").withStyle(rateColor)
+            // Ball multipliers stay accurate even when the species' base rate is unknown,
+            // so the multiplier column is still worth showing next to an unknown percentage.
+            val rateText = if (ball.isCatchRateEstimate) {
+                Component.literal(HudTranslations.unknownRate()).withStyle(ChatFormatting.GRAY)
+            } else {
+                val approx = if (!ball.isPredictionReliable) "~" else ""
+                Component.literal("$approx${CatchRateFormula.formatCatchPercentage(ball.catchRate, effectiveGuaranteed)}%")
+                    .withStyle(HudDrawing.getChanceFormatting(ball.catchRate))
+            }
             
             val multColor = HudDrawing.getBallMultiplierFormatting(ball.multiplier)
             val multText = Component.literal("${String.format("%.1f", ball.multiplier)}x").withStyle(multColor)

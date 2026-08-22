@@ -31,19 +31,24 @@ object CatchRateAuditExport {
                 "form_name",
                 "form_showdown_id",
                 "resolved_catch_rate",
-                "is_estimate",
+                "is_known",
                 "source",
                 "source_path",
                 "species_registry_catch_rate",
                 "form_registry_catch_rate",
-                "matches_form_registry"
+                "matches_form_registry",
+                "registry_trusted"
             ).joinToString(",")
         )
+
+        // Recorded once per export: when the registry is not trusted its catch rate columns
+        // are all Cobblemon's unsynced default and a mismatch there means nothing.
+        val registryTrusted = try { SpeciesCatchRateCache.isRegistryTrusted() } catch (_: Throwable) { false }
 
         speciesList.forEach { species ->
             val resolution = SpeciesCatchRateCache.getResolution(species)
             auditForms(species).forEach { form ->
-                val matchesFormRegistry = resolution.catchRate == form.catchRate
+                val matchesFormRegistry = resolution.isKnown && resolution.catchRate == form.catchRate
                 builder.appendLine(
                     listOf(
                         csv(species.resourceIdentifier.toString()),
@@ -51,12 +56,13 @@ object CatchRateAuditExport {
                         csv(form.name),
                         csv(form.formOnlyShowdownId()),
                         resolution.catchRate.toString(),
-                        resolution.isEstimate.toString(),
+                        resolution.isKnown.toString(),
                         csv(resolution.source),
                         csv(resolution.sourcePath ?: ""),
                         species.catchRate.toString(),
                         form.catchRate.toString(),
-                        matchesFormRegistry.toString()
+                        matchesFormRegistry.toString(),
+                        registryTrusted.toString()
                     ).joinToString(",")
                 )
             }

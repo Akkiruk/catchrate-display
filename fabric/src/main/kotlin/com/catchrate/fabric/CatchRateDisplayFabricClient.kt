@@ -43,6 +43,7 @@ class CatchRateDisplayFabricClient : ClientModInitializer {
         // Register client tick for keybinds
         ClientTickEvents.END_CLIENT_TICK.register { minecraft ->
             CatchRateBattleMonitor.onClientTick()
+            SpeciesCatchRateCache.onClientTick()
             CatchRateKeybinds.tick(minecraft)
         }
         

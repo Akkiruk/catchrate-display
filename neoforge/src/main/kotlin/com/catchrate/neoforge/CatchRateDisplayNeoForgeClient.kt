@@ -59,6 +59,7 @@ object CatchRateDisplayNeoForgeClientEvents {
     fun onClientTick(event: ClientTickEvent.Post) {
         val minecraft = Minecraft.getInstance()
         CatchRateBattleMonitor.onClientTick()
+        SpeciesCatchRateCache.onClientTick()
         if (minecraft.player != null) {
             CatchRateKeybinds.tick(minecraft)
         }
