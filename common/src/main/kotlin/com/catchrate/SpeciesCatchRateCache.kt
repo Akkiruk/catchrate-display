@@ -275,8 +275,11 @@ object SpeciesCatchRateCache {
             }
         }
 
-        // 2. Local files.
-        ensureLocalFilesScanned()
+        // 2. Local files. Never scans inline: resolve() runs on the render thread, and
+        // walking every mod JAR there would freeze the frame. The scan is kicked off in
+        // the background and this lookup reports unknown until it lands — unknowns are
+        // not cached, so the real value appears as soon as the index is published.
+        requestLocalFileScan()
         resolveFromFiles(species, aspects)?.let { return it }
 
         // 3. Honest unknown.
@@ -368,6 +371,22 @@ object SpeciesCatchRateCache {
     private fun showdownId(name: String): String = name.lowercase().replace(Regex("[^a-z0-9]"), "")
 
     // ==================== FILE SCANNING ====================
+
+    /**
+     * Starts the local file scan on a background thread if it is neither done nor running.
+     * Safe to call from the render thread; returns immediately either way.
+     */
+    private fun requestLocalFileScan() {
+        if (localFilesScanned || scanning) return
+        Thread {
+            try { ensureLocalFilesScanned() } catch (_: Throwable) { }
+        }.apply {
+            isDaemon = true
+            name = "CatchRate-FileScan"
+            priority = Thread.MIN_PRIORITY
+            start()
+        }
+    }
 
     private fun ensureLocalFilesScanned() {
         if (localFilesScanned || scanning) return
