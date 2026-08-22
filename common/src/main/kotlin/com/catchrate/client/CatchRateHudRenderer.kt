@@ -3,6 +3,7 @@ package com.catchrate.client
 import com.catchrate.BallContextFactory
 import com.catchrate.CatchRateBattleMonitor
 import com.catchrate.CatchRateCalculator
+import com.catchrate.CatchRateCaptureTracker
 import com.catchrate.CatchRateConstants.Colors
 import com.catchrate.CatchRateDebugLog
 import com.catchrate.CatchRateFormula
@@ -50,26 +51,27 @@ object HudTranslations {
 class CatchRateHudRenderer {
     
     private var lastBattleId: java.util.UUID? = null
-    
-    private var lastPokemonUuid: java.util.UUID? = null
-    private var lastBallItem: String? = null
-    private var lastHpValue: Float = -1F
-    private var lastStatusName: String? = null
-    
+
+    /** Composite fingerprint of every cheap input the battle calculation depends on. */
+    private var lastBattleSignature: String? = null
+    private var lastBattleCalcAtMs = 0L
+
     private var cachedClientResult: CatchRateResult? = null
-    
+
     private var cachedComparison: List<BallComparisonCalculator.BallCatchRate>? = null
-    private var lastComparisonTurnCount = 0
-    private var lastComparisonStatusName: String? = null
-    
+
     private var cachedWorldComparison: List<BallComparisonCalculator.BallCatchRate>? = null
-    private var lastWorldPokemonUuid: java.util.UUID? = null
-    private var lastWorldComparisonHp: Int = -1
-    private var lastWorldComparisonStatusName: String? = null
-    
-    private var tickCounter = 0L
-    
-    companion object
+    private var lastWorldSignature: String? = null
+    private var lastWorldCalcAtMs = 0L
+
+    companion object {
+        /**
+         * Ceiling on how long a cached rate may live even when the signature is unchanged.
+         * Covers inputs too expensive to fingerprint every frame (target underwater state,
+         * light level, Pokedex sync arriving late, external catch rate buffs expiring).
+         */
+        private const val MAX_CACHE_AGE_MS = 500L
+    }
     
     /**
      * Main render method. Called by platform-specific HUD render events.
@@ -92,8 +94,6 @@ class CatchRateHudRenderer {
         // Respect F1 to hide HUD
         if (minecraft.options.hideGui) return
         
-        this.tickCounter++
-        
         val battle = CobblemonClient.battle
         
         // Handle out-of-combat display
@@ -114,10 +114,7 @@ class CatchRateHudRenderer {
             cachedClientResult = null
             cachedComparison = null
             cachedWorldComparison = null
-            lastPokemonUuid = null
-            lastBallItem = null
-            lastHpValue = -1F
-            lastStatusName = null
+            lastBattleSignature = null
         }
         if (!battle.isPvW) {
             CatchRateMod.debugOnChange("battleType", "pvp", "Not PvW battle, HUD hidden")
@@ -136,7 +133,7 @@ class CatchRateHudRenderer {
             return
         }
         
-        checkCacheInvalidation(opponentPokemon, heldItem)
+        checkCacheInvalidation(opponentPokemon, heldItem, battle)
         
         val ballName = getBallId(heldItem).lowercase()
         val showComparison = CatchRateKeybinds.isComparisonHeld
@@ -163,35 +160,62 @@ class CatchRateHudRenderer {
         renderClientModeHud(guiGraphics, minecraft, result, ballName)
     }
     
-    private fun checkCacheInvalidation(pokemon: ClientBattlePokemon, heldItem: ItemStack) {
-        val ballId = getBallId(heldItem)
-        val statusName = pokemon.status?.name?.path
-        var needsInvalidation = false
-        
-        if (pokemon.uuid != lastPokemonUuid) { needsInvalidation = true; lastPokemonUuid = pokemon.uuid }
-        if (ballId != lastBallItem) { needsInvalidation = true; lastBallItem = ballId }
-        if (pokemon.hpValue != lastHpValue) { needsInvalidation = true; lastHpValue = pokemon.hpValue }
-        if (statusName != lastStatusName) { needsInvalidation = true; lastStatusName = statusName }
-        
-        if (needsInvalidation) {
+    private fun checkCacheInvalidation(pokemon: ClientBattlePokemon, heldItem: ItemStack, battle: ClientBattle) {
+        val signature = buildBattleSignature(pokemon, heldItem, battle)
+        val now = System.currentTimeMillis()
+        val stale = now - lastBattleCalcAtMs >= MAX_CACHE_AGE_MS
+
+        if (signature != lastBattleSignature || stale) {
+            lastBattleSignature = signature
+            lastBattleCalcAtMs = now
             cachedClientResult = null
             cachedComparison = null
         }
     }
-    
+
+    /**
+     * Fingerprint of everything the catch rate depends on that is cheap to read each frame.
+     *
+     * Notably includes the player's own active Pokemon: Love Ball and Level Ball read it, so
+     * switching party members mid-battle has to invalidate the cached rate. Anything too
+     * expensive to sample here is covered by the MAX_CACHE_AGE_MS refresh instead.
+     */
+    private fun buildBattleSignature(pokemon: ClientBattlePokemon, heldItem: ItemStack, battle: ClientBattle): String {
+        return try {
+            val ally = battle.side1.activeClientBattlePokemon.firstOrNull()?.battlePokemon
+            val player = Minecraft.getInstance().player
+            buildString {
+                append(pokemon.uuid).append('|')
+                append(pokemon.species.resourceIdentifier).append('|')
+                append(pokemon.level).append('|')
+                append(pokemon.hpValue).append('/').append(pokemon.maxHp).append('|')
+                append(pokemon.isHpFlat).append('|')
+                append(pokemon.status?.name?.path).append('|')
+                append(pokemon.state.currentAspects.sorted().joinToString(",")).append('|')
+                append(getBallId(heldItem)).append('|')
+                append(CatchRateBattleMonitor.getTurnCount(battle.battleId)).append('|')
+                append(CatchRateCaptureTracker.hasConsumedQuickBallBonus(battle.battleId, pokemon.uuid)).append('|')
+                append(ally?.uuid).append('/')
+                append(ally?.species?.resourceIdentifier).append('/')
+                append(ally?.gender?.name).append('/')
+                append(ally?.level).append('|')
+                append(player?.isUnderWater)
+            }
+        } catch (e: Throwable) {
+            // Unknown state, so use a value that never matches and force a recalculation.
+            "sig_error_" + System.nanoTime()
+        }
+    }
+
     private fun resetState() {
         lastBattleId = null
-        lastPokemonUuid = null
-        lastBallItem = null
-        lastHpValue = -1F
-        lastStatusName = null
+        lastBattleSignature = null
+        lastBattleCalcAtMs = 0L
         cachedClientResult = null
         cachedComparison = null
-        lastComparisonStatusName = null
         cachedWorldComparison = null
-        lastWorldPokemonUuid = null
-        lastWorldComparisonHp = -1
-        lastWorldComparisonStatusName = null
+        lastWorldSignature = null
+        lastWorldCalcAtMs = 0L
     }
     
     /**
@@ -477,38 +501,47 @@ class CatchRateHudRenderer {
     
     private fun renderBallComparisonPanel(guiGraphics: GuiGraphics, minecraft: Minecraft, pokemon: ClientBattlePokemon, battle: ClientBattle) {
         val turnCount = CatchRateBattleMonitor.getTurnCount(battle.battleId)
-        val statusName = pokemon.status?.name?.path
-        val turnChanged = turnCount != lastComparisonTurnCount
-        val statusChanged = statusName != lastComparisonStatusName
-        if (cachedComparison == null || turnChanged || statusChanged) {
+        // Invalidation is driven by checkCacheInvalidation(), which shares one signature with
+        // the single-ball result so both panels refresh on exactly the same triggers.
+        if (cachedComparison == null) {
             cachedComparison = BallComparisonCalculator.calculateAllBalls(pokemon, turnCount, battle)
-            lastComparisonTurnCount = turnCount
-            lastComparisonStatusName = statusName
         }
         val comparison = cachedComparison ?: return
         renderComparisonPanelContent(guiGraphics, minecraft, comparison, HudTranslations.ballComparison(turnCount), showPenaltyNote = false)
     }
     
     private fun renderWorldComparisonPanel(guiGraphics: GuiGraphics, minecraft: Minecraft, entity: com.cobblemon.mod.common.entity.pokemon.PokemonEntity) {
-        val entityUuid = entity.uuid
-        val pokemon = entity.pokemon
-        val currentHp = pokemon.currentHealth
-        val statusName = BallContextFactory.getEffectiveStatusPath(entity)
-        if (entityUuid != lastWorldPokemonUuid) {
-            cachedWorldComparison = null
-            lastWorldPokemonUuid = entityUuid
-        }
-        val hpChanged = currentHp != lastWorldComparisonHp
-        val statusChanged = statusName != lastWorldComparisonStatusName
-        if (cachedWorldComparison == null || hpChanged || statusChanged) {
+        val signature = buildWorldSignature(entity)
+        val now = System.currentTimeMillis()
+        val stale = now - lastWorldCalcAtMs >= MAX_CACHE_AGE_MS
+        if (cachedWorldComparison == null || signature != lastWorldSignature || stale) {
             cachedWorldComparison = BallComparisonCalculator.calculateAllBallsForWorld(entity)
-            lastWorldComparisonHp = currentHp
-            lastWorldComparisonStatusName = statusName
+            lastWorldSignature = signature
+            lastWorldCalcAtMs = now
         }
         val comparison = cachedWorldComparison ?: return
         renderComparisonPanelContent(guiGraphics, minecraft, comparison, HudTranslations.ballComparisonWild(), showPenaltyNote = true)
     }
     
+    private fun buildWorldSignature(entity: com.cobblemon.mod.common.entity.pokemon.PokemonEntity): String {
+        return try {
+            val pokemon = entity.pokemon
+            val player = Minecraft.getInstance().player
+            buildString {
+                append(entity.uuid).append('|')
+                append(pokemon.species.resourceIdentifier).append('|')
+                append(pokemon.level).append('|')
+                append(pokemon.currentHealth).append('/').append(pokemon.maxHealth).append('|')
+                append(BallContextFactory.getEffectiveStatusPath(entity)).append('|')
+                append(entity.aspects.sorted().joinToString(",")).append('|')
+                append(entity.isUnderWater).append('|')
+                append(player?.isUnderWater)
+            }
+        } catch (e: Throwable) {
+            "sig_error_" + System.nanoTime()
+        }
+    }
+
     private fun renderComparisonPanelContent(
         guiGraphics: GuiGraphics,
         minecraft: Minecraft,

@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.8.24] - 2026-08-22
+
+### Fixed
+- **Catch rates no longer get stuck after switching your active Pokemon.** The 2.8.23 caching change only invalidated on target, held ball, HP, and status changes, so inputs that come from your own side of the battle never triggered a refresh. Switching party members now updates Love Ball and Level Ball rates immediately.
+- **Turn-dependent balls now update every turn.** Timer Ball and Quick Ball rates were held in the cache across turn advances and Quick Ball bonus consumption; both are now part of the cache key.
+- **Form changes, aspect changes, and water state now refresh the HUD.** Mega evolution, form swaps, and the player entering or leaving water previously kept a stale rate on screen.
+- **Cached rates now expire after 500ms as a backstop.** Inputs too expensive to sample every frame (target underwater state, light level, late Pokedex sync, external catch-rate buffs) can no longer leave a stale rate on screen indefinitely.
+
 ## [2.8.23] - 2026-07-25
 
 ### Changed
