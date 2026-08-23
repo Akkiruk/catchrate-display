@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.9.1] - 2026-08-23
+
+### Added
+- **Public API for third-party catch-rate compat.** Other mods can now register a `CatchRateModifierProvider` with `com.catchrate.api.CatchRateModifierRegistry` to add their own catch-rate boosts (e.g. a food or item effect) without needing dedicated compat work from this mod. Each active modifier gets its own row on the HUD and is folded into the displayed percentage the same way ball, status, and level bonuses already are. The HUD looks identical to before when nothing is registered.
+
+### Fixed
+- Cleaned up leftover formatting artifacts (stray multiplier text duplicated from the ball line, trailing exclamation marks, leftover placeholder syntax) across the non-English translation files.
+
 ## [2.9.0] - 2026-08-23
 
 ### Changed

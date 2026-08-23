@@ -11,6 +11,8 @@ import com.catchrate.CatchRateKeybinds
 import com.catchrate.CatchRateMod
 import com.catchrate.CatchRatePredictionReliability
 import com.catchrate.CatchRateResult
+import com.catchrate.ExternalCatchRateModifiers
+import com.catchrate.api.CatchRateModifierResult
 import com.catchrate.config.CatchRateConfig
 import com.cobblemon.mod.common.api.pokedex.PokedexEntryProgress
 import com.cobblemon.mod.common.client.CobblemonClient
@@ -274,7 +276,8 @@ class CatchRateHudRenderer {
         val isWild: Boolean,
         val isEncountered: Boolean = true,
         val isCatchRateEstimate: Boolean = false,
-        val isPredictionReliable: Boolean = true
+        val isPredictionReliable: Boolean = true,
+        val externalModifiers: List<CatchRateModifierResult> = emptyList()
     )
 
     private fun getEffectiveBattleSpecies(pokemon: ClientBattlePokemon) =
@@ -304,7 +307,8 @@ class CatchRateHudRenderer {
             isWild = false,
             isEncountered = encountered,
             isCatchRateEstimate = result.isCatchRateEstimate,
-            isPredictionReliable = result.isReliableGuaranteedPrediction
+            isPredictionReliable = result.isReliableGuaranteedPrediction,
+            externalModifiers = result.externalModifiers
         ))
     }
     
@@ -349,7 +353,8 @@ class CatchRateHudRenderer {
             isWild = true,
             isEncountered = encountered,
             isCatchRateEstimate = result.isCatchRateEstimate,
-            isPredictionReliable = result.isPredictionReliable
+            isPredictionReliable = result.isPredictionReliable,
+            externalModifiers = ExternalCatchRateModifiers.collect(player)
         ))
     }
     
@@ -401,7 +406,10 @@ class CatchRateHudRenderer {
         
         val hasConditionDesc = data.ballConditionReason.isNotBlank()
         val penaltyText = if (data.isWild) HudTranslations.outOfCombatPenalty() else null
-        
+        val modifierTexts = data.externalModifiers.map { modifier ->
+            "${modifier.description} ${String.format("%.2f", modifier.multiplier)}x"
+        }
+
         val textWidths = mutableListOf(
             font.width(nameText) + (if (wildText != null) font.width(" $wildText") + 8 else 0),
             font.width(percentText),
@@ -411,14 +419,16 @@ class CatchRateHudRenderer {
         if (hasStatus) textWidths.add(font.width(statusText))
         if (hasConditionDesc) textWidths.add(font.width(data.ballConditionReason))
         if (penaltyText != null) textWidths.add(font.width(penaltyText))
-        
+        modifierTexts.forEach { textWidths.add(font.width(it)) }
+
         val boxWidth = (textWidths.maxOrNull() ?: 100) + 16
-        
+
         // Layout: name(10) + 2 + bar(8) + 2 + percent(10) + 2 = 34 top section + detail rows * 10 + 6 bottom pad
         var detailRows = 2 // HP + ball always present
         if (hasStatus) detailRows++
         if (hasConditionDesc) detailRows++
         if (penaltyText != null) detailRows++
+        detailRows += modifierTexts.size
         val boxHeight = 40 + detailRows * 10 + 6
         val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
         
@@ -464,6 +474,11 @@ class CatchRateHudRenderer {
         if (penaltyText != null) {
             currentY += 10
             guiGraphics.drawString(font, penaltyText, x + 6, currentY, Colors.TEXT_ORANGE)
+        }
+
+        modifierTexts.forEach { modifierText ->
+            currentY += 10
+            guiGraphics.drawString(font, modifierText, x + 6, currentY, Colors.TEXT_GREEN)
         }
     }
     

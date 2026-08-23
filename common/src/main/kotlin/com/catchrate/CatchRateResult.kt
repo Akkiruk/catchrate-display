@@ -1,5 +1,7 @@
 package com.catchrate
 
+import com.catchrate.api.CatchRateModifierResult
+
 /**
  * Result of a catch rate calculation.
  */
@@ -19,9 +21,8 @@ data class CatchRateResult(
     val ballConditionReason: String = "",
     /** True when the base catch rate is a fallback estimate (species not found in local data). */
     val isCatchRateEstimate: Boolean = false,
-    /** Additional catch-rate multiplier from detected client-side compat effects. */
-    val externalCatchRateMultiplier: Double = 1.0,
-    val externalCatchRateReason: String = "",
+    /** Active catch-rate modifiers from CobbleCuisine compat and third-party API registrations. */
+    val externalModifiers: List<CatchRateModifierResult> = emptyList(),
     /** True when the displayed catch prediction is based on trustworthy client target data. */
     val isReliableGuaranteedPrediction: Boolean = false
 )

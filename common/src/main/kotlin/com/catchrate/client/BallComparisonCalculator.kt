@@ -2,7 +2,7 @@ package com.catchrate.client
 
 import com.catchrate.BallContextFactory
 import com.catchrate.BallMultiplierCalculator
-import com.catchrate.CobbleCuisineCompat
+import com.catchrate.ExternalCatchRateModifiers
 import com.catchrate.CatchRatePredictionReliability
 import com.catchrate.CatchRateMod
 import com.catchrate.CatchRateFormula
@@ -97,7 +97,9 @@ object BallComparisonCalculator {
         val isEstimate = SpeciesCatchRateCache.isEstimate(effectiveSpecies, ctx.pokemonAspects)
         val statusMult = CatchRateFormula.getStatusMultiplier(pokemon.status?.name?.path)
         val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
-        val externalCatchRateMultiplier = CobbleCuisineCompat.getCatchRateMultiplier(player)
+        val externalCatchRateMultiplier = ExternalCatchRateModifiers.combinedMultiplier(
+            ExternalCatchRateModifiers.collect(player)
+        )
         
         return comparableBalls().map { ballId ->
             val result = BallMultiplierCalculator.calculate(ballId, ctx)
@@ -160,7 +162,9 @@ object BallComparisonCalculator {
         val currentHp = pokemon.currentHealth.toFloat()
         val statusMult = CatchRateFormula.getStatusMultiplier(BallContextFactory.getEffectiveStatusPath(entity))
         val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
-        val externalCatchRateMultiplier = CobbleCuisineCompat.getCatchRateMultiplier(player)
+        val externalCatchRateMultiplier = ExternalCatchRateModifiers.combinedMultiplier(
+            ExternalCatchRateModifiers.collect(player)
+        )
         
         val catchChance = CatchRateFormula.calculateCatchPercentage(
             baseCatchRate = baseCatchRate,
@@ -224,7 +228,9 @@ object BallComparisonCalculator {
         val currentHp = pokemon.currentHealth.toFloat()
         val statusMult = CatchRateFormula.getStatusMultiplier(BallContextFactory.getEffectiveStatusPath(entity))
         val levelBonus = CatchRateFormula.getLowLevelBonus(pokemon.level)
-        val externalCatchRateMultiplier = CobbleCuisineCompat.getCatchRateMultiplier(player)
+        val externalCatchRateMultiplier = ExternalCatchRateModifiers.combinedMultiplier(
+            ExternalCatchRateModifiers.collect(player)
+        )
         
         return comparableBalls().map { ballId ->
             val result = BallMultiplierCalculator.calculate(ballId, ctx)

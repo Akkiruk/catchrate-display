@@ -80,8 +80,8 @@ object CatchRateDebugLog {
         sb.appendLine("  HP: ${String.format("%.1f", result.hpPercentage)}%")
         sb.appendLine("  Status: ${result.statusName.ifEmpty { "none" }} (${result.statusMultiplier}x)")
         sb.appendLine("  Level Bonus: ${result.levelBonus}x")
-        if (result.externalCatchRateMultiplier != 1.0 || result.externalCatchRateReason.isNotEmpty()) {
-            sb.appendLine("  External Catch Modifier: ${result.externalCatchRateMultiplier}x ${result.externalCatchRateReason}".trimEnd())
+        result.externalModifiers.forEach { modifier ->
+            sb.appendLine("  External Catch Modifier: ${modifier.multiplier}x ${modifier.description}".trimEnd())
         }
         sb.appendLine("  Modified Catch Rate: ${String.format("%.4f", result.modifiedCatchRate)}")
         sb.appendLine("  In Battle: $inBattle${if (!inBattle) " (0.5x penalty)" else ""}")

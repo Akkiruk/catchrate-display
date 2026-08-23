@@ -72,6 +72,8 @@
   "catchrate.ball.lure.ineffective": "Only fished Pokémon",
   "catchrate.ball.safari.out_of_combat": "Out of combat bonus",
   "catchrate.ball.safari.in_battle": "No effect in battle",
+  "catchrate.ball.park.temperate_biome": "Temperate biome",
+  "catchrate.ball.park.need_temperate_biome": "Need temperate biome",
   "catchrate.message.enabled": "Catch Rate: §aEnabled",
   "catchrate.message.disabled": "Catch Rate: §cDisabled",
   "catchrate.message.position_reset": "HUD position reset",

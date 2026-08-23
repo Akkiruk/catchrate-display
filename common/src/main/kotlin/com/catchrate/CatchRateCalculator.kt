@@ -106,9 +106,9 @@ object CatchRateCalculator {
         val bonusLevel = CatchRateFormula.getLowLevelBonus(level)
         val ballResult = getBallResult(pokeBall, ballName, pokemon, turnCount)
         val ballBonus = ballResult.multiplier
-        val externalCatchRateMultiplier = CobbleCuisineCompat.getCatchRateMultiplier(Minecraft.getInstance().player)
-        val externalCatchRateReason = if (externalCatchRateMultiplier != 1F) "CobbleCuisine catch boost" else ""
-        
+        val externalModifiers = ExternalCatchRateModifiers.collect(Minecraft.getInstance().player)
+        val externalCatchRateMultiplier = ExternalCatchRateModifiers.combinedMultiplier(externalModifiers)
+
         // Compute modified rate once, derive percentage from it (avoids duplicate HP/modifier math)
         val modifiedCatchRate = CatchRateFormula.calculateModifiedCatchRate(
             baseCatchRate = catchRate,
@@ -147,8 +147,7 @@ object CatchRateCalculator {
             ballConditionMet = ballResult.conditionMet,
             ballConditionReason = ballResult.reason,
             isCatchRateEstimate = isEstimate,
-            externalCatchRateMultiplier = externalCatchRateMultiplier.toDouble(),
-            externalCatchRateReason = externalCatchRateReason,
+            externalModifiers = externalModifiers,
             isReliableGuaranteedPrediction = !isEstimate && reliability.isReliable
         )
     }
