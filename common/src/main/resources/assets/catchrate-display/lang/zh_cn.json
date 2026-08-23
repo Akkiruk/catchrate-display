@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "回合 %d",
   "catchrate.ball.timer.scales": "随回合数增加",
   "catchrate.ball.dusk.dark_area": "黑暗区域 (L%d)",
-  "catchrate.ball.dusk.need_darkness": "需要黑暗",
+  "catchrate.ball.dusk.need_darkness": "需要黑暗 (L%d)",
   "catchrate.ball.dive.underwater": "水下",
   "catchrate.ball.dive.need_underwater": "需要在水下",
   "catchrate.ball.moon.not_night": "仅在夜间有效",

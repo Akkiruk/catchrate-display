@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "Kolo %d",
   "catchrate.ball.timer.scales": "Roste s koly",
   "catchrate.ball.dusk.dark_area": "Tmavá oblast (L%d)",
-  "catchrate.ball.dusk.need_darkness": "Potřebuje tmu",
+  "catchrate.ball.dusk.need_darkness": "Potřebuje tmu (L%d)",
   "catchrate.ball.dive.underwater": "Pod vodou",
   "catchrate.ball.dive.need_underwater": "Musí být pod vodou",
   "catchrate.ball.moon.not_night": "Účinné pouze v noci",

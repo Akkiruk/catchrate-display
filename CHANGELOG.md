@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.9.2] - 2026-08-23
+
+### Fixed
+- **Dusk Ball used the player's light level instead of the target Pokémon's.** Cobblemon's own Dusk Ball logic samples `getMaxLocalRawBrightness` at the wild/battling Pokémon's block position, not the thrower's, so a player standing in a lit area next to a Pokémon in a dark corner (or vice versa) was seeing the wrong multiplier. Both the battle and overworld context builders now sample light level at the target Pokémon's position.
+- **"Need darkness" no longer hides the actual light level.** The Dusk Ball tooltip now always shows the current light level (e.g. "Need darkness (L12)") instead of a bare "Need darkness" when the bonus isn't active, across all languages.
+
 ## [2.9.1] - 2026-08-23
 
 ### Added

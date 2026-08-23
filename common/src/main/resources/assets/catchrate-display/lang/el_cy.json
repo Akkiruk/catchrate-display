@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "Γύρος %d",
   "catchrate.ball.timer.scales": "Κλιμακώνεται με γύρους",
   "catchrate.ball.dusk.dark_area": "Σκοτεινή περιοχή (L%d)",
-  "catchrate.ball.dusk.need_darkness": "Χρειάζεται σκοτάδι",
+  "catchrate.ball.dusk.need_darkness": "Χρειάζεται σκοτάδι (L%d)",
   "catchrate.ball.dive.underwater": "Υποβρύχια",
   "catchrate.ball.dive.need_underwater": "Πρέπει να είναι υποβρύχια",
   "catchrate.ball.moon.not_night": "Αποτελεσματικό μόνο τη νύχτα",

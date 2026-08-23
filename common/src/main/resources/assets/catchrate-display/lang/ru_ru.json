@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "Ход %d",
   "catchrate.ball.timer.scales": "Растёт с ходами",
   "catchrate.ball.dusk.dark_area": "Тёмная зона (L%d)",
-  "catchrate.ball.dusk.need_darkness": "Нужна темнота",
+  "catchrate.ball.dusk.need_darkness": "Нужна темнота (L%d)",
   "catchrate.ball.dive.underwater": "Под водой",
   "catchrate.ball.dive.need_underwater": "Нужно быть под водой",
   "catchrate.ball.moon.not_night": "Эффективен только ночью",

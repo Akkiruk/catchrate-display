@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "ターン %d",
   "catchrate.ball.timer.scales": "ターン数で増加",
   "catchrate.ball.dusk.dark_area": "暗い場所 (L%d)",
-  "catchrate.ball.dusk.need_darkness": "暗さが必要",
+  "catchrate.ball.dusk.need_darkness": "暗さが必要 (L%d)",
   "catchrate.ball.dive.underwater": "水中",
   "catchrate.ball.dive.need_underwater": "水中である必要あり",
   "catchrate.ball.moon.not_night": "夜のみ有効",

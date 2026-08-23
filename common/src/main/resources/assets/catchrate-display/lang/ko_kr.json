@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "턴 %d",
   "catchrate.ball.timer.scales": "턴수에 따라 증가",
   "catchrate.ball.dusk.dark_area": "어두운 지역 (L%d)",
-  "catchrate.ball.dusk.need_darkness": "어둡 필요",
+  "catchrate.ball.dusk.need_darkness": "어둡 필요 (L%d)",
   "catchrate.ball.dive.underwater": "수중",
   "catchrate.ball.dive.need_underwater": "수중이어야 함",
   "catchrate.ball.moon.not_night": "밤에만 효과적",

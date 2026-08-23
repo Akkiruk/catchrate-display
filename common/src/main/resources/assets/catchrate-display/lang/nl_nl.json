@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "Beurt %d",
   "catchrate.ball.timer.scales": "Schaalt met beurten",
   "catchrate.ball.dusk.dark_area": "Donker gebied (L%d)",
-  "catchrate.ball.dusk.need_darkness": "Heeft duisternis nodig",
+  "catchrate.ball.dusk.need_darkness": "Heeft duisternis nodig (L%d)",
   "catchrate.ball.dive.underwater": "Onderwater",
   "catchrate.ball.dive.need_underwater": "Moet onderwater zijn",
   "catchrate.ball.moon.not_night": "Alleen effectief 's nachts",

@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "Runde %d",
   "catchrate.ball.timer.scales": "Skaliert mit Runden",
   "catchrate.ball.dusk.dark_area": "Dunkler Bereich (L%d)",
-  "catchrate.ball.dusk.need_darkness": "Dunkelheit nötig",
+  "catchrate.ball.dusk.need_darkness": "Dunkelheit nötig (L%d)",
   "catchrate.ball.dive.underwater": "Unter Wasser",
   "catchrate.ball.dive.need_underwater": "Muss unter Wasser sein",
   "catchrate.ball.moon.not_night": "Nur nachts wirksam",

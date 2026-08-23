@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "Tura %d",
   "catchrate.ball.timer.scales": "Skaluje się z turami",
   "catchrate.ball.dusk.dark_area": "Ciemny obszar (L%d)",
-  "catchrate.ball.dusk.need_darkness": "Potrzeba ciemności",
+  "catchrate.ball.dusk.need_darkness": "Potrzeba ciemności (L%d)",
   "catchrate.ball.dive.underwater": "Pod wodą",
   "catchrate.ball.dive.need_underwater": "Musisz być pod wodą",
   "catchrate.ball.moon.not_night": "Skuteczny tylko w nocy",

@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "Turno %d",
   "catchrate.ball.timer.scales": "Skalas kun turnoj",
   "catchrate.ball.dusk.dark_area": "Malhela areo (L%d)",
-  "catchrate.ball.dusk.need_darkness": "Bezonas malhelon",
+  "catchrate.ball.dusk.need_darkness": "Bezonas malhelon (L%d)",
   "catchrate.ball.dive.underwater": "Subakve",
   "catchrate.ball.dive.need_underwater": "Devas esti subakve",
   "catchrate.ball.moon.not_night": "Nur efika nokte",

@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "Tur %d",
   "catchrate.ball.timer.scales": "Skalas med turer",
   "catchrate.ball.dusk.dark_area": "Mörkt område (L%d)",
-  "catchrate.ball.dusk.need_darkness": "Behöver mörker",
+  "catchrate.ball.dusk.need_darkness": "Behöver mörker (L%d)",
   "catchrate.ball.dive.underwater": "Undervattens",
   "catchrate.ball.dive.need_underwater": "Måste vara under vatten",
   "catchrate.ball.moon.not_night": "Endast effektiv på natten",

@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "Tur %d",
   "catchrate.ball.timer.scales": "Turlarla artar",
   "catchrate.ball.dusk.dark_area": "Karanlık alan (L%d)",
-  "catchrate.ball.dusk.need_darkness": "Karanlık gerekli",
+  "catchrate.ball.dusk.need_darkness": "Karanlık gerekli (L%d)",
   "catchrate.ball.dive.underwater": "Su altında",
   "catchrate.ball.dive.need_underwater": "Su altında olmalı",
   "catchrate.ball.moon.not_night": "Sadece gece etkili",

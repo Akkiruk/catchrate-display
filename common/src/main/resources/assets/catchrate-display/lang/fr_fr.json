@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "Tour %d",
   "catchrate.ball.timer.scales": "Augmente avec les tours",
   "catchrate.ball.dusk.dark_area": "Zone sombre (L%d)",
-  "catchrate.ball.dusk.need_darkness": "Obscurité requise",
+  "catchrate.ball.dusk.need_darkness": "Obscurité requise (L%d)",
   "catchrate.ball.dive.underwater": "Sous l'eau",
   "catchrate.ball.dive.need_underwater": "Doit être sous l'eau",
   "catchrate.ball.moon.not_night": "Efficace seulement la nuit",

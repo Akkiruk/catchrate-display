@@ -44,6 +44,7 @@ object BallContextFactory {
         val aspects = getPokemonAspectsFromBattle(pokemon)
         val targetEntity = getBattleTargetEntity(pokemon, battle, player, level)
         val targetUnderwater = targetEntity?.isUnderWater ?: false
+        val targetPos = targetEntity?.blockPosition() ?: player.blockPosition()
         CatchRateMod.debugOnChange(
             "BattleTargetWater",
             "${pokemon.uuid}_${targetEntity?.uuid}_${targetUnderwater}",
@@ -60,7 +61,7 @@ object BallContextFactory {
             baseSpeed = getBaseSpeed(species.baseStats),
             labels = safeGetLabels(species),
             statusPath = pokemon.status?.name?.path,
-            lightLevel = level.getMaxLocalRawBrightness(player.blockPosition()),
+            lightLevel = level.getMaxLocalRawBrightness(targetPos),
             isNight = timeOfDay in NIGHT_START_TICK..NIGHT_END_TICK,
             moonPhase = level.moonPhase,
             isTargetUnderwater = targetUnderwater,
@@ -98,7 +99,8 @@ object BallContextFactory {
             hasCaughtSpecies = checkHasCaughtSpecies(pokemon.species.resourceIdentifier),
             isTargetUnderwater = entity.isUnderWater,
             pokemonAspects = entity.aspects,
-            statusOverride = effectiveStatus
+            statusOverride = effectiveStatus,
+            targetPos = entity.blockPosition()
         )
     }
     
@@ -116,11 +118,12 @@ object BallContextFactory {
         hasCaughtSpecies: Boolean? = null,
         isTargetUnderwater: Boolean = false,
         pokemonAspects: Set<String> = emptySet(),
-        statusOverride: String? = null
+        statusOverride: String? = null,
+        targetPos: BlockPos = player.blockPosition()
     ): BallContext {
         val species = pokemon.species
         val timeOfDay = level.dayTime % 24000
-        
+
         return BallContext(
             speciesId = species.resourceIdentifier.toString(),
             level = pokemon.level,
@@ -131,7 +134,7 @@ object BallContextFactory {
             baseSpeed = getBaseSpeed(species.baseStats),
             labels = safeGetLabels(species),
             statusPath = statusOverride ?: pokemon.status?.status?.name?.path,
-            lightLevel = level.getMaxLocalRawBrightness(player.blockPosition()),
+            lightLevel = level.getMaxLocalRawBrightness(targetPos),
             isNight = timeOfDay in NIGHT_START_TICK..NIGHT_END_TICK,
             moonPhase = level.moonPhase,
             isTargetUnderwater = isTargetUnderwater,

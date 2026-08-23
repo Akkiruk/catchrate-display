@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "Lượt %d",
   "catchrate.ball.timer.scales": "Tăng theo lượt",
   "catchrate.ball.dusk.dark_area": "Vùng tối (L%d)",
-  "catchrate.ball.dusk.need_darkness": "Cần bóng tối",
+  "catchrate.ball.dusk.need_darkness": "Cần bóng tối (L%d)",
   "catchrate.ball.dive.underwater": "Dưới nước",
   "catchrate.ball.dive.need_underwater": "Cần ở dưới nước",
   "catchrate.ball.moon.not_night": "Chỉ hiệu quả ban đêm",

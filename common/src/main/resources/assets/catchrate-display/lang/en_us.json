@@ -45,7 +45,7 @@
   "catchrate.ball.timer.scales": "Increases each turn",
 
   "catchrate.ball.dusk.dark_area": "Dark area (L%d)",
-  "catchrate.ball.dusk.need_darkness": "Need darkness",
+  "catchrate.ball.dusk.need_darkness": "Need darkness (L%d)",
 
   "catchrate.ball.dive.underwater": "Underwater",
   "catchrate.ball.dive.need_underwater": "Not underwater",

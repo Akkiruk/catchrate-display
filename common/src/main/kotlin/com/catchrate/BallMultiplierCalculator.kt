@@ -25,7 +25,7 @@ object BallTranslations {
     fun timerScales() = Component.translatable("catchrate.ball.timer.scales").string
     
     fun duskDarkArea(level: Int) = Component.translatable("catchrate.ball.dusk.dark_area", level).string
-    fun duskNeedDarkness() = Component.translatable("catchrate.ball.dusk.need_darkness").string
+    fun duskNeedDarkness(level: Int) = Component.translatable("catchrate.ball.dusk.need_darkness", level).string
     
     fun diveUnderwater() = Component.translatable("catchrate.ball.dive.underwater").string
     fun diveNeedUnderwater() = Component.translatable("catchrate.ball.dive.need_underwater").string
@@ -253,7 +253,7 @@ object BallMultiplierCalculator {
             else -> 1F
         }
         val effective = ctx.lightLevel <= 7
-        return BallResult(mult, effective, if (effective) BallTranslations.duskDarkArea(ctx.lightLevel) else BallTranslations.duskNeedDarkness())
+        return BallResult(mult, effective, if (effective) BallTranslations.duskDarkArea(ctx.lightLevel) else BallTranslations.duskNeedDarkness(ctx.lightLevel))
     }
     
     private fun calculateDiveBall(ctx: BallContext): BallResult {

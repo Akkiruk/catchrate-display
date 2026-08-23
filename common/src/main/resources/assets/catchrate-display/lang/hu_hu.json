@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "Kör %d",
   "catchrate.ball.timer.scales": "Körökkel növekszik",
   "catchrate.ball.dusk.dark_area": "Sötét terület (L%d)",
-  "catchrate.ball.dusk.need_darkness": "Sötétség szükséges",
+  "catchrate.ball.dusk.need_darkness": "Sötétség szükséges (L%d)",
   "catchrate.ball.dive.underwater": "Víz alatt",
   "catchrate.ball.dive.need_underwater": "Víz alatt kell lennie",
   "catchrate.ball.moon.not_night": "Csak éjszaka hatásos",

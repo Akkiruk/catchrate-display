@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "เทิร์น %d",
   "catchrate.ball.timer.scales": "เพิ่มตามเทิร์น",
   "catchrate.ball.dusk.dark_area": "พื้นที่มืด (L%d)",
-  "catchrate.ball.dusk.need_darkness": "ต้องการความมืด",
+  "catchrate.ball.dusk.need_darkness": "ต้องการความมืด (L%d)",
   "catchrate.ball.dive.underwater": "ใต้น้ำ",
   "catchrate.ball.dive.need_underwater": "ต้องอยู่ใต้น้ำ",
   "catchrate.ball.moon.not_night": "มีผลเฉพาะกลางคืน",

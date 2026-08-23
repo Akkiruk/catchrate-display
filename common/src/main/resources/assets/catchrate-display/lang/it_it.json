@@ -39,7 +39,7 @@
   "catchrate.ball.timer.turn_info": "Turno %d",
   "catchrate.ball.timer.scales": "Aumenta con i turni",
   "catchrate.ball.dusk.dark_area": "Zona buia (L%d)",
-  "catchrate.ball.dusk.need_darkness": "Serve oscurità",
+  "catchrate.ball.dusk.need_darkness": "Serve oscurità (L%d)",
   "catchrate.ball.dive.underwater": "Sott'acqua",
   "catchrate.ball.dive.need_underwater": "Devi essere sott'acqua",
   "catchrate.ball.moon.not_night": "Efficace solo di notte",
