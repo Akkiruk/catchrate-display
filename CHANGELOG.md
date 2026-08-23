@@ -1,14 +1,18 @@
 # Changelog
 
-## [2.9.0] - 2026-08-22
+## [2.9.0] - 2026-08-23
 
 ### Changed
 - **Catch rates now come from Cobblemon's own species registry whenever it is trustworthy.** Cobblemon never sends `catchRate` over the network, so a client on a dedicated server sees the default 45 for every species — but it also skips its data sync entirely for memory connections, which means singleplayer and LAN hosts keep the real datapack-loaded values. Catch Rate Display now detects this and reads the registry directly in that case, exactly like the Pokedex mods do. Custom species from any datapack or mod resolve correctly regardless of how their files are laid out.
 
 ### Fixed
+- **Park Ball always showed 1x.** It had no bonus logic at all and silently fell through to the generic "no effect" case. It now boosts 2.5x in temperate biomes (forest/plains, matching Cobblemon's own `cobblemon:is_temperate` biome tag), same as vanilla Cobblemon.
 - **Custom/fake Pokemon in non-standard folders now resolve.** The previous file lookup only checked eleven hardcoded `generationN` folders plus `custom/` and `addon/` inside mod JARs, so a species in any other subfolder silently fell back to a guess — while the same species shipped in a datapack worked, because datapacks were scanned recursively. Mod JARs are now scanned recursively too, so layout no longer matters.
 - **`species_additions` are now read.** Packs that adjust a catch rate through `data/<namespace>/species_additions/` were previously invisible, leaving the base value on screen.
 - **Species files can no longer collide across packs.** The file index was keyed by bare filename, so two packs shipping the same filename in different namespaces overwrote each other. Entries are now keyed by full `namespace:path`, and a datapack correctly outranks a mod JAR for the same species.
+- **Unrelated local worlds could no longer leak into the result.** The local-file fallback (remote-server play) scanned `datapacks/` under every save folder on the machine, not just the world being played, so an old test world's datapack could silently outrank the correct value. It now only reads the active world's own datapacks, and skips local saves entirely during genuine remote play.
+- **Same-priority conflicts are now reproducible.** Mod JAR and datapack directory listings weren't guaranteed to come back in a consistent order, so which of two same-rank sources won a conflict on the same species could vary between launches. Listings are now sorted before scanning.
+- **Classpath fallback no longer risks a render-thread stall.** It could previously run inline before the background file scan finished, doing several file-stream opens on the render thread — the same class of stall the mod-JAR scan was fixed to avoid. It now only runs once the background scan has completed.
 
 ### Removed
 - **Unresolvable catch rates no longer display a fabricated number.** The fallback used to be a hardcoded `3`, which is a plausible real catch rate — an unresolved species rendered as a confident ~1% that was indistinguishable from a correct answer. The HUD and comparison panel now show the rate as unknown instead, and never claim GUARANTEED from a value that was never resolved. Ball multipliers, HP and status are still shown, since those remain accurate.

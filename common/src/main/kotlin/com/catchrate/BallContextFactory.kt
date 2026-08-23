@@ -5,6 +5,7 @@ import com.catchrate.BallMultiplierCalculator.PartyMember
 import com.catchrate.CatchRateConstants.NIGHT_END_TICK
 import com.catchrate.CatchRateConstants.NIGHT_START_TICK
 import com.cobblemon.mod.common.api.pokedex.PokedexEntryProgress
+import com.cobblemon.mod.common.api.tags.CobblemonBiomeTags
 import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
@@ -13,6 +14,7 @@ import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Gender
 import com.cobblemon.mod.common.pokemon.Pokemon
 import net.minecraft.client.Minecraft
+import net.minecraft.core.BlockPos
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
@@ -63,6 +65,7 @@ object BallContextFactory {
             moonPhase = level.moonPhase,
             isTargetUnderwater = targetUnderwater,
             isPlayerUnderwater = player.isUnderWater,
+            isTemperateBiome = isTemperateBiome(level, player.blockPosition()),
             inBattle = true,
             turnCount = turnCount,
             quickBallBonusConsumed = CatchRateCaptureTracker.hasConsumedQuickBallBonus(battle?.battleId, pokemon.uuid),
@@ -133,6 +136,7 @@ object BallContextFactory {
             moonPhase = level.moonPhase,
             isTargetUnderwater = isTargetUnderwater,
             isPlayerUnderwater = player.isUnderWater,
+            isTemperateBiome = isTemperateBiome(level, player.blockPosition()),
             inBattle = inBattle,
             turnCount = turnCount,
             quickBallBonusConsumed = false,
@@ -241,6 +245,18 @@ object BallContextFactory {
         }
     }
     
+    /**
+     * Checks if the player is standing in a biome tagged cobblemon:is_temperate,
+     * mirroring Cobblemon's own Park Ball catch rate modifier.
+     */
+    private fun isTemperateBiome(level: Level, pos: BlockPos): Boolean {
+        return try {
+            level.getBiome(pos).`is`(CobblemonBiomeTags.IS_TEMPERATE)
+        } catch (e: Throwable) {
+            false
+        }
+    }
+
     private fun safeParseGender(genderName: String): Gender? {
         return try {
             Gender.valueOf(genderName)

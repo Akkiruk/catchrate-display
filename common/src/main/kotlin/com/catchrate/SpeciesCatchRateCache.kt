@@ -6,6 +6,7 @@ import com.cobblemon.mod.common.pokemon.Species
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.minecraft.client.Minecraft
+import net.minecraft.world.level.storage.LevelResource
 import java.io.InputStream
 import java.net.URI
 import java.nio.file.FileSystemAlreadyExistsException
@@ -302,7 +303,13 @@ object SpeciesCatchRateCache {
 
     private fun resolveFromFiles(species: Species, aspects: Set<String>): CatchRateResolution? {
         val id = speciesId(species)
-        val base = speciesIndex[id] ?: loadFromClasspath(species)?.also { speciesIndex[id] = it }
+        // The classpath probe does its own file I/O (up to ~14 stream opens), so it must
+        // not run until the background scan has actually finished — resolveFromFiles is
+        // reached from resolve(), which runs on the render thread. Trying it while a scan
+        // is still in flight would reintroduce the per-frame stall requestLocalFileScan()
+        // exists to avoid. Once localFilesScanned is true this is just a rare-case safety
+        // net (dev workspaces, non-standard launchers), so paying for it inline is fine.
+        val base = speciesIndex[id] ?: (if (localFilesScanned) loadFromClasspath(species) else null)?.also { speciesIndex[id] = it }
         val addition = additionIndex[id]
 
         // species_additions are applied on top of the base file by Cobblemon, so they win here too.
@@ -403,12 +410,14 @@ object SpeciesCatchRateCache {
             // demote a higher-priority source, so this order is only an optimisation.
             scanModJars(gameDir.resolve("mods"), target)
             scanDatapackDir(gameDir.resolve("datapacks"), target)
-            val savesDir = gameDir.resolve("saves")
-            if (Files.isDirectory(savesDir)) {
-                Files.list(savesDir).use { worlds ->
-                    worlds.forEach { world -> scanDatapackDir(world.resolve("datapacks"), target) }
-                }
-            }
+
+            // Only the world actually being played, never every folder under saves/.
+            // This tier exists for remote-server play, where the local saves directory
+            // can easily hold several unrelated worlds (old tests, other packs) — scanning
+            // all of them let an unrelated world's datapack silently outrank the correct
+            // one at the same DATAPACK rank, purely because of listing order. On genuine
+            // remote play there is no local world at all, so this correctly scans nothing.
+            currentWorldDatapacksDir()?.let { worldDatapacks -> scanDatapackDir(worldDatapacks, target) }
 
             // Publish only if this scan still describes the current session.
             if (generation != startGeneration) {
@@ -428,6 +437,17 @@ object SpeciesCatchRateCache {
         }
     }
 
+    /**
+     * The datapacks/ folder of the world actually being played, or null when there is
+     * none — i.e. on genuine remote-server play, where an integrated server does not exist.
+     */
+    private fun currentWorldDatapacksDir(): Path? {
+        val server = try { Minecraft.getInstance().singleplayerServer } catch (_: Throwable) { null } ?: return null
+        return try {
+            server.getWorldPath(LevelResource.ROOT).resolve("datapacks").takeIf { Files.isDirectory(it) }
+        } catch (_: Throwable) { null }
+    }
+
     /** Scratch index for one scan pass, published only once the pass completes. */
     private class ScanTarget {
         val species = HashMap<String, SpeciesFileData>()
@@ -437,8 +457,12 @@ object SpeciesCatchRateCache {
     private fun scanModJars(modsDir: Path, target: ScanTarget) {
         if (!Files.isDirectory(modsDir)) return
         try {
+            // Sorted so that when two mod JARs define the same species (same MOD_JAR rank),
+            // which one wins is reproducible across launches instead of depending on
+            // whatever order the filesystem happens to hand back.
             Files.list(modsDir).use { entries ->
                 entries.filter { it.toString().endsWith(".jar", ignoreCase = true) }
+                    .sorted()
                     .forEach { jar -> scanArchive(jar, Source.MOD_JAR, target) }
             }
         } catch (e: Throwable) {
@@ -449,8 +473,10 @@ object SpeciesCatchRateCache {
     private fun scanDatapackDir(dir: Path, target: ScanTarget) {
         if (!Files.isDirectory(dir)) return
         try {
+            // Sorted for the same reason as scanModJars: deterministic tie-breaking
+            // between two datapacks that both touch the same species.
             Files.list(dir).use { entries ->
-                entries.forEach { entry ->
+                entries.sorted().forEach { entry ->
                     try {
                         when {
                             Files.isDirectory(entry) -> scanDataRoot(entry.resolve("data"), Source.DATAPACK, entry.toString(), target)

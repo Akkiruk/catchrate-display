@@ -70,6 +70,9 @@ object BallTranslations {
     
     fun safariOutOfCombat() = Component.translatable("catchrate.ball.safari.out_of_combat").string
     fun safariInBattle() = Component.translatable("catchrate.ball.safari.in_battle").string
+
+    fun parkTemperateBiome() = Component.translatable("catchrate.ball.park.temperate_biome").string
+    fun parkNeedTemperateBiome() = Component.translatable("catchrate.ball.park.need_temperate_biome").string
 }
 
 /**
@@ -93,6 +96,7 @@ object BallMultiplierCalculator {
         val moonPhase: Int,
         val isTargetUnderwater: Boolean,
         val isPlayerUnderwater: Boolean,
+        val isTemperateBiome: Boolean = false,
         val inBattle: Boolean,
         val turnCount: Int,
         val quickBallBonusConsumed: Boolean = false,
@@ -189,6 +193,7 @@ object BallMultiplierCalculator {
             "level_ball" -> calculateLevelBall(ctx)
             "repeat_ball" -> calculateRepeatBall(ctx)
             "lure_ball" -> calculateLureBall(ctx)
+            "park_ball" -> calculateParkBall(ctx)
             "friend_ball", "luxury_ball", "heal_ball" -> 
                 BallResult(1F, true, BallTranslations.specialEffect())
             else -> BallResult(1F, true, "")
@@ -357,6 +362,12 @@ object BallMultiplierCalculator {
         return BallResult(1F, false, BallTranslations.repeatIneffective())
     }
     
+    private fun calculateParkBall(ctx: BallContext): BallResult {
+        val mult = if (ctx.isTemperateBiome) 2.5F else 1F
+        return BallResult(mult, ctx.isTemperateBiome,
+            if (ctx.isTemperateBiome) BallTranslations.parkTemperateBiome() else BallTranslations.parkNeedTemperateBiome())
+    }
+
     private fun calculateLureBall(ctx: BallContext): BallResult {
         val fished = ctx.pokemonAspects.any { it.equals("fished", ignoreCase = true) }
         CatchRateMod.debugOnChange("LureBall", "${ctx.speciesId}_${fished}",
