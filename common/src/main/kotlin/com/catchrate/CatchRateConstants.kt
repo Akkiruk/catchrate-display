@@ -50,9 +50,13 @@ object CatchRateConstants {
     
     // ==================== ENVIRONMENT CONSTANTS ====================
     
-    /** Time of day range for night (in ticks) */
-    const val NIGHT_START_TICK = 13000L
-    const val NIGHT_END_TICK = 24000L
+    /**
+     * Cobblemon's real Moon Ball guard checks total elapsed world ticks (gameTime), not
+     * wrapped time-of-day — a world's gameTime only ever sits in this window once, near its
+     * creation, after which the moon-phase bonus applies day and night for the rest of its life.
+     */
+    const val MOON_BALL_GATE_START = 12000L
+    const val MOON_BALL_GATE_END = 24000L
     
     // ==================== UI COLORS ====================
     

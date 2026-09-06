@@ -50,7 +50,7 @@
   "catchrate.ball.dive.underwater": "Underwater",
   "catchrate.ball.dive.need_underwater": "Not underwater",
 
-  "catchrate.ball.moon.not_night": "Not nighttime",
+  "catchrate.ball.moon.gate_closed": "Too early in this world",
   "catchrate.ball.moon.night_phase": "Moon phase %d",
 
   "catchrate.ball.net.effective": "Bug/Water type",
@@ -77,7 +77,7 @@
   "catchrate.ball.love.battler_genderless": "Your battler is genderless",
   "catchrate.ball.love.need_opposite": "Need opposite gender battler",
   "catchrate.ball.love.same_species": "Same species + opposite %s",
-  "catchrate.ball.love.opposite_gender": "Opposite gender %s",
+  "catchrate.ball.love.need_same_species": "Need same species",
 
   "catchrate.ball.level.effective": "Level advantage",
   "catchrate.ball.level.ineffective": "No level advantage",

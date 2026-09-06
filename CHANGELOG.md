@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.11.0] - 2026-09-06
+
+### Fixed
+- **Version detection now actually reads the running Cobblemon jar.** The Cobblemon version check was reading a Kotlin `const val`, which the compiler inlines as a literal at build time — this mod always reported whatever version it happened to be compiled against, never what's actually loaded on your game. It's now read via reflection at runtime, so ancient ball behavior (see below) correctly detects mismatched Cobblemon versions instead of assuming the build-time one.
+- **Beast Ball no longer shows a fake penalty.** Non-Ultra-Beast catches showed a 0.1× multiplier; Cobblemon's own penalty modifier for this has been commented out in its source for a long time, so the real behavior is a neutral 1× with no penalty at all.
+- **Love Ball now requires a species match for any bonus.** It previously gave a 2.5× boost to any opposite-gender wild Pokémon regardless of species — Cobblemon's actual formula requires species to match before any bonus applies (1× otherwise), then 8× for a matching species.
+- **Nest Ball no longer shows a bonus at exactly level 30.** Cobblemon's condition is a strict "level < 30"; level 30 itself gets no bonus, not the ~1.1× the raw formula would otherwise produce.
+- **Moon Ball now matches Cobblemon's actual (unintuitive) capture math.** Cobblemon's real guard checks a world's total elapsed ticks against a fixed window near world creation, not the time of day — meaning in any world older than about a day, the real capture calculation applies the moon-phase bonus during the day too. This mod now reflects that instead of gating strictly on nighttime, so displayed odds match what actually happens when you throw the ball.
+
 ## [2.10.0] - 2026-09-06
 
 ### Fixed

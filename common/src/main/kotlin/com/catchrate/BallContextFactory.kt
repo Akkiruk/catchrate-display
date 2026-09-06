@@ -2,8 +2,8 @@ package com.catchrate
 
 import com.catchrate.BallMultiplierCalculator.BallContext
 import com.catchrate.BallMultiplierCalculator.PartyMember
-import com.catchrate.CatchRateConstants.NIGHT_END_TICK
-import com.catchrate.CatchRateConstants.NIGHT_START_TICK
+import com.catchrate.CatchRateConstants.MOON_BALL_GATE_END
+import com.catchrate.CatchRateConstants.MOON_BALL_GATE_START
 import com.cobblemon.mod.common.api.tags.CobblemonBiomeTags
 import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.client.battle.ClientBattle
@@ -39,7 +39,6 @@ object BallContextFactory {
         battle: ClientBattle?
     ): BallContext {
         val species = pokemon.species
-        val timeOfDay = level.dayTime % 24000
         val aspects = getPokemonAspectsFromBattle(pokemon)
         val targetEntity = getBattleTargetEntity(pokemon, battle, player, level)
         val targetUnderwater = targetEntity?.isUnderWater ?: false
@@ -61,7 +60,7 @@ object BallContextFactory {
             labels = safeGetLabels(species),
             statusPath = pokemon.status?.name?.path,
             lightLevel = level.getMaxLocalRawBrightness(targetPos),
-            isNight = timeOfDay in NIGHT_START_TICK..NIGHT_END_TICK,
+            moonBallGateOpen = level.gameTime !in MOON_BALL_GATE_START..MOON_BALL_GATE_END,
             moonPhase = level.moonPhase,
             isTargetUnderwater = targetUnderwater,
             isPlayerUnderwater = player.isUnderWater,
@@ -121,7 +120,6 @@ object BallContextFactory {
         targetPos: BlockPos = player.blockPosition()
     ): BallContext {
         val species = pokemon.species
-        val timeOfDay = level.dayTime % 24000
 
         return BallContext(
             speciesId = species.resourceIdentifier.toString(),
@@ -134,7 +132,7 @@ object BallContextFactory {
             labels = safeGetLabels(species),
             statusPath = statusOverride ?: pokemon.status?.status?.name?.path,
             lightLevel = level.getMaxLocalRawBrightness(targetPos),
-            isNight = timeOfDay in NIGHT_START_TICK..NIGHT_END_TICK,
+            moonBallGateOpen = level.gameTime !in MOON_BALL_GATE_START..MOON_BALL_GATE_END,
             moonPhase = level.moonPhase,
             isTargetUnderwater = isTargetUnderwater,
             isPlayerUnderwater = player.isUnderWater,

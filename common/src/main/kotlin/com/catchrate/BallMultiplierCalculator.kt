@@ -30,7 +30,7 @@ object BallTranslations {
     fun diveUnderwater() = Component.translatable("catchrate.ball.dive.underwater").string
     fun diveNeedUnderwater() = Component.translatable("catchrate.ball.dive.need_underwater").string
     
-    fun moonNotNight() = Component.translatable("catchrate.ball.moon.not_night").string
+    fun moonGateClosed() = Component.translatable("catchrate.ball.moon.gate_closed").string
     fun moonNightPhase(phase: Int) = Component.translatable("catchrate.ball.moon.night_phase", phase).string
     
     fun netEffective() = Component.translatable("catchrate.ball.net.effective").string
@@ -57,7 +57,7 @@ object BallTranslations {
     fun loveBattlerGenderless() = Component.translatable("catchrate.ball.love.battler_genderless").string
     fun loveNeedOpposite() = Component.translatable("catchrate.ball.love.need_opposite").string
     fun loveSameSpecies(gender: String) = Component.translatable("catchrate.ball.love.same_species", gender).string
-    fun loveOppositeGender(gender: String) = Component.translatable("catchrate.ball.love.opposite_gender", gender).string
+    fun loveNeedSameSpecies() = Component.translatable("catchrate.ball.love.need_same_species").string
     
     fun levelEffective() = Component.translatable("catchrate.ball.level.effective").string
     fun levelIneffective() = Component.translatable("catchrate.ball.level.ineffective").string
@@ -92,7 +92,7 @@ object BallMultiplierCalculator {
         val labels: List<String>,
         val statusPath: String?,
         val lightLevel: Int,
-        val isNight: Boolean,
+        val moonBallGateOpen: Boolean,
         val moonPhase: Int,
         val isTargetUnderwater: Boolean,
         val isPlayerUnderwater: Boolean,
@@ -210,12 +210,12 @@ object BallMultiplierCalculator {
         }
 
         val mult = when (CobblemonVersionSupport.ancientBallProfile()) {
-            CobblemonVersionSupport.AncientBallProfile.LEGACY_PRE_173_FIX -> when (lower) {
+            CobblemonVersionSupport.AncientBallProfile.LEGACY_PRE_180 -> when (lower) {
                 "ancient_great_ball" -> 1.5F
                 "ancient_ultra_ball" -> 2F
                 else -> 1F
             }
-            CobblemonVersionSupport.AncientBallProfile.RESPECTIVE_MODIFIERS_POST_173 -> when (lower) {
+            CobblemonVersionSupport.AncientBallProfile.RESPECTIVE_MODIFIERS_180 -> when (lower) {
                 "ancient_great_ball", "ancient_leaden_ball", "ancient_wing_ball" -> 1.5F
                 "ancient_ultra_ball", "ancient_gigaton_ball", "ancient_jet_ball" -> 2F
                 else -> 1F
@@ -264,7 +264,12 @@ object BallMultiplierCalculator {
     }
     
     private fun calculateMoonBall(ctx: BallContext): BallResult {
-        if (!ctx.isNight) return BallResult(1F, false, BallTranslations.moonNotNight())
+        // Cobblemon's actual guard checks the world's total elapsed ticks (gameTime) against
+        // 12000..24000, not the wrapped time-of-day — so despite being named for night, the real
+        // capture math applies the moon-phase bonus during the day too, for the entire lifetime
+        // of a world past its first ~day. This mirrors that (buggy but real) behavior rather than
+        // a literal day/night check, so the displayed odds match what actually happens in-game.
+        if (!ctx.moonBallGateOpen) return BallResult(1F, false, BallTranslations.moonGateClosed())
         val mult = when (ctx.moonPhase) {
             0 -> 4F
             1, 7 -> 2.5F
@@ -281,8 +286,10 @@ object BallMultiplierCalculator {
     }
     
     private fun calculateNestBall(ctx: BallContext): BallResult {
-        val mult = ((41 - ctx.level) / 10F).coerceAtLeast(1F)
-        val effective = mult > 1F
+        // Cobblemon's condition is a strict `level < 30`; level 30 itself gets no bonus at all
+        // (not the ~1.1x the raw formula would otherwise produce).
+        val effective = ctx.level < 30
+        val mult = if (effective) ((41 - ctx.level) / 10F).coerceAtLeast(1F) else 1F
         return BallResult(mult, effective, if (effective) BallTranslations.nestEffective(ctx.level) else BallTranslations.nestIneffective())
     }
     
@@ -302,8 +309,11 @@ object BallMultiplierCalculator {
     }
     
     private fun calculateBeastBall(ctx: BallContext): BallResult {
+        // Cobblemon's beast_ball only registers a bonus LabelModifier for Ultra Beasts; the
+        // matching non-UB penalty modifier is commented out in Cobblemon's own source, so a
+        // non-UB target gets a neutral 1x, never a penalty.
         val isUB = ctx.labels.any { it.lowercase() == "ultra_beast" }
-        return BallResult(if (isUB) 5F else 0.1F, isUB, if (isUB) BallTranslations.beastUltraBeast() else BallTranslations.beastPenalty())
+        return BallResult(if (isUB) 5F else 1F, isUB, if (isUB) BallTranslations.beastUltraBeast() else BallTranslations.beastPenalty())
     }
     
     private fun calculateDreamBall(ctx: BallContext): BallResult {
@@ -328,11 +338,14 @@ object BallMultiplierCalculator {
         val oppositeGender = (wildGender == Gender.MALE && battlerGender == Gender.FEMALE) ||
                              (wildGender == Gender.FEMALE && battlerGender == Gender.MALE)
         if (!oppositeGender) return BallResult(1F, false, BallTranslations.loveNeedOpposite())
-        
+
+        // Cobblemon's LOVE modifier requires a species match for any bonus at all — opposite
+        // gender alone (regardless of species) gives no boost, contrary to what this used to do.
         val sameSpecies = ctx.speciesId == activeBattler.speciesId
+        if (!sameSpecies) return BallResult(1F, false, BallTranslations.loveNeedSameSpecies())
+
         val genderDesc = if (wildGender == Gender.MALE) "♂" else "♀"
-        return if (sameSpecies) BallResult(8F, true, BallTranslations.loveSameSpecies(genderDesc))
-        else BallResult(2.5F, true, BallTranslations.loveOppositeGender(genderDesc))
+        return BallResult(8F, true, BallTranslations.loveSameSpecies(genderDesc))
     }
     
     private fun calculateLevelBall(ctx: BallContext): BallResult {
