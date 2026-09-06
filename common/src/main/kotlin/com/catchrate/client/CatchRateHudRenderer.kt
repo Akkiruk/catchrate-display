@@ -14,7 +14,6 @@ import com.catchrate.CatchRateResult
 import com.catchrate.ExternalCatchRateModifiers
 import com.catchrate.api.CatchRateModifierResult
 import com.catchrate.config.CatchRateConfig
-import com.cobblemon.mod.common.api.pokedex.PokedexEntryProgress
 import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
@@ -229,7 +228,9 @@ class CatchRateHudRenderer {
         if (!config.hideUnencounteredInfo) return true
         return try {
             val knowledge = CobblemonClient.clientPokedexData.getHighestKnowledgeForSpecies(speciesId)
-            knowledge != PokedexEntryProgress.NONE
+            // Compares by enum name so this keeps working whether the loaded Cobblemon is
+            // pre-1.8.0 (NONE) or 1.8.0+ (renamed to UNREGISTERED).
+            knowledge.name != "NONE" && knowledge.name != "UNREGISTERED"
         } catch (e: Throwable) {
             true // fail open — don't block HUD if Pokédex check errors
         }

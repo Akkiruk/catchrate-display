@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.10.0] - 2026-09-06
+
+### Fixed
+- **Compatibility with Cobblemon 1.8.0.** Cobblemon 1.8.0 renamed the Pokédex knowledge states (`CAUGHT`→`OWNED`, `NONE`→`UNREGISTERED`). Catch rate and HUD visibility checks now compare by enum name instead of the constant itself, so this build works unmodified on both pre-1.8.0 and 1.8.0+ Cobblemon.
+
 ## [2.9.2] - 2026-08-23
 
 ### Fixed

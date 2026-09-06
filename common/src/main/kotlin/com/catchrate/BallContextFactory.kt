@@ -4,7 +4,6 @@ import com.catchrate.BallMultiplierCalculator.BallContext
 import com.catchrate.BallMultiplierCalculator.PartyMember
 import com.catchrate.CatchRateConstants.NIGHT_END_TICK
 import com.catchrate.CatchRateConstants.NIGHT_START_TICK
-import com.cobblemon.mod.common.api.pokedex.PokedexEntryProgress
 import com.cobblemon.mod.common.api.tags.CobblemonBiomeTags
 import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.client.battle.ClientBattle
@@ -177,7 +176,9 @@ object BallContextFactory {
         return try {
             if (!isPokedexSynced()) return null
             val knowledge = CobblemonClient.clientPokedexData.getHighestKnowledgeForSpecies(speciesId)
-            val caught = knowledge == PokedexEntryProgress.CAUGHT
+            // Compares by enum name (not the constant itself) so this keeps working whether the
+            // loaded Cobblemon is pre-1.8.0 (CAUGHT) or 1.8.0+ (renamed to OWNED).
+            val caught = knowledge.name == "CAUGHT" || knowledge.name == "OWNED"
             CatchRateMod.debugOnChange("Pokedex", "${speciesId}_${caught}",
                 "$speciesId -> knowledge=$knowledge, caught=$caught")
             caught
