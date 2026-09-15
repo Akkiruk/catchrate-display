@@ -1,5 +1,7 @@
 package com.catchrate
 
+import com.catchrate.api.BallApiContext
+import com.catchrate.api.CatchRateBallRegistry
 import com.catchrate.compat.AtmBallCompat
 import com.cobblemon.mod.common.api.pokeball.PokeBalls
 import com.cobblemon.mod.common.pokeball.PokeBall
@@ -103,7 +105,21 @@ object BallMultiplierCalculator {
         val activeBattler: PartyMember?,
         val hasCaughtSpecies: Boolean? = null,
         val pokemonAspects: Set<String> = emptySet()
-    )
+    ) {
+        fun toApiContext() = BallApiContext(
+            speciesId = speciesId,
+            level = level,
+            primaryType = primaryType,
+            secondaryType = secondaryType,
+            weight = weight,
+            baseSpeed = baseSpeed,
+            labels = labels,
+            statusPath = statusPath,
+            inBattle = inBattle,
+            turnCount = turnCount,
+            pokemonAspects = pokemonAspects
+        )
+    }
 
     data class PartyMember(
         val speciesId: String,
@@ -123,6 +139,21 @@ object BallMultiplierCalculator {
     
     fun calculate(ballId: String, ctx: BallContext): BallResult {
         val lower = ballId.lowercase()
+
+        // Third-party balls registered through the public CatchRateBallRegistry API take
+        // priority over our own hardcoded compat - they're the more specific registration.
+        val fullId = ResourceLocation.tryParse(lower) ?: ResourceLocation.fromNamespaceAndPath("cobblemon", lower)
+        if (fullId.namespace != "cobblemon" || CatchRateBallRegistry.registeredIds().contains(fullId)) {
+            CatchRateBallRegistry.evaluate(fullId, ctx.toApiContext())?.let { apiResult ->
+                val result = BallResult(apiResult.multiplier, apiResult.conditionMet, apiResult.reason, apiResult.isGuaranteed)
+                CatchRateMod.debugOnChange(
+                    "Ball/$lower",
+                    "api_${result.multiplier}_${result.conditionMet}",
+                    "$lower: registered ball API ${result.reason} -> ${result.multiplier}x [${if (result.conditionMet) "✓" else "✗"}]"
+                )
+                return result
+            }
+        }
 
         AtmBallCompat.getCustomResult(lower, ctx)?.let { result ->
             CatchRateMod.debugOnChange(

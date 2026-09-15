@@ -246,9 +246,12 @@ object CatchRateFormula {
      */
     fun formatBallName(name: String): String {
         return ballNameCache.getOrPut(name) {
-            val cleanName = name.removePrefix("cobblemon:")
-            val translated = Component.translatable("item.cobblemon.$cleanName").string
-            if (translated != "item.cobblemon.$cleanName") {
+            val parts = name.split(":", limit = 2)
+            val namespace = if (parts.size == 2) parts[0] else "cobblemon"
+            val cleanName = if (parts.size == 2) parts[1] else parts[0]
+            val translationKey = "item.$namespace.$cleanName"
+            val translated = Component.translatable(translationKey).string
+            if (translated != translationKey) {
                 translated
             } else {
                 cleanName.replace("_", " ")

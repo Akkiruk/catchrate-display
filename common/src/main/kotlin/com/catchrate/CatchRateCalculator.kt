@@ -1,5 +1,6 @@
 package com.catchrate
 
+import com.catchrate.api.CatchRateBallRegistry
 import com.catchrate.compat.AtmBallCompat
 import com.cobblemon.mod.common.api.pokeball.PokeBalls
 import com.cobblemon.mod.common.client.CobblemonClient
@@ -189,7 +190,9 @@ object CatchRateCalculator {
             return pokeBall.name.path
         }
 
-        return ballName.takeIf { AtmBallCompat.isSupportedBall(it) }
+        if (AtmBallCompat.isSupportedBall(ballName)) return ballName
+
+        return getRegisteredItemId(itemStack)?.takeIf { CatchRateBallRegistry.registeredIds().contains(it) }?.toString()
     }
 
     fun getPokeBallFromItem(itemStack: ItemStack): PokeBall? {
@@ -234,7 +237,9 @@ object CatchRateCalculator {
             return pokeBall.name.path
         }
 
-        return ballName.takeIf { AtmBallCompat.isSupportedBall(it) }
+        if (AtmBallCompat.isSupportedBall(ballName)) return ballName
+
+        return getRegisteredItemId(selected)?.takeIf { CatchRateBallRegistry.registeredIds().contains(it) }?.toString()
     }
 
     private fun getSelectedContainerItem(itemStack: ItemStack): ItemStack? {
@@ -266,6 +271,14 @@ object CatchRateCalculator {
         return BuiltInRegistries.ITEM.getKey(itemStack.item)
             .path
             .takeIf { it.isNotBlank() }
+    }
+
+    private fun getRegisteredItemId(itemStack: ItemStack): ResourceLocation? {
+        if (itemStack.isEmpty) {
+            return null
+        }
+
+        return BuiltInRegistries.ITEM.getKey(itemStack.item)
     }
     
     private fun getBallResult(

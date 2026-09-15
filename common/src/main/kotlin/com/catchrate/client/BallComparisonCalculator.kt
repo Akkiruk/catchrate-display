@@ -7,11 +7,13 @@ import com.catchrate.CatchRatePredictionReliability
 import com.catchrate.CatchRateMod
 import com.catchrate.CatchRateFormula
 import com.catchrate.SpeciesCatchRateCache
+import com.catchrate.api.CatchRateBallRegistry
 import com.catchrate.compat.AtmBallCompat
 import com.cobblemon.mod.common.client.battle.ClientBattle
 import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import net.minecraft.client.Minecraft
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
 
@@ -34,7 +36,24 @@ object BallComparisonCalculator {
         "heal_ball", "premier_ball", "poke_ball", "safari_ball", "sport_ball", "beast_ball"
     )
 
-    private fun comparableBalls(): List<String> = AtmBallCompat.extendComparableBalls(baseComparableBalls)
+    @Volatile
+    private var cachedRegisteredBallIds: List<String>? = null
+
+    /** Ball IDs registered through the public CatchRateBallRegistry API whose item is installed. */
+    private fun installedRegisteredBallIds(): List<String> {
+        cachedRegisteredBallIds?.let { return it }
+        val installed = CatchRateBallRegistry.registeredIds()
+            .filter { BuiltInRegistries.ITEM.containsKey(it) }
+            .map { it.toString() }
+        cachedRegisteredBallIds = installed
+        return installed
+    }
+
+    private fun comparableBalls(): List<String> {
+        val withAtm = AtmBallCompat.extendComparableBalls(baseComparableBalls)
+        val registered = installedRegisteredBallIds()
+        return if (registered.isEmpty()) withAtm else withAtm + registered
+    }
     
     // Pokemon lookup cache to avoid expensive entity queries every frame
     private var cachedLookedAtPokemon: PokemonEntity? = null

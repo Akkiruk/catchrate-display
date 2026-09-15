@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.12.0] - 2026-09-15
+
+### Added
+- **Public API for third-party custom balls.** Other mods can now register a `CatchRateBallProvider` with `com.catchrate.api.CatchRateBallRegistry`, keyed by their ball item's own `ResourceLocation`, to teach this mod about a custom Cobblemon ball's multiplier and display reason — no compat work from us required. A registered ball automatically appears in the ball comparison panel whenever the item is installed, and its result takes priority over our own hardcoded compat (e.g. All the Mods balls) for the same ID. Mirrors the existing `CatchRateModifierRegistry` API added in 2.9.1. Previously, an unrecognized custom ball silently showed a flat, likely-wrong 1x multiplier with no indication anything was off.
+
 ## [2.11.0] - 2026-09-06
 
 ### Fixed
