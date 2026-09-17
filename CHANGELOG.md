@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.12.1] - 2026-09-17
+
+### Fixed
+- **Ditto (and other Transform users) now keep their true catch rate after transforming.** The HUD previously switched to showing the transformed-into Pokémon's name and catch rate as soon as Transform resolved, because the existing "remembered species" fallback (originally built for Illusion) was only ever fed from the HUD-render and capture-throw code paths — both gated on the player holding a Pokéball. If Ditto transformed before a ball was drawn, its true species was never observed and there was nothing to fall back to. The opponent's species is now observed every client tick regardless of held item, so Ditto is always captured in its true form before it can transform.
+
 ## [2.12.0] - 2026-09-15
 
 ### Added

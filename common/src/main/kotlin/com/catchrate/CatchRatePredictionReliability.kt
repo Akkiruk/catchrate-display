@@ -21,6 +21,23 @@ object CatchRatePredictionReliability {
         val effectiveSpecies: Species? = null
     )
 
+    /**
+     * Observes the current wild opponent every client tick, independent of whether the HUD
+     * is actually rendering (which only happens while a Pokeball is held). Without this,
+     * a Pokemon that disguises itself (e.g. Ditto's Transform) before the player ever draws
+     * a ball is never seen in its true form, so there is nothing to remember and the HUD
+     * falls back to the disguised species for the rest of the battle.
+     */
+    fun onClientTick(battle: ClientBattle?) {
+        if (battle == null || !battle.isPvW) return
+        val opponent = try {
+            battle.side2.activeClientBattlePokemon.firstOrNull()?.battlePokemon
+        } catch (_: Throwable) {
+            null
+        } ?: return
+        analyzeBattleTarget(opponent, battle)
+    }
+
     fun analyzeBattleTarget(pokemon: ClientBattlePokemon, battle: ClientBattle?): Reliability {
         val visibleSpecies = pokemon.species
         if (battle == null || !battle.isPvW) return Reliability(true, effectiveSpecies = visibleSpecies)

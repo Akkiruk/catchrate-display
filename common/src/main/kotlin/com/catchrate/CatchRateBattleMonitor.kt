@@ -40,6 +40,12 @@ object CatchRateBattleMonitor {
         }
 
         lastMustChoose = nowMustChoose
+
+        // Runs every tick regardless of held item so a disguising Pokemon (e.g. Ditto's
+        // Transform) is captured in its true form even if the player hasn't drawn a
+        // Pokeball yet. See CatchRatePredictionReliability.onClientTick for why this can't
+        // just live in the HUD render path.
+        CatchRatePredictionReliability.onClientTick(battle)
     }
 
     fun getTurnCount(expectedBattleId: UUID? = currentBattleId): Int {
