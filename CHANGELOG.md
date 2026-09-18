@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.12.2] - 2026-09-17
+
+### Fixed
+- **Ditto (and other Transform users) now actually keeps its true catch rate after transforming.** 2.12.1 attempted this by feeding the existing "disguise" fallback earlier, but that fallback's detection (`entity.effects.mockEffect`) is set only by Cobblemon's server-side battle interpreter and is never networked to observing clients — it always read as "not disguised" on the client, so the fallback never actually engaged and the every-tick observation kept overwriting the remembered species with whatever was currently visible, including the transformed one. The fix now freezes each battle Pokémon's species the first time it's observed for that battle UUID (write-once, before any Transform can occur) and always prefers that over the live, post-transform `species` field, instead of depending on the unusable disguise signal.
+
 ## [2.12.1] - 2026-09-17
 
 ### Fixed

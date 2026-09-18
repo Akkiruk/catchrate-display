@@ -5,14 +5,30 @@ import com.cobblemon.mod.common.client.battle.ClientBattlePokemon
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Species
 import java.util.UUID
-import net.minecraft.client.Minecraft
 
+/**
+ * Recovers the true species of a battle Pokemon whose client-visible species can change
+ * mid-battle (Transform, and in principle Illusion) without a real species change happening.
+ *
+ * Cobblemon has no field that survives this with the pre-change species intact:
+ * [ClientBattlePokemon.species] is a live getter off `properties`, and `BattleTransformPokemonPacket`
+ * overwrites `properties`/`aspects` in place when Transform resolves. The entity-side
+ * `effects.mockEffect` that Cobblemon's own code uses server-side to know a Pokemon is disguised
+ * is set only by the battle interpreter (`TransformInstruction`/`SwitchInstruction`), which runs
+ * exclusively on the server — it is never networked to observing clients, so reading it here
+ * always sees null and can't be used as a signal.
+ *
+ * What *is* reliable: a wild Pokemon is always sent out, and therefore observed once in its
+ * true form, before it can act (a battle can't start already mid-Transform). So the species
+ * seen the very first time this client observes a given battle Pokemon's UUID is trustworthy
+ * for the rest of that battle, and is kept instead of whatever `species` reports afterward.
+ */
 object CatchRatePredictionReliability {
 
-    private val rememberedBattleSpecies = mutableMapOf<UUID, Species>()
+    private val firstSeenBattleSpecies = mutableMapOf<UUID, Species>()
 
     fun clearBattleMemory() {
-        rememberedBattleSpecies.clear()
+        firstSeenBattleSpecies.clear()
     }
 
     data class Reliability(
@@ -23,10 +39,8 @@ object CatchRatePredictionReliability {
 
     /**
      * Observes the current wild opponent every client tick, independent of whether the HUD
-     * is actually rendering (which only happens while a Pokeball is held). Without this,
-     * a Pokemon that disguises itself (e.g. Ditto's Transform) before the player ever draws
-     * a ball is never seen in its true form, so there is nothing to remember and the HUD
-     * falls back to the disguised species for the rest of the battle.
+     * is actually rendering (which only happens while a Pokeball is held). Without this, a
+     * same-turn Transform could beat the client to its only clean observation.
      */
     fun onClientTick(battle: ClientBattle?) {
         if (battle == null || !battle.isPvW) return
@@ -35,101 +49,30 @@ object CatchRatePredictionReliability {
         } catch (_: Throwable) {
             null
         } ?: return
-        analyzeBattleTarget(opponent, battle)
+        observe(opponent)
+    }
+
+    private fun observe(pokemon: ClientBattlePokemon) {
+        // putIfAbsent, never overwritten: any later sighting could already be post-Transform.
+        firstSeenBattleSpecies.putIfAbsent(pokemon.uuid, pokemon.species)
     }
 
     fun analyzeBattleTarget(pokemon: ClientBattlePokemon, battle: ClientBattle?): Reliability {
         val visibleSpecies = pokemon.species
         if (battle == null || !battle.isPvW) return Reliability(true, effectiveSpecies = visibleSpecies)
 
-        val wildEntities = getActiveWildBattleEntities(battle.battleId)
-        if (wildEntities.isEmpty()) return Reliability(true, effectiveSpecies = visibleSpecies)
-
-        val matchedEntity = wildEntities.firstOrNull { it.pokemon.uuid == pokemon.uuid }
-        if (matchedEntity != null) {
-            return if (isDisguised(matchedEntity)) {
-                val rememberedSpecies = getRememberedSpecies(pokemon.uuid, battle.wildActor?.uuid)
-                if (rememberedSpecies != null) {
-                    Reliability(true, "Using remembered pre-disguise species", rememberedSpecies)
-                } else {
-                    Reliability(false, "Active wild entity is disguised", visibleSpecies)
-                }
-            } else {
-                rememberSpecies(visibleSpecies, pokemon.uuid, battle.wildActor?.uuid)
-                Reliability(true, effectiveSpecies = visibleSpecies)
-            }
-        }
-
-        val actualWildUuid = battle.wildActor?.uuid
-        val actualWildEntity = actualWildUuid?.let { wildUuid ->
-            wildEntities.firstOrNull { it.pokemon.uuid == wildUuid }
-        }
-        if (actualWildEntity != null) {
-            if (isDisguised(actualWildEntity)) {
-                val rememberedSpecies = getRememberedSpecies(actualWildUuid)
-                if (rememberedSpecies != null) {
-                    return Reliability(true, "Using remembered pre-disguise species for hidden target", rememberedSpecies)
-                }
-                return Reliability(
-                    false,
-                    "Active wild entity is disguised and the client was never shown its true species",
-                    visibleSpecies
-                )
-            }
-
-            rememberSpecies(visibleSpecies, actualWildUuid)
-            return Reliability(true, effectiveSpecies = visibleSpecies)
-        }
-
-        val disguisedEntity = wildEntities.firstOrNull(::isDisguised)
-        return if (disguisedEntity != null) {
-            Reliability(false, "Active wild entity is disguised and public battle data does not match it", visibleSpecies)
+        observe(pokemon)
+        val trueSpecies = firstSeenBattleSpecies[pokemon.uuid] ?: visibleSpecies
+        return if (trueSpecies.resourceIdentifier != visibleSpecies.resourceIdentifier) {
+            Reliability(true, "Using species observed at send-out, before any mid-battle change", trueSpecies)
         } else {
-            Reliability(false, "Public battle data does not match any active wild entity", visibleSpecies)
+            Reliability(true, effectiveSpecies = visibleSpecies)
         }
     }
 
+    /** No battle-side transform is possible for a world (non-battle) target, so its currently
+     * observed species is always the true one. */
     fun analyzeWorldTarget(entity: PokemonEntity): Reliability {
-        return if (isDisguised(entity)) {
-            Reliability(false, "World target is disguised", entity.pokemon.species)
-        } else {
-            Reliability(true, effectiveSpecies = entity.pokemon.species)
-        }
-    }
-
-    private fun rememberSpecies(species: Species, vararg keys: UUID?) {
-        keys.forEach { key ->
-            if (key != null) {
-                rememberedBattleSpecies[key] = species
-            }
-        }
-    }
-
-    private fun getRememberedSpecies(vararg keys: UUID?): Species? {
-        return keys.firstNotNullOfOrNull { key -> key?.let { rememberedBattleSpecies[it] } }
-    }
-
-    private fun getActiveWildBattleEntities(battleId: UUID): List<PokemonEntity> {
-        val minecraft = Minecraft.getInstance()
-        val player = minecraft.player ?: return emptyList()
-        val level = minecraft.level ?: return emptyList()
-
-        return level.getEntitiesOfClass(
-            PokemonEntity::class.java,
-            player.boundingBox.inflate(128.0)
-        ) {
-            it.isAlive &&
-                it.battleId == battleId &&
-                it.ownerUUID == null &&
-                it.pokemon.getOwnerUUID() == null
-        }
-    }
-
-    private fun isDisguised(entity: PokemonEntity): Boolean {
-        return try {
-            entity.effects.mockEffect != null
-        } catch (_: Throwable) {
-            false
-        }
+        return Reliability(true, effectiveSpecies = entity.pokemon.species)
     }
 }
