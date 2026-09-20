@@ -56,6 +56,7 @@ object CatchRateMod {
         LOGGER.info("  Loader: ${getLoaderInfo()}")
         LOGGER.info("  Cobblemon: ${getCobblemonVersion()}")
         LOGGER.info("  Ancient Ball Rules: ${CobblemonVersionSupport.ancientBallProfileLabel()}")
+        LOGGER.info("  Catch Mechanics: ${CobblemonVersionSupport.catchMechanicsProfileLabel()}")
         LOGGER.info("  Config debugLogging: $DEBUG_ENABLED")
         LOGGER.info("  Session override: $sessionDebugOverride")
         LOGGER.info("==================================================")

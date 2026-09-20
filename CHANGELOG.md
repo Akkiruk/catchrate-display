@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.12.3] - 2026-09-20
+
+### Fixed
+- **Timer Ball, Beast Ball, Moon Ball, and Love Ball now calculate correctly on Cobblemon 1.8.1+, while staying accurate for 1.8.0 and earlier.** Cobblemon fixed all four of these in 1.8.1: Timer Ball's formula gained a missing `+1` base term, Beast Ball's non-Ultra-Beast penalty (previously a no-op due to commented-out code) now really applies at 0.1×, Moon Ball's gate now checks actual time-of-day instead of a world's total elapsed ticks (previously permanently "open" past the first in-game day), and Love Ball no longer requires a species match just to get the base 2.5× opposite-gender bonus. This mod now detects the running Cobblemon version at runtime and calculates each ball using whichever ruleset is actually loaded, so players on either side of the 1.8.1 boundary see accurate odds.
+- **Completed missing/stale translations across all 25 non-English locales**, found while making the above version-gated fix: `catchrate.ball.love.need_same_species` was missing from every non-English locale, and `catchrate.ball.moon.gate_closed` had been renamed from `catchrate.ball.moon.not_night` in English only — every other language was still on the old key with an inaccurate "only works at night" translation.
+
 ## [2.12.2] - 2026-09-17
 
 ### Fixed

@@ -26,7 +26,26 @@ import net.minecraft.world.level.Level
  * - CatchRateHudRenderer client-side context building
  */
 object BallContextFactory {
-    
+
+    /**
+     * Whether the Moon Ball bonus is active for the given level, matching Cobblemon's real
+     * (version-dependent) guard rather than a naive day/night check.
+     *
+     * Pre-1.8.1: Cobblemon gated the bonus on the world's total elapsed ticks (gameTime) sitting
+     * outside 12000..24000 — a bug, since gameTime never wraps, so the bonus is only correctly
+     * denied during the world's first in-game night and is permanently active every day after.
+     * Fixed in 1.8.1 to check actual time-of-day (dayTime % 24000), so the bonus is now really
+     * night-only as the ball's name implies.
+     */
+    private fun isMoonBallGateOpen(level: Level): Boolean {
+        return when (CobblemonVersionSupport.catchMechanicsProfile()) {
+            CobblemonVersionSupport.CatchMechanicsProfile.LEGACY_PRE_181 ->
+                level.gameTime !in MOON_BALL_GATE_START..MOON_BALL_GATE_END
+            CobblemonVersionSupport.CatchMechanicsProfile.FIXED_181 ->
+                level.dayTime % 24000L >= 12000L
+        }
+    }
+
     /**
      * Create a BallContext from a ClientBattlePokemon (client-side battle).
      * Used by BallComparisonCalculator for in-battle calculations.
@@ -60,7 +79,7 @@ object BallContextFactory {
             labels = safeGetLabels(species),
             statusPath = pokemon.status?.name?.path,
             lightLevel = level.getMaxLocalRawBrightness(targetPos),
-            moonBallGateOpen = level.gameTime !in MOON_BALL_GATE_START..MOON_BALL_GATE_END,
+            moonBallGateOpen = isMoonBallGateOpen(level),
             moonPhase = level.moonPhase,
             isTargetUnderwater = targetUnderwater,
             isPlayerUnderwater = player.isUnderWater,
@@ -132,7 +151,7 @@ object BallContextFactory {
             labels = safeGetLabels(species),
             statusPath = statusOverride ?: pokemon.status?.status?.name?.path,
             lightLevel = level.getMaxLocalRawBrightness(targetPos),
-            moonBallGateOpen = level.gameTime !in MOON_BALL_GATE_START..MOON_BALL_GATE_END,
+            moonBallGateOpen = isMoonBallGateOpen(level),
             moonPhase = level.moonPhase,
             isTargetUnderwater = isTargetUnderwater,
             isPlayerUnderwater = player.isUnderWater,

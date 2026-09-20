@@ -48,6 +48,7 @@ object BallTranslations {
     
     fun beastUltraBeast() = Component.translatable("catchrate.ball.beast.ultra_beast").string
     fun beastPenalty() = Component.translatable("catchrate.ball.beast.penalty").string
+    fun beastPenalty181() = Component.translatable("catchrate.ball.beast.penalty_181").string
     
     fun dreamSleeping() = Component.translatable("catchrate.ball.dream.sleeping").string
     fun dreamNeedSleep() = Component.translatable("catchrate.ball.dream.need_sleep").string
@@ -60,6 +61,7 @@ object BallTranslations {
     fun loveNeedOpposite() = Component.translatable("catchrate.ball.love.need_opposite").string
     fun loveSameSpecies(gender: String) = Component.translatable("catchrate.ball.love.same_species", gender).string
     fun loveNeedSameSpecies() = Component.translatable("catchrate.ball.love.need_same_species").string
+    fun loveOppositeGender(gender: String) = Component.translatable("catchrate.ball.love.opposite_gender", gender).string
     
     fun levelEffective() = Component.translatable("catchrate.ball.level.effective").string
     fun levelIneffective() = Component.translatable("catchrate.ball.level.ineffective").string
@@ -270,8 +272,15 @@ object BallMultiplierCalculator {
     }
     
     private fun calculateTimerBall(ctx: BallContext): BallResult {
-        // Cobblemon formula: turn * (1229/4096), capped at 4 — NOT the mainline games formula
-        val mult = if (ctx.inBattle) (ctx.turnCount * (1229F / 4096F)).coerceAtMost(4F) else 1F
+        // Cobblemon formula, NOT the mainline games formula. Fixed in 1.8.1: pre-1.8.1 used
+        // turn * (1229/4096) (so turn 1 gave almost no bonus); 1.8.1 added the missing +1 base
+        // term (1 + turn * (1229/4096)). Both are capped at 4.
+        val mult = if (!ctx.inBattle) 1F else when (CobblemonVersionSupport.catchMechanicsProfile()) {
+            CobblemonVersionSupport.CatchMechanicsProfile.LEGACY_PRE_181 ->
+                (ctx.turnCount * (1229F / 4096F)).coerceAtMost(4F)
+            CobblemonVersionSupport.CatchMechanicsProfile.FIXED_181 ->
+                (1F + ctx.turnCount * (1229F / 4096F)).coerceAtMost(4F)
+        }
         val effective = mult > 1.01f
         val reason = if (ctx.inBattle) BallTranslations.timerTurnInfo(ctx.turnCount) else BallTranslations.timerScales()
         return BallResult(mult, effective, reason)
@@ -340,11 +349,18 @@ object BallMultiplierCalculator {
     }
     
     private fun calculateBeastBall(ctx: BallContext): BallResult {
-        // Cobblemon's beast_ball only registers a bonus LabelModifier for Ultra Beasts; the
-        // matching non-UB penalty modifier is commented out in Cobblemon's own source, so a
-        // non-UB target gets a neutral 1x, never a penalty.
+        // Pre-1.8.1, Cobblemon's beast_ball only registered a bonus LabelModifier for Ultra
+        // Beasts; the matching non-UB penalty modifier was commented out in Cobblemon's own
+        // source, so a non-UB target got a neutral 1x, never a penalty. Fixed in 1.8.1, which
+        // restores the real 0.1x non-UB penalty via a DynamicMultiplierModifier.
         val isUB = ctx.labels.any { it.lowercase() == "ultra_beast" }
-        return BallResult(if (isUB) 5F else 1F, isUB, if (isUB) BallTranslations.beastUltraBeast() else BallTranslations.beastPenalty())
+        if (isUB) return BallResult(5F, true, BallTranslations.beastUltraBeast())
+        return when (CobblemonVersionSupport.catchMechanicsProfile()) {
+            CobblemonVersionSupport.CatchMechanicsProfile.LEGACY_PRE_181 ->
+                BallResult(1F, false, BallTranslations.beastPenalty())
+            CobblemonVersionSupport.CatchMechanicsProfile.FIXED_181 ->
+                BallResult(0.1F, false, BallTranslations.beastPenalty181())
+        }
     }
     
     private fun calculateDreamBall(ctx: BallContext): BallResult {
@@ -370,13 +386,23 @@ object BallMultiplierCalculator {
                              (wildGender == Gender.FEMALE && battlerGender == Gender.MALE)
         if (!oppositeGender) return BallResult(1F, false, BallTranslations.loveNeedOpposite())
 
-        // Cobblemon's LOVE modifier requires a species match for any bonus at all — opposite
-        // gender alone (regardless of species) gives no boost, contrary to what this used to do.
         val sameSpecies = ctx.speciesId == activeBattler.speciesId
-        if (!sameSpecies) return BallResult(1F, false, BallTranslations.loveNeedSameSpecies())
-
         val genderDesc = if (wildGender == Gender.MALE) "♂" else "♀"
-        return BallResult(8F, true, BallTranslations.loveSameSpecies(genderDesc))
+
+        if (CobblemonVersionSupport.catchMechanicsProfile() == CobblemonVersionSupport.CatchMechanicsProfile.LEGACY_PRE_181) {
+            // Pre-1.8.1, Cobblemon's LOVE modifier required a species match for any bonus at
+            // all — opposite gender alone (regardless of species) gave no boost.
+            if (!sameSpecies) return BallResult(1F, false, BallTranslations.loveNeedSameSpecies())
+            return BallResult(8F, true, BallTranslations.loveSameSpecies(genderDesc))
+        }
+
+        // Fixed in 1.8.1: opposite gender alone is now enough for the base 2.5x bonus; matching
+        // species on top raises it to 8x.
+        return if (sameSpecies) {
+            BallResult(8F, true, BallTranslations.loveSameSpecies(genderDesc))
+        } else {
+            BallResult(2.5F, true, BallTranslations.loveOppositeGender(genderDesc))
+        }
     }
     
     private fun calculateLevelBall(ctx: BallContext): BallResult {

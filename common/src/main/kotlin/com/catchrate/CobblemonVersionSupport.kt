@@ -10,6 +10,14 @@ object CobblemonVersionSupport {
         RESPECTIVE_MODIFIERS_180
     }
 
+    // Timer Ball, Beast Ball, Moon Ball, and Love Ball were all fixed together in Cobblemon 1.8.1
+    // (see gitlab.com/cable-mc/cobblemon diff between the 1.8.0 and 1.8.1 tags), so one shared
+    // profile covers all four rather than a separate enum per ball.
+    enum class CatchMechanicsProfile {
+        LEGACY_PRE_181,
+        FIXED_181
+    }
+
     private data class ParsedVersion(
         val major: Int,
         val minor: Int,
@@ -28,6 +36,10 @@ object CobblemonVersionSupport {
     // gate gate is >= 1.8.0 rather than "> 1.7.3" — if Cobblemon ever ships a 1.7.x patch without
     // the fix, that boundary would have wrongly reported it as fixed.
     private val ancientBallFixBoundary = ParsedVersion(1, 8, 0)
+    // Timer/Beast/Moon/Love fixes landed exactly in 1.8.1, so the gate is >= 1.8.1 rather than
+    // "> 1.8.0" for the same reason as above - a hypothetical 1.8.0.x patch without the fix
+    // should not be misreported as fixed.
+    private val catchMechanicsFixBoundary = ParsedVersion(1, 8, 1)
 
     fun cobblemonVersion(): String = rawVersion
 
@@ -44,6 +56,22 @@ object CobblemonVersionSupport {
         return when (ancientBallProfile()) {
             AncientBallProfile.LEGACY_PRE_180 -> "1.7.x and earlier (Great/Ultra/Origin only)"
             AncientBallProfile.RESPECTIVE_MODIFIERS_180 -> "1.8.0+ (Great/Ultra/Leaden/Wing/Gigaton/Jet/Origin)"
+        }
+    }
+
+    fun catchMechanicsProfile(): CatchMechanicsProfile {
+        val parsed = parsedVersion ?: return CatchMechanicsProfile.LEGACY_PRE_181
+        return if (parsed >= catchMechanicsFixBoundary) {
+            CatchMechanicsProfile.FIXED_181
+        } else {
+            CatchMechanicsProfile.LEGACY_PRE_181
+        }
+    }
+
+    fun catchMechanicsProfileLabel(): String {
+        return when (catchMechanicsProfile()) {
+            CatchMechanicsProfile.LEGACY_PRE_181 -> "1.8.0 and earlier (buggy Timer/Beast/Moon/Love Ball math)"
+            CatchMechanicsProfile.FIXED_181 -> "1.8.1+ (corrected Timer/Beast/Moon/Love Ball math)"
         }
     }
 

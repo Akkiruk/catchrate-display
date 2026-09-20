@@ -66,6 +66,7 @@
 
   "catchrate.ball.beast.ultra_beast": "Ultra Beast",
   "catchrate.ball.beast.penalty": "Not an Ultra Beast",
+  "catchrate.ball.beast.penalty_181": "Not an Ultra Beast (0.1x)",
 
   "catchrate.ball.dream.sleeping": "Target is asleep",
   "catchrate.ball.dream.need_sleep": "Target not asleep",
@@ -78,6 +79,7 @@
   "catchrate.ball.love.need_opposite": "Need opposite gender battler",
   "catchrate.ball.love.same_species": "Same species + opposite %s",
   "catchrate.ball.love.need_same_species": "Need same species",
+  "catchrate.ball.love.opposite_gender": "Opposite gender %s",
 
   "catchrate.ball.level.effective": "Level advantage",
   "catchrate.ball.level.ineffective": "No level advantage",
