@@ -226,8 +226,8 @@ object CatchRateDebugLog {
         // Battle state
         val battle = try { com.cobblemon.mod.common.client.CobblemonClient.battle } catch (_: Throwable) { null }
         if (battle != null) {
-            sb.appendLine("Battle Active: yes (id=${battle.battleId}, isPvW=${battle.isPvW}, mustChoose=${battle.mustChoose})")
-            val opponent = battle.side2?.activeClientBattlePokemon?.firstOrNull()?.battlePokemon
+            sb.appendLine("Battle Active: yes (id=${battle.battleId}, isPvW=${battle.isPvW}, wild=${BattleSides.isWildBattle(battle)}, mustChoose=${battle.mustChoose})")
+            val opponent = BattleSides.opponentPokemon(battle)
             if (opponent != null) {
                 val analysis = CatchRatePredictionReliability.analyzeBattleTarget(opponent, battle)
                 val species = analysis.effectiveSpecies ?: opponent.species

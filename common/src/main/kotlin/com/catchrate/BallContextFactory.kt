@@ -225,7 +225,7 @@ object BallContextFactory {
     private fun getActiveBattlerFromClientBattle(battle: ClientBattle?): PartyMember? {
         if (battle == null) return null
         return try {
-            val activePokemon = battle.side1.activeClientBattlePokemon.firstOrNull()?.battlePokemon
+            val activePokemon = BattleSides.ownPokemon(battle)
             if (activePokemon != null) {
                 PartyMember(
                     speciesId = activePokemon.species.resourceIdentifier.toString(),

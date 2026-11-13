@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.4] - 2026-11-12
+
+### Fixed
+- The catch rate HUD just wasn't there with Cobblemon SOS Encounters installed. SOS turns wild fights into multi battles behind the scenes, so the mod thought you weren't in a wild battle at all, from turn one. Should work with anything else built on Asymmetric Battles too.
+- Double battles get a panel for each wild Pokémon now, side by side. So when the buddy shows up you can see both rates at once instead of guessing which one you're looking at. Holding the comparison key does the same, with each panel labelled by name and level.
+- Ditto showing up as the helper keeps its real catch rate after transforming, same as a normal Ditto.
+
 ## [2.12.3] - 2026-09-20
 
 ### Fixed

@@ -43,13 +43,9 @@ object CatchRatePredictionReliability {
      * same-turn Transform could beat the client to its only clean observation.
      */
     fun onClientTick(battle: ClientBattle?) {
-        if (battle == null || !battle.isPvW) return
-        val opponent = try {
-            battle.side2.activeClientBattlePokemon.firstOrNull()?.battlePokemon
-        } catch (_: Throwable) {
-            null
-        } ?: return
-        observe(opponent)
+        if (battle == null || !BattleSides.isWildBattle(battle)) return
+        // Every wild Pokemon on the field, so a Ditto that shows up as an SOS ally is caught too.
+        BattleSides.opponentPokemonList(battle).forEach(::observe)
     }
 
     private fun observe(pokemon: ClientBattlePokemon) {
@@ -59,7 +55,7 @@ object CatchRatePredictionReliability {
 
     fun analyzeBattleTarget(pokemon: ClientBattlePokemon, battle: ClientBattle?): Reliability {
         val visibleSpecies = pokemon.species
-        if (battle == null || !battle.isPvW) return Reliability(true, effectiveSpecies = visibleSpecies)
+        if (battle == null || !BattleSides.isWildBattle(battle)) return Reliability(true, effectiveSpecies = visibleSpecies)
 
         observe(pokemon)
         val trueSpecies = firstSeenBattleSpecies[pokemon.uuid] ?: visibleSpecies

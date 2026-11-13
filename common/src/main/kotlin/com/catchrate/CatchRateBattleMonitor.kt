@@ -27,7 +27,7 @@ object CatchRateBattleMonitor {
             lastMustChoose = false
             mustChooseTransitions = 0
             CatchRateCaptureTracker.onBattleStarted(battle.battleId)
-            CatchRateDebugLog.onBattleObserved(battle.battleId.toString(), battle.isPvW)
+            CatchRateDebugLog.onBattleObserved(battle.battleId.toString(), BattleSides.isWildBattle(battle))
         }
 
         val nowMustChoose = battle.mustChoose

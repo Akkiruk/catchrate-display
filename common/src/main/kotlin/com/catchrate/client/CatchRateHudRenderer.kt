@@ -1,5 +1,6 @@
 package com.catchrate.client
 
+import com.catchrate.BattleSides
 import com.catchrate.BallContextFactory
 import com.catchrate.CatchRateBattleMonitor
 import com.catchrate.CatchRateCalculator
@@ -53,13 +54,27 @@ class CatchRateHudRenderer {
     
     private var lastBattleId: java.util.UUID? = null
 
-    /** Composite fingerprint of every cheap input the battle calculation depends on. */
-    private var lastBattleSignature: String? = null
-    private var lastBattleCalcAtMs = 0L
+    /**
+     * Cached results for one wild battle Pokemon. Kept per Pokemon so double/multi battles
+     * (e.g. Cobblemon SOS Encounters) can show a panel for each without thrashing one cache.
+     */
+    private class OpponentCache {
+        /** Composite fingerprint of every cheap input the battle calculation depends on. */
+        var signature: String? = null
+        var calcAtMs = 0L
+        var result: CatchRateResult? = null
+        var comparison: List<BallComparisonCalculator.BallCatchRate>? = null
+    }
 
-    private var cachedClientResult: CatchRateResult? = null
+    private val opponentCaches = HashMap<java.util.UUID, OpponentCache>()
 
-    private var cachedComparison: List<BallComparisonCalculator.BallCatchRate>? = null
+    /** A measured HUD panel that can be drawn at any position, so several can be laid out side by side. */
+    private class Panel(
+        val width: Int,
+        val height: Int,
+        val isComparison: Boolean = false,
+        val draw: (GuiGraphics, Int, Int) -> Unit
+    )
 
     private var cachedWorldComparison: List<BallComparisonCalculator.BallCatchRate>? = null
     private var lastWorldSignature: String? = null
@@ -112,12 +127,10 @@ class CatchRateHudRenderer {
         
         if (battle.battleId != lastBattleId) {
             lastBattleId = battle.battleId
-            cachedClientResult = null
-            cachedComparison = null
+            opponentCaches.clear()
             cachedWorldComparison = null
-            lastBattleSignature = null
         }
-        if (!battle.isPvW) {
+        if (!BattleSides.isWildBattle(battle)) {
             CatchRateMod.debugOnChange("battleType", "pvp", "Not PvW battle, HUD hidden")
             return
         }
@@ -128,49 +141,110 @@ class CatchRateHudRenderer {
             return
         }
         
-        val opponentPokemon = getOpponentPokemon(battle)
-        if (opponentPokemon == null) {
+        // One panel per wild Pokemon on the field: a single one in a normal wild battle, two or
+        // more side by side in double/multi battles (an SOS ally joined, horde battles, ...).
+        val opponents = BattleSides.opponentPokemonList(battle)
+        if (opponents.isEmpty()) {
             CatchRateMod.debugOnChange("opponent", "none", "No opponent Pokemon found")
             return
         }
-        
-        checkCacheInvalidation(opponentPokemon, heldItem, battle)
-        
+        opponentCaches.keys.retainAll(opponents.map { it.uuid }.toSet())
+
         val ballName = getBallId(heldItem).lowercase()
         val showComparison = CatchRateKeybinds.isComparisonHeld
-        val targetSpecies = getEffectiveBattleSpecies(opponentPokemon)
-        CatchRateMod.debugOnChange("target", "${targetSpecies.name}_${ballName}", 
-            "Target: ${targetSpecies.name} Lv${opponentPokemon.level} with $ballName")
-        
-        if (showComparison) {
-            // Block comparison panel for unencountered Pokémon
-            if (!hasEncounteredSpecies(targetSpecies.resourceIdentifier)) {
-                val result = getClientCalculation(opponentPokemon, heldItem) ?: return
-                renderClientModeHud(guiGraphics, minecraft, result, ballName)
-                return
-            }
+        val multi = opponents.size > 1
+        CatchRateMod.debugOnChange("target", opponents.joinToString(",") { "${it.uuid}" } + "_$ballName",
+            "Targets: " + opponents.joinToString { "${getEffectiveBattleSpecies(it).name} Lv${it.level}" } + " with $ballName")
+
+        val panels = opponents.mapNotNull { opponent ->
             try {
-                renderBallComparisonPanel(guiGraphics, minecraft, opponentPokemon, battle)
-                return
+                buildBattlePanel(minecraft, battle, opponent, heldItem, ballName, showComparison, multi)
+            } catch (e: Throwable) {
+                CatchRateMod.debugOnChange("HudErr", "battlePanel", "Battle panel failed: ${e.javaClass.simpleName}")
+                null
+            }
+        }
+        if (panels.isEmpty()) return
+        drawPanelGroup(guiGraphics, minecraft, panels, centered = panels.any { it.isComparison })
+    }
+
+    private fun buildBattlePanel(
+        minecraft: Minecraft,
+        battle: ClientBattle,
+        opponent: ClientBattlePokemon,
+        heldItem: ItemStack,
+        ballName: String,
+        showComparison: Boolean,
+        multi: Boolean
+    ): Panel? {
+        val cache = opponentCaches.getOrPut(opponent.uuid) { OpponentCache() }
+        refreshCache(cache, opponent, heldItem, battle)
+        val species = getEffectiveBattleSpecies(opponent)
+
+        // Comparison panel is blocked for unencountered Pokémon; they get the normal (obfuscated) panel.
+        if (showComparison && hasEncounteredSpecies(species.resourceIdentifier)) {
+            try {
+                val turnCount = CatchRateBattleMonitor.getTurnCount(battle.battleId)
+                if (cache.comparison == null) {
+                    cache.comparison = BallComparisonCalculator.calculateAllBalls(opponent, turnCount, battle)
+                }
+                val comparison = cache.comparison
+                if (comparison != null) {
+                    val header = HudTranslations.ballComparison(turnCount)
+                    // Label each panel when there's more than one. SOS helpers are usually the
+                    // same species as the caller, so the level is what tells them apart.
+                    val title = if (multi) "${species.translatedName.string} Lv${opponent.level}: $header" else header
+                    return buildComparisonPanel(minecraft, comparison, title, showPenaltyNote = false)
+                }
             } catch (e: Throwable) {
                 CatchRateMod.debugOnChange("HudErr", "comparison", "Comparison panel failed, falling back: ${e.javaClass.simpleName}")
             }
         }
-        
-        val result = getClientCalculation(opponentPokemon, heldItem) ?: return
-        renderClientModeHud(guiGraphics, minecraft, result, ballName)
+
+        val result = getClientCalculation(cache, opponent, heldItem) ?: return null
+        return buildUnifiedPanel(minecraft, battleHudData(opponent, result, ballName))
     }
-    
-    private fun checkCacheInvalidation(pokemon: ClientBattlePokemon, heldItem: ItemStack, battle: ClientBattle) {
+
+    /**
+     * Lays panels out left to right as one block. The block is placed with the configured HUD
+     * anchor (or centred for comparison panels), and shorter panels hug the anchor's edge.
+     * With a single panel this lands exactly where the HUD always has.
+     */
+    private fun drawPanelGroup(guiGraphics: GuiGraphics, minecraft: Minecraft, panels: List<Panel>, centered: Boolean) {
+        val gap = 4
+        val screenWidth = minecraft.window.guiScaledWidth
+        val screenHeight = minecraft.window.guiScaledHeight
+        val totalWidth = panels.sumOf { it.width } + gap * (panels.size - 1)
+        val maxHeight = panels.maxOf { it.height }
+        val config = CatchRateConfig.get()
+        val (groupX, groupY) = if (centered) {
+            Pair((screenWidth - totalWidth) / 2, (screenHeight - maxHeight) / 2)
+        } else {
+            config.getPosition(screenWidth, screenHeight, totalWidth, maxHeight)
+        }
+        val anchor = config.hudAnchor.name
+        var x = groupX
+        for (panel in panels) {
+            val y = when {
+                centered || anchor.startsWith("MIDDLE") -> groupY + (maxHeight - panel.height) / 2
+                anchor.startsWith("BOTTOM") -> groupY + maxHeight - panel.height
+                else -> groupY
+            }
+            panel.draw(guiGraphics, x, y)
+            x += panel.width + gap
+        }
+    }
+
+    private fun refreshCache(cache: OpponentCache, pokemon: ClientBattlePokemon, heldItem: ItemStack, battle: ClientBattle) {
         val signature = buildBattleSignature(pokemon, heldItem, battle)
         val now = System.currentTimeMillis()
-        val stale = now - lastBattleCalcAtMs >= MAX_CACHE_AGE_MS
+        val stale = now - cache.calcAtMs >= MAX_CACHE_AGE_MS
 
-        if (signature != lastBattleSignature || stale) {
-            lastBattleSignature = signature
-            lastBattleCalcAtMs = now
-            cachedClientResult = null
-            cachedComparison = null
+        if (signature != cache.signature || stale) {
+            cache.signature = signature
+            cache.calcAtMs = now
+            cache.result = null
+            cache.comparison = null
         }
     }
 
@@ -183,7 +257,7 @@ class CatchRateHudRenderer {
      */
     private fun buildBattleSignature(pokemon: ClientBattlePokemon, heldItem: ItemStack, battle: ClientBattle): String {
         return try {
-            val ally = battle.side1.activeClientBattlePokemon.firstOrNull()?.battlePokemon
+            val ally = BattleSides.ownPokemon(battle)
             val player = Minecraft.getInstance().player
             buildString {
                 append(pokemon.uuid).append('|')
@@ -210,10 +284,7 @@ class CatchRateHudRenderer {
 
     private fun resetState() {
         lastBattleId = null
-        lastBattleSignature = null
-        lastBattleCalcAtMs = 0L
-        cachedClientResult = null
-        cachedComparison = null
+        opponentCaches.clear()
         cachedWorldComparison = null
         lastWorldSignature = null
         lastWorldCalcAtMs = 0L
@@ -236,24 +307,24 @@ class CatchRateHudRenderer {
         }
     }
     
-    private fun getClientCalculation(pokemon: ClientBattlePokemon, heldItem: ItemStack): CatchRateResult? {
+    private fun getClientCalculation(cache: OpponentCache, pokemon: ClientBattlePokemon, heldItem: ItemStack): CatchRateResult? {
         val turnCount = CatchRateBattleMonitor.getTurnCount()
-        if (cachedClientResult == null) {
+        if (cache.result == null) {
             val result = try {
                 CatchRateCalculator.calculateCatchRate(pokemon, heldItem, turnCount, null, true)
             } catch (e: Throwable) {
                 CatchRateMod.debugOnChange("HudErr", "calc", "Calculation failed: ${e.message}")
                 null
             }
-            cachedClientResult = result
-            
+            cache.result = result
+
             // Log detailed calculation and track guaranteed predictions
             if (result != null) {
                 val pokemonName = getEffectiveBattleSpecies(pokemon).name
                 CatchRateDebugLog.logCalculation(pokemonName, pokemon.level, result, inBattle = true)
             }
         }
-        return cachedClientResult
+        return cache.result
     }
     
     
@@ -284,16 +355,13 @@ class CatchRateHudRenderer {
     private fun getEffectiveBattleSpecies(pokemon: ClientBattlePokemon) =
         CatchRatePredictionReliability.analyzeBattleTarget(pokemon, CobblemonClient.battle).effectiveSpecies ?: pokemon.species
     
-    private fun renderClientModeHud(guiGraphics: GuiGraphics, minecraft: Minecraft, result: CatchRateResult, ballName: String) {
-        val opponent = cachedClientResult?.let {
-            CobblemonClient.battle?.side2?.activeClientBattlePokemon?.firstOrNull()?.battlePokemon
-        }
-        val species = opponent?.let(::getEffectiveBattleSpecies)
-        val encountered = species?.let { hasEncounteredSpecies(it.resourceIdentifier) } ?: true
+    private fun battleHudData(opponent: ClientBattlePokemon, result: CatchRateResult, ballName: String): HudData {
+        val species = getEffectiveBattleSpecies(opponent)
+        val encountered = hasEncounteredSpecies(species.resourceIdentifier)
         val hpMult = (3.0 - 2.0 * result.hpPercentage / 100.0) / 3.0
-        renderUnifiedHud(guiGraphics, minecraft, HudData(
-            pokemonName = species?.translatedName?.string ?: "???",
-            level = opponent?.level ?: 0,
+        return HudData(
+            pokemonName = species.translatedName.string,
+            level = opponent.level,
             catchPercentage = result.percentage,
             isGuaranteed = result.isGuaranteed,
             hpMultiplier = hpMult,
@@ -310,7 +378,7 @@ class CatchRateHudRenderer {
             isCatchRateEstimate = result.isCatchRateEstimate,
             isPredictionReliable = result.isReliableGuaranteedPrediction,
             externalModifiers = result.externalModifiers
-        ))
+        )
     }
     
     private fun renderOutOfCombatHud(guiGraphics: GuiGraphics, minecraft: Minecraft, player: LocalPlayer) {
@@ -337,7 +405,7 @@ class CatchRateHudRenderer {
         val hpPercent = if (pokemon.maxHealth > 0) (pokemon.currentHealth.toDouble() / pokemon.maxHealth.toDouble()) * 100.0 else 100.0
         val statusPath = BallContextFactory.getEffectiveStatusPath(pokemonEntity) ?: ""
         
-        renderUnifiedHud(guiGraphics, minecraft, HudData(
+        drawPanelGroup(guiGraphics, minecraft, listOf(buildUnifiedPanel(minecraft, HudData(
             pokemonName = pokemon.species.translatedName.string,
             level = pokemon.level,
             catchPercentage = result.catchRate,
@@ -356,22 +424,18 @@ class CatchRateHudRenderer {
             isCatchRateEstimate = result.isCatchRateEstimate,
             isPredictionReliable = result.isPredictionReliable,
             externalModifiers = ExternalCatchRateModifiers.collect(player)
-        ))
+        ))), centered = false)
     }
-    
+
     /**
-     * Single unified HUD renderer used for both in-battle and out-of-combat display.
+     * Single unified HUD panel used for both in-battle and out-of-combat display.
      */
-    private fun renderUnifiedHud(guiGraphics: GuiGraphics, minecraft: Minecraft, data: HudData) {
-        val config = CatchRateConfig.get()
+    private fun buildUnifiedPanel(minecraft: Minecraft, data: HudData): Panel {
         val font = minecraft.font
-        val screenWidth = minecraft.window.guiScaledWidth
-        val screenHeight = minecraft.window.guiScaledHeight
-        
+
         // Obfuscated HUD for unencountered Pokémon
         if (!data.isEncountered) {
-            renderObfuscatedHud(guiGraphics, minecraft, data)
-            return
+            return buildObfuscatedPanel(minecraft, data)
         }
         
         val nameText = "${data.pokemonName} Lv${data.level}"
@@ -431,68 +495,66 @@ class CatchRateHudRenderer {
         if (penaltyText != null) detailRows++
         detailRows += modifierTexts.size
         val boxHeight = 40 + detailRows * 10 + 6
-        val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
-        
-        HudDrawing.drawStyledPanel(guiGraphics, x, y, boxWidth, boxHeight, displayPercentage, isWild = data.isWild)
-        
-        // Header: Pokemon name + level, optional WILD tag
-        guiGraphics.drawString(font, nameText, x + 6, y + 4, Colors.TEXT_WHITE)
-        if (wildText != null) {
-            guiGraphics.drawString(font, wildText, x + boxWidth - font.width(wildText) - 6, y + 4, Colors.TEXT_WILD_RED)
-        }
-        
-        // Catch bar + percentage
-        val barY = y + 16
-        if (effectiveGuaranteed) {
-            HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, 100.0, true)
-            guiGraphics.drawString(font, percentText, x + 6, barY + 12, Colors.TEXT_GREEN)
-        } else {
-            HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, displayPercentage, false)
-            val percentColor = if (rateUnknown) Colors.TEXT_ORANGE else HudDrawing.getChanceColorInt(displayPercentage)
-            guiGraphics.drawString(font, percentText, x + 6, barY + 12, percentColor)
-        }
-        
-        // Detail rows
-        var currentY = barY + 26
-        
-        val hpColor = HudDrawing.getHpMultiplierColor(data.hpMultiplier)
-        guiGraphics.drawString(font, hpText, x + 6, currentY, hpColor)
-        currentY += 10
-        
-        if (hasStatus) {
-            guiGraphics.drawString(font, statusText, x + 6, currentY, Colors.TEXT_PURPLE)
-            currentY += 10
-        }
-        
-        guiGraphics.drawString(font, ballText, x + 6, currentY, HudDrawing.getBallMultiplierColor(data.ballMultiplier))
-        
-        if (hasConditionDesc) {
-            currentY += 10
-            val conditionColor = if (data.ballConditionMet) Colors.TEXT_DARK_GREEN else Colors.TEXT_DARK_GRAY
-            guiGraphics.drawString(font, data.ballConditionReason, x + 6, currentY, conditionColor)
-        }
-        
-        if (penaltyText != null) {
-            currentY += 10
-            guiGraphics.drawString(font, penaltyText, x + 6, currentY, Colors.TEXT_ORANGE)
-        }
 
-        modifierTexts.forEach { modifierText ->
+        return Panel(boxWidth, boxHeight) { guiGraphics, x, y ->
+            HudDrawing.drawStyledPanel(guiGraphics, x, y, boxWidth, boxHeight, displayPercentage, isWild = data.isWild)
+        
+            // Header: Pokemon name + level, optional WILD tag
+            guiGraphics.drawString(font, nameText, x + 6, y + 4, Colors.TEXT_WHITE)
+            if (wildText != null) {
+                guiGraphics.drawString(font, wildText, x + boxWidth - font.width(wildText) - 6, y + 4, Colors.TEXT_WILD_RED)
+            }
+        
+            // Catch bar + percentage
+            val barY = y + 16
+            if (effectiveGuaranteed) {
+                HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, 100.0, true)
+                guiGraphics.drawString(font, percentText, x + 6, barY + 12, Colors.TEXT_GREEN)
+            } else {
+                HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, displayPercentage, false)
+                val percentColor = if (rateUnknown) Colors.TEXT_ORANGE else HudDrawing.getChanceColorInt(displayPercentage)
+                guiGraphics.drawString(font, percentText, x + 6, barY + 12, percentColor)
+            }
+        
+            // Detail rows
+            var currentY = barY + 26
+        
+            val hpColor = HudDrawing.getHpMultiplierColor(data.hpMultiplier)
+            guiGraphics.drawString(font, hpText, x + 6, currentY, hpColor)
             currentY += 10
-            guiGraphics.drawString(font, modifierText, x + 6, currentY, Colors.TEXT_GREEN)
+        
+            if (hasStatus) {
+                guiGraphics.drawString(font, statusText, x + 6, currentY, Colors.TEXT_PURPLE)
+                currentY += 10
+            }
+        
+            guiGraphics.drawString(font, ballText, x + 6, currentY, HudDrawing.getBallMultiplierColor(data.ballMultiplier))
+        
+            if (hasConditionDesc) {
+                currentY += 10
+                val conditionColor = if (data.ballConditionMet) Colors.TEXT_DARK_GREEN else Colors.TEXT_DARK_GRAY
+                guiGraphics.drawString(font, data.ballConditionReason, x + 6, currentY, conditionColor)
+            }
+        
+            if (penaltyText != null) {
+                currentY += 10
+                guiGraphics.drawString(font, penaltyText, x + 6, currentY, Colors.TEXT_ORANGE)
+            }
+
+            modifierTexts.forEach { modifierText ->
+                currentY += 10
+                guiGraphics.drawString(font, modifierText, x + 6, currentY, Colors.TEXT_GREEN)
+            }
         }
     }
-    
+
     /**
-     * Renders a minimal obfuscated HUD for Pokémon the player hasn't encountered yet.
+     * Builds a minimal obfuscated panel for Pokémon the player hasn't encountered yet.
      * Shows "???" for name/level/catch rate and a "Not yet encountered" note.
      */
-    private fun renderObfuscatedHud(guiGraphics: GuiGraphics, minecraft: Minecraft, data: HudData) {
-        val config = CatchRateConfig.get()
+    private fun buildObfuscatedPanel(minecraft: Minecraft, data: HudData): Panel {
         val font = minecraft.font
-        val screenWidth = minecraft.window.guiScaledWidth
-        val screenHeight = minecraft.window.guiScaledHeight
-        
+
         val unknownName = "${HudTranslations.unknownPokemon()} Lv?"
         val wildText = if (data.isWild) HudTranslations.wild() else null
         val unknownRate = HudTranslations.unknownRate()
@@ -505,37 +567,27 @@ class CatchRateHudRenderer {
         )
         val boxWidth = (textWidths.maxOrNull() ?: 100) + 16
         val boxHeight = 52
-        val (x, y) = config.getPosition(screenWidth, screenHeight, boxWidth, boxHeight)
+
+        return Panel(boxWidth, boxHeight) { guiGraphics, x, y ->
+            // Draw panel with 0% catch chance styling (unknown = red border)
+            HudDrawing.drawStyledPanel(guiGraphics, x, y, boxWidth, boxHeight, 0.0, isWild = data.isWild)
         
-        // Draw panel with 0% catch chance styling (unknown = red border)
-        HudDrawing.drawStyledPanel(guiGraphics, x, y, boxWidth, boxHeight, 0.0, isWild = data.isWild)
+            // Header: ??? Lv?
+            guiGraphics.drawString(font, unknownName, x + 6, y + 4, Colors.TEXT_DARK_GRAY)
+            if (wildText != null) {
+                guiGraphics.drawString(font, wildText, x + boxWidth - font.width(wildText) - 6, y + 4, Colors.TEXT_WILD_RED)
+            }
         
-        // Header: ??? Lv?
-        guiGraphics.drawString(font, unknownName, x + 6, y + 4, Colors.TEXT_DARK_GRAY)
-        if (wildText != null) {
-            guiGraphics.drawString(font, wildText, x + boxWidth - font.width(wildText) - 6, y + 4, Colors.TEXT_WILD_RED)
+            // Empty catch bar
+            val barY = y + 16
+            HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, 0.0, false)
+            guiGraphics.drawString(font, unknownRate, x + 6, barY + 12, Colors.TEXT_DARK_GRAY)
+        
+            // "Not yet encountered" note
+            guiGraphics.drawString(font, encounterNote, x + 6, barY + 26, Colors.TEXT_ORANGE)
         }
-        
-        // Empty catch bar
-        val barY = y + 16
-        HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, 0.0, false)
-        guiGraphics.drawString(font, unknownRate, x + 6, barY + 12, Colors.TEXT_DARK_GRAY)
-        
-        // "Not yet encountered" note
-        guiGraphics.drawString(font, encounterNote, x + 6, barY + 26, Colors.TEXT_ORANGE)
     }
-    
-    private fun renderBallComparisonPanel(guiGraphics: GuiGraphics, minecraft: Minecraft, pokemon: ClientBattlePokemon, battle: ClientBattle) {
-        val turnCount = CatchRateBattleMonitor.getTurnCount(battle.battleId)
-        // Invalidation is driven by checkCacheInvalidation(), which shares one signature with
-        // the single-ball result so both panels refresh on exactly the same triggers.
-        if (cachedComparison == null) {
-            cachedComparison = BallComparisonCalculator.calculateAllBalls(pokemon, turnCount, battle)
-        }
-        val comparison = cachedComparison ?: return
-        renderComparisonPanelContent(guiGraphics, minecraft, comparison, HudTranslations.ballComparison(turnCount), showPenaltyNote = false)
-    }
-    
+
     private fun renderWorldComparisonPanel(guiGraphics: GuiGraphics, minecraft: Minecraft, entity: com.cobblemon.mod.common.entity.pokemon.PokemonEntity) {
         val signature = buildWorldSignature(entity)
         val now = System.currentTimeMillis()
@@ -546,7 +598,9 @@ class CatchRateHudRenderer {
             lastWorldCalcAtMs = now
         }
         val comparison = cachedWorldComparison ?: return
-        renderComparisonPanelContent(guiGraphics, minecraft, comparison, HudTranslations.ballComparisonWild(), showPenaltyNote = true)
+        drawPanelGroup(guiGraphics, minecraft,
+            listOf(buildComparisonPanel(minecraft, comparison, HudTranslations.ballComparisonWild(), showPenaltyNote = true)),
+            centered = true)
     }
     
     private fun buildWorldSignature(entity: com.cobblemon.mod.common.entity.pokemon.PokemonEntity): String {
@@ -568,17 +622,14 @@ class CatchRateHudRenderer {
         }
     }
 
-    private fun renderComparisonPanelContent(
-        guiGraphics: GuiGraphics,
+    private fun buildComparisonPanel(
         minecraft: Minecraft,
         comparison: List<BallComparisonCalculator.BallCatchRate>,
         headerText: String,
         showPenaltyNote: Boolean
-    ) {
+    ): Panel {
         val font = minecraft.font
-        val screenWidth = minecraft.window.guiScaledWidth
-        val screenHeight = minecraft.window.guiScaledHeight
-        
+
         val lineHeight = 10
         val padding = 6
         val headerHeight = 20
@@ -625,48 +676,44 @@ class CatchRateHudRenderer {
         val boxWidth = maxOf(contentWidth, headerWidth, footerWidth, penaltyWidth)
         val footerHeight = if (showPenaltyNote) 28 else 18
         val boxHeight = headerHeight + lines.size * lineHeight + footerHeight + padding * 2
+
+
+        return Panel(boxWidth, boxHeight, isComparison = true) { guiGraphics, x, y ->
+            HudDrawing.drawComparisonPanel(guiGraphics, x, y, boxWidth, boxHeight, headerHeight)
         
-        val x = (screenWidth - boxWidth) / 2
-        val y = (screenHeight - boxHeight) / 2
+            guiGraphics.drawString(font, header, x + padding, y + padding, 0xFFFFFF)
         
-        HudDrawing.drawComparisonPanel(guiGraphics, x, y, boxWidth, boxHeight, headerHeight)
+            guiGraphics.hLine(x + padding, x + boxWidth - padding, y + headerHeight, 0xFF444455.toInt())
         
-        guiGraphics.drawString(font, header, x + padding, y + padding, 0xFFFFFF)
-        
-        guiGraphics.hLine(x + padding, x + boxWidth - padding, y + headerHeight, 0xFF444455.toInt())
-        
-        var lineY = y + headerHeight + padding
-        for ((index, triple) in lines.withIndex()) {
-            val (ballText, rateText, multText) = triple
+            var lineY = y + headerHeight + padding
+            for ((index, triple) in lines.withIndex()) {
+                val (ballText, rateText, multText) = triple
             
-            if (index % 2 == 0) {
-                guiGraphics.fill(x + 2, lineY - 1, x + boxWidth - 2, lineY + 9, 0x15FFFFFF)
+                if (index % 2 == 0) {
+                    guiGraphics.fill(x + 2, lineY - 1, x + boxWidth - 2, lineY + 9, 0x15FFFFFF)
+                }
+            
+                guiGraphics.drawString(font, ballText, x + padding, lineY, 0xFFFFFF)
+                guiGraphics.drawString(font, rateText, x + col1Width + padding * 2, lineY, 0xFFFFFF)
+                guiGraphics.drawString(font, multText, x + col1Width + col2Width + padding * 3, lineY, 0xFFFFFF)
+                lineY += lineHeight
             }
-            
-            guiGraphics.drawString(font, ballText, x + padding, lineY, 0xFFFFFF)
-            guiGraphics.drawString(font, rateText, x + col1Width + padding * 2, lineY, 0xFFFFFF)
-            guiGraphics.drawString(font, multText, x + col1Width + col2Width + padding * 3, lineY, 0xFFFFFF)
-            lineY += lineHeight
-        }
         
-        if (penaltyNote != null) {
-            val footerY = y + boxHeight - padding - 19
-            guiGraphics.hLine(x + padding, x + boxWidth - padding, footerY - 4, Colors.BAR_BORDER)
-            guiGraphics.drawString(font, penaltyNote, x + padding, footerY, Colors.TEXT_ORANGE)
-            guiGraphics.drawString(font, footerText, x + padding, footerY + 10, Colors.TEXT_DARK_GRAY)
-        } else {
-            val footerY = y + boxHeight - padding - 9
-            guiGraphics.hLine(x + padding, x + boxWidth - padding, footerY - 4, Colors.BAR_BORDER)
-            guiGraphics.drawString(font, footerText, x + padding, footerY, Colors.TEXT_DARK_GRAY)
+            if (penaltyNote != null) {
+                val footerY = y + boxHeight - padding - 19
+                guiGraphics.hLine(x + padding, x + boxWidth - padding, footerY - 4, Colors.BAR_BORDER)
+                guiGraphics.drawString(font, penaltyNote, x + padding, footerY, Colors.TEXT_ORANGE)
+                guiGraphics.drawString(font, footerText, x + padding, footerY + 10, Colors.TEXT_DARK_GRAY)
+            } else {
+                val footerY = y + boxHeight - padding - 9
+                guiGraphics.hLine(x + padding, x + boxWidth - padding, footerY - 4, Colors.BAR_BORDER)
+                guiGraphics.drawString(font, footerText, x + padding, footerY, Colors.TEXT_DARK_GRAY)
+            }
         }
     }
-    
+
     // ==================== HELPER METHODS ====================
-    
-    private fun getOpponentPokemon(battle: ClientBattle): ClientBattlePokemon? {
-        return try { battle.side2.activeClientBattlePokemon.firstOrNull()?.battlePokemon } catch (e: Throwable) { null }
-    }
-    
+
     private fun isPokeball(itemStack: ItemStack): Boolean {
         return CatchRateCalculator.getBallIdFromItem(itemStack) != null
     }
