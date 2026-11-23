@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.12.10] - 2026-11-23
+
+### Added
+- New "Crit Catch" number next to the catch % on the HUD. It's your chance of a critical capture on that throw, and a crit only needs one shake to land instead of four. Cobblemon only starts giving you those once you own more than 30 species in your Pokédex, so it stays hidden until then. It's not part of the catch %, that number works the same as before.
+
 ## [2.12.4] - 2026-11-12
 
 ### Fixed
