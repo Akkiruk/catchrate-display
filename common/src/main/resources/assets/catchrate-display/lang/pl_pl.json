@@ -21,6 +21,7 @@
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "DZIKI",
   "catchrate.hud.out_of_combat_penalty": "⚠ Poza walką: 0.5x",
+  "catchrate.hud.crit": "✦ Krytyczne złapanie %s",
   "catchrate.hud.release_to_close": "Puść %s aby zamknąć",
   "catchrate.hud.ball_comparison": "⚔ Porównanie Balli (Tura %d)",
   "catchrate.hud.ball_comparison_wild": "⚔ Porównanie Balli (Dziki)",

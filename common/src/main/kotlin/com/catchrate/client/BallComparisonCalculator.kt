@@ -70,7 +70,8 @@ object BallComparisonCalculator {
         val reason: String,
         val isGuaranteed: Boolean = false,
         val isCatchRateEstimate: Boolean = false,
-        val isPredictionReliable: Boolean = true
+        val isPredictionReliable: Boolean = true,
+        val critChance: Double = 0.0
     )
     
     /**
@@ -185,7 +186,7 @@ object BallComparisonCalculator {
             ExternalCatchRateModifiers.collect(player)
         )
         
-        val catchChance = CatchRateFormula.calculateCatchPercentage(
+        val modifiedRate = CatchRateFormula.calculateModifiedCatchRate(
             baseCatchRate = baseCatchRate,
             maxHp = maxHp,
             currentHp = currentHp,
@@ -195,6 +196,7 @@ object BallComparisonCalculator {
             inBattle = false,
             externalCatchRateMultiplier = externalCatchRateMultiplier
         )
+        val catchChance = CatchRateFormula.modifiedRateToPercentage(modifiedRate)
         
         CatchRateMod.debugOnChange("WorldCalc",
             "${pokemon.species.name}_${ballId}_${currentHp.toInt()}_${statusMult}",
@@ -215,7 +217,8 @@ object BallComparisonCalculator {
             reason = result.reason,
             isGuaranteed = isFormulaGuaranteed,
             isCatchRateEstimate = isEstimate,
-            isPredictionReliable = reliability.isReliable
+            isPredictionReliable = reliability.isReliable,
+            critChance = CatchRateFormula.critChance(modifiedRate).toDouble()
         )
     }
     

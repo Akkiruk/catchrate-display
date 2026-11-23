@@ -21,6 +21,7 @@
   "catchrate.hud.hp": "PS",
   "catchrate.hud.wild": "SELVATICO",
   "catchrate.hud.out_of_combat_penalty": "⚠ Fuori combattimento: 0.5x",
+  "catchrate.hud.crit": "✦ Cattura critica %s",
   "catchrate.hud.release_to_close": "Rilascia %s per chiudere",
   "catchrate.hud.ball_comparison": "⚔ Confronto Ball (Turno %d)",
   "catchrate.hud.ball_comparison_wild": "⚔ Confronto Ball (Selvatico)",

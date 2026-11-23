@@ -36,6 +36,7 @@ object HudTranslations {
     fun hp() = Component.translatable("catchrate.hud.hp").string
     fun wild() = Component.translatable("catchrate.hud.wild").string
     fun outOfCombatPenalty() = Component.translatable("catchrate.hud.out_of_combat_penalty").string
+    fun crit(value: String) = Component.translatable("catchrate.hud.crit", value).string
     fun releaseToClose(key: String) = Component.translatable("catchrate.hud.release_to_close", key).string
     fun ballComparison(turn: Int) = Component.translatable("catchrate.hud.ball_comparison", turn).string
     fun ballComparisonWild() = Component.translatable("catchrate.hud.ball_comparison_wild").string
@@ -349,7 +350,8 @@ class CatchRateHudRenderer {
         val isEncountered: Boolean = true,
         val isCatchRateEstimate: Boolean = false,
         val isPredictionReliable: Boolean = true,
-        val externalModifiers: List<CatchRateModifierResult> = emptyList()
+        val externalModifiers: List<CatchRateModifierResult> = emptyList(),
+        val critChance: Double = 0.0
     )
 
     private fun getEffectiveBattleSpecies(pokemon: ClientBattlePokemon) =
@@ -377,7 +379,8 @@ class CatchRateHudRenderer {
             isEncountered = encountered,
             isCatchRateEstimate = result.isCatchRateEstimate,
             isPredictionReliable = result.isReliableGuaranteedPrediction,
-            externalModifiers = result.externalModifiers
+            externalModifiers = result.externalModifiers,
+            critChance = CatchRateFormula.critChance(result.modifiedCatchRate.toFloat()).toDouble()
         )
     }
     
@@ -423,7 +426,8 @@ class CatchRateHudRenderer {
             isEncountered = encountered,
             isCatchRateEstimate = result.isCatchRateEstimate,
             isPredictionReliable = result.isPredictionReliable,
-            externalModifiers = ExternalCatchRateModifiers.collect(player)
+            externalModifiers = ExternalCatchRateModifiers.collect(player),
+            critChance = result.critChance
         ))), centered = false)
     }
 
@@ -471,13 +475,17 @@ class CatchRateHudRenderer {
         
         val hasConditionDesc = data.ballConditionReason.isNotBlank()
         val penaltyText = if (data.isWild) HudTranslations.outOfCombatPenalty() else null
+        // sits beside the main % so it doesn't read as one of the multipliers below it
+        val critText = if (data.critChance > 0.0 && !effectiveGuaranteed && !rateUnknown) {
+            HudTranslations.crit(String.format("%.1f%%", data.critChance * 100.0))
+        } else null
         val modifierTexts = data.externalModifiers.map { modifier ->
             "${modifier.description} ${String.format("%.2f", modifier.multiplier)}x"
         }
 
         val textWidths = mutableListOf(
             font.width(nameText) + (if (wildText != null) font.width(" $wildText") + 8 else 0),
-            font.width(percentText),
+            font.width(percentText) + (if (critText != null) 12 + font.width(critText) else 0),
             font.width(hpText),
             font.width(ballText)
         )
@@ -514,6 +522,9 @@ class CatchRateHudRenderer {
                 HudDrawing.drawCatchBar(guiGraphics, x + 6, barY, boxWidth - 12, displayPercentage, false)
                 val percentColor = if (rateUnknown) Colors.TEXT_ORANGE else HudDrawing.getChanceColorInt(displayPercentage)
                 guiGraphics.drawString(font, percentText, x + 6, barY + 12, percentColor)
+            }
+            if (critText != null) {
+                guiGraphics.drawString(font, critText, x + boxWidth - font.width(critText) - 6, barY + 12, Colors.TEXT_GRAY)
             }
         
             // Detail rows

@@ -21,6 +21,7 @@
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "DIVOKÝ",
   "catchrate.hud.out_of_combat_penalty": "⚠ Mimo boj: 0.5x",
+  "catchrate.hud.crit": "✦ Kritické chycení %s",
   "catchrate.hud.release_to_close": "Uvolněte %s pro zavření",
   "catchrate.hud.ball_comparison": "⚔ Porovnání Míčů (Kolo %d)",
   "catchrate.hud.ball_comparison_wild": "⚔ Porovnání Míčů (Divoký)",

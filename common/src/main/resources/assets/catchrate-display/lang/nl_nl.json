@@ -21,6 +21,7 @@
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "WILD",
   "catchrate.hud.out_of_combat_penalty": "⚠ Buiten gevecht: 0.5x",
+  "catchrate.hud.crit": "✦ Kritieke vangst %s",
   "catchrate.hud.release_to_close": "Laat %s los om te sluiten",
   "catchrate.hud.ball_comparison": "⚔ Bal Vergelijking (Beurt %d)",
   "catchrate.hud.ball_comparison_wild": "⚔ Bal Vergelijking (Wild)",

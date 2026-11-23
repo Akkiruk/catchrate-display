@@ -21,6 +21,7 @@
   "catchrate.hud.hp": "PS",
   "catchrate.hud.wild": "SALVAJE",
   "catchrate.hud.out_of_combat_penalty": "⚠ Fuera de combate: 0.5x",
+  "catchrate.hud.crit": "✦ Captura crítica %s",
   "catchrate.hud.release_to_close": "Suelta %s para cerrar",
   "catchrate.hud.ball_comparison": "⚔ Comparación de Bolas (Turno %d)",
   "catchrate.hud.ball_comparison_wild": "⚔ Comparación de Bolas (Salvaje)",

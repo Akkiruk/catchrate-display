@@ -21,6 +21,7 @@
   "catchrate.hud.hp": "VP",
   "catchrate.hud.wild": "SOVAĜA",
   "catchrate.hud.out_of_combat_penalty": "⚠ Ekster batalo: 0.5x",
+  "catchrate.hud.crit": "✦ Kritika kapto %s",
   "catchrate.hud.release_to_close": "Liberigu %s por fermi",
   "catchrate.hud.ball_comparison": "⚔ Pilko-Komparo (Turno %d)",
   "catchrate.hud.ball_comparison_wild": "⚔ Pilko-Komparo (Sovaĝa)",

@@ -10,38 +10,17 @@ import com.catchrate.CatchRateConstants.SHAKE_RANDOM_BOUND
 import com.catchrate.CatchRateConstants.STATUS_NONE_MULT
 import com.catchrate.CatchRateConstants.STATUS_PARA_BURN_POISON_MULT
 import com.catchrate.CatchRateConstants.STATUS_SLEEP_FROZEN_MULT
+import com.cobblemon.mod.common.api.pokedex.CaughtCount
+import com.cobblemon.mod.common.client.CobblemonClient
 import net.minecraft.network.chat.Component
 import java.util.Locale
 import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-/**
- * Single source of truth for all catch rate calculations.
- * Consolidates the catch formula, status multipliers, HP calculations, and related utilities.
- * 
- * This eliminates duplication across CatchRateCalculator, BallComparisonCalculator, 
- * and CatchRateHudRenderer.
- */
 object CatchRateFormula {
     private val ballNameCache = java.util.concurrent.ConcurrentHashMap<String, String>()
     
-    // ==================== MAIN CATCH RATE CALCULATION ====================
-    
-    /**
-     * Calculate the final catch percentage using the Gen 6+ formula.
-     * 
-     * @param baseCatchRate The Pokemon's base catch rate (species-dependent)
-     * @param maxHp The Pokemon's maximum HP
-     * @param currentHp The Pokemon's current HP
-     * @param ballMultiplier The ball's catch rate multiplier
-     * @param statusMultiplier The status condition multiplier
-     * @param levelBonus Low-level bonus multiplier (for Pokemon under level 13)
-     * @param inBattle Whether the Pokemon is being caught in battle (false = 0.5x penalty)
-     * @param levelPenalty Optional penalty for catching Pokemon higher level than your team
-     * @param externalCatchRateMultiplier Additional client-visible compat multiplier
-     * @return Catch percentage from 0.0 to 100.0
-     */
     fun calculateCatchPercentage(
         baseCatchRate: Float,
         maxHp: Float,
@@ -52,36 +31,14 @@ object CatchRateFormula {
         inBattle: Boolean = true,
         levelPenalty: Float = 1F,
         externalCatchRateMultiplier: Float = 1F
-    ): Float {
-        val battleModifier = if (inBattle) 1F else OUT_OF_BATTLE_MODIFIER
-        
-        // HP component: (3*maxHP - 2*currentHP) * catchRate * battleMod
-        val hpComponent = (3F * maxHp - 2F * currentHp) * baseCatchRate * battleModifier
-        
-        // Modified catch rate with ball bonus
-        var modifiedRate = (hpComponent * ballMultiplier) / (3F * maxHp)
-        modifiedRate *= statusMultiplier * levelBonus * levelPenalty * externalCatchRateMultiplier
-        
-        // Calculate shake probability (rounded to int like Cobblemon does)
-        val shakeProbability = calculateShakeProbability(modifiedRate).roundToInt()
-        
-        // If shakeProbability >= SHAKE_RANDOM_BOUND, every Random.nextInt(65537) check passes
-        // This is a mathematically guaranteed catch, same as Cobblemon's actual behavior
-        if (shakeProbability >= SHAKE_RANDOM_BOUND.toInt()) {
-            return 100F
-        }
-        
-        // Per-shake probability: shakeProbability / 65537 (Cobblemon uses Random.nextInt(65537))
-        // Catch chance = (shakeProbability / 65537)^4 * 100
-        val perShakeProb = shakeProbability.toFloat() / SHAKE_RANDOM_BOUND
-        return perShakeProb.pow(SHAKE_CHECKS) * 100F
-    }
+    ): Float = modifiedRateToPercentage(
+        calculateModifiedCatchRate(
+            baseCatchRate, maxHp, currentHp, ballMultiplier, statusMultiplier,
+            levelBonus, inBattle, levelPenalty, externalCatchRateMultiplier
+        )
+    )
     
-    /**
-     * Calculate shake probability from modified catch rate.
-     * Matches Cobblemon's exact formula: (65536 / (255/modifiedCatchRate)^0.1875)
-     * Note: Cobblemon .roundToInt()s this value before comparing against Random.nextInt(65537).
-     */
+    // Cobblemon rounds this before comparing it to Random.nextInt(65537)
     fun calculateShakeProbability(modifiedCatchRate: Float): Float {
         return when {
             modifiedCatchRate <= 0F -> 0F
@@ -89,21 +46,12 @@ object CatchRateFormula {
         }
     }
     
-    /**
-     * Check if a modified catch rate results in a mathematically guaranteed catch.
-     * When modifiedCatchRate > 255, shakeProbability exceeds 65536, meaning every
-     * Random.nextInt(65537) check passes. This is how Cobblemon naturally handles
-     * high catch rate scenarios (e.g., Quick Ball on high-catch-rate Pokemon).
-     */
+    // past a modified rate of 255 every shake passes, e.g. Quick Ball on something easy
     fun isGuaranteedByFormula(modifiedCatchRate: Float): Boolean {
         val shakeProbability = calculateShakeProbability(modifiedCatchRate).roundToInt()
         return shakeProbability >= SHAKE_RANDOM_BOUND.toInt()
     }
     
-    /**
-     * Calculate modified catch rate (before shake probability).
-     * Use this when you need to apply custom behavior mutators (like Cobblemon's API).
-     */
     fun calculateModifiedCatchRate(
         baseCatchRate: Float,
         maxHp: Float,
@@ -122,17 +70,31 @@ object CatchRateFormula {
         return modifiedRate
     }
     
-    /**
-     * Convert modified catch rate to final percentage.
-     * Use after applying Cobblemon's behavior mutator.
-     * Matches Cobblemon's exact logic with .roundToInt() and 65537 divisor.
-     */
     fun modifiedRateToPercentage(modifiedCatchRate: Float): Float {
         val shakeProbability = calculateShakeProbability(modifiedCatchRate).roundToInt()
         if (shakeProbability >= SHAKE_RANDOM_BOUND.toInt()) return 100F
         val perShakeProb = shakeProbability.toFloat() / SHAKE_RANDOM_BOUND
         return perShakeProb.pow(SHAKE_CHECKS) * 100F
     }
+
+    // Chance the throw turns into a critical capture, same roll as Cobblemon's
+    // CriticalCaptureProvider. Kept out of the main percentage on purpose, the HUD shows it
+    // as its own line. Scales with species owned in your Pokedex, zero at 30 or fewer.
+    fun critChance(modifiedCatchRate: Float, caught: Int = caughtCount()): Float {
+        val mult = when {
+            caught <= 30 -> return 0F
+            caught <= 150 -> 0.5F
+            caught <= 300 -> 1F
+            caught <= 450 -> 1.5F
+            caught <= 600 -> 2F
+            else -> 2.5F
+        }
+        val c = (modifiedCatchRate * mult / 6F).roundToInt()
+        return (c / 256F).coerceIn(0F, 1F)
+    }
+
+    // the server syncs the dex to the client, so this is the same count the server rolls with
+    private fun caughtCount(): Int = CobblemonClient.clientPokedexData.getGlobalCalculatedValue(CaughtCount)
     
     /**
      * Format catch percentage for display.

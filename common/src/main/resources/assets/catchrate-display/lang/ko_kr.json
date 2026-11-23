@@ -21,6 +21,7 @@
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "야생",
   "catchrate.hud.out_of_combat_penalty": "⚠ 전투 밖: 0.5x",
+  "catchrate.hud.crit": "✦ 크리티컬 캡처 %s",
   "catchrate.hud.release_to_close": "%s 놓아서 닫기",
   "catchrate.hud.ball_comparison": "⚔ 볼 비교 (턴 %d)",
   "catchrate.hud.ball_comparison_wild": "⚔ 볼 비교 (야생)",

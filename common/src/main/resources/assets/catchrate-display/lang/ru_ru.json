@@ -21,6 +21,7 @@
   "catchrate.hud.hp": "ОЗ",
   "catchrate.hud.wild": "ДИКИЙ",
   "catchrate.hud.out_of_combat_penalty": "⚠ Вне боя: 0.5x",
+  "catchrate.hud.crit": "✦ Критическая поимка %s",
   "catchrate.hud.release_to_close": "Отпустите %s для закрытия",
   "catchrate.hud.ball_comparison": "⚔ Сравнение Шаров (Ход %d)",
   "catchrate.hud.ball_comparison_wild": "⚔ Сравнение Шаров (Дикий)",

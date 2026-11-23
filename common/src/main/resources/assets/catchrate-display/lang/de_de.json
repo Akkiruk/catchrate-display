@@ -21,6 +21,7 @@
   "catchrate.hud.hp": "KP",
   "catchrate.hud.wild": "WILD",
   "catchrate.hud.out_of_combat_penalty": "⚠ Außerhalb Kampf: 0.5x",
+  "catchrate.hud.crit": "✦ Superfang %s",
   "catchrate.hud.release_to_close": "%s loslassen zum Schließen",
   "catchrate.hud.ball_comparison": "⚔ Ball-Vergleich (Runde %d)",
   "catchrate.hud.ball_comparison_wild": "⚔ Ball-Vergleich (Wild)",

@@ -21,6 +21,7 @@
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "野生",
   "catchrate.hud.out_of_combat_penalty": "⚠ 戰鬥外: 0.5x",
+  "catchrate.hud.crit": "✦ 會心捕捉 %s",
   "catchrate.hud.release_to_close": "釋放%s以關閉",
   "catchrate.hud.ball_comparison": "⚔ 球類比較 (回合 %d)",
   "catchrate.hud.ball_comparison_wild": "⚔ 球類比較 (野生)",

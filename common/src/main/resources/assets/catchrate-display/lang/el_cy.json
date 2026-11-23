@@ -21,6 +21,7 @@
   "catchrate.hud.hp": "HP",
   "catchrate.hud.wild": "ΑΓΡΙΟ",
   "catchrate.hud.out_of_combat_penalty": "⚠ Εκτός μάχης: 0.5x",
+  "catchrate.hud.crit": "✦ Κρίσιμη σύλληψη %s",
   "catchrate.hud.release_to_close": "Αφήστε %s για κλείσιμο",
   "catchrate.hud.ball_comparison": "⚔ Σύγκριση Μπαλών (Γύρος %d)",
   "catchrate.hud.ball_comparison_wild": "⚔ Σύγκριση Μπαλών (Άγριο)",
