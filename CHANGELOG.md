@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.11] - 2026-11-25
+
+### Fixed
+- Quick Ball odds were way off with TIM Core installed (it's in Cobbleverse). TIM has a setting that only lets the Quick Ball bonus work the first time a Pokémon gets hit by one. After that it's a normal ball against that Pokémon, even on turn 1 of a brand new battle. The HUD didn't know and kept showing the 5x, so you'd see 39.9% when it was really about 12%. It shows 1x now, with a note saying why.
+- Only applies if your TIM Core version has that setting and it's turned on (`preventQuickBallSpam` in `tim_core.json`). Turn it off and Quick Balls go back to normal on the HUD too.
+- On a server the mod can only remember Quick Balls it saw land, yours or anyone else's nearby. A Pokémon that got hit before you joined, or somewhere you couldn't see, will still show the 5x. Singleplayer always gets it right.
+
 ## [2.12.10] - 2026-11-23
 
 ### Added
