@@ -6,6 +6,7 @@ import com.catchrate.CatchRateMod
 import com.catchrate.SpeciesCatchRateCache
 import com.catchrate.DebugCommands
 import com.catchrate.client.CatchRateHudRenderer
+import com.catchrate.compat.TimCoreCompat
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
@@ -40,9 +41,9 @@ class CatchRateDisplayFabricClient : ClientModInitializer {
             hudRenderer.render(guiGraphics, deltaTracker)
         }
         
-        // Register client tick for keybinds
         ClientTickEvents.END_CLIENT_TICK.register { minecraft ->
             CatchRateBattleMonitor.onClientTick()
+            TimCoreCompat.onClientTick()
             SpeciesCatchRateCache.onClientTick()
             CatchRateKeybinds.tick(minecraft)
         }

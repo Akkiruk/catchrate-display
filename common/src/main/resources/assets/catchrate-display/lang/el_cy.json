@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "Στον πρώτο γύρο",
   "catchrate.ball.quick.ineffective": "Αποτελεσματικό μόνο στον 1ο γύρο",
   "catchrate.ball.quick.consumed": "Το μπόνους Quick Ball έχει ήδη χρησιμοποιηθεί σε αυτόν τον στόχο",
+  "catchrate.ball.quick.tim_spent": "Αυτό το Pokémon έχει ήδη δεχτεί Quick Ball (TIM Core)",
   "catchrate.ball.timer.turn_info": "Γύρος %d",
   "catchrate.ball.timer.scales": "Κλιμακώνεται με γύρους",
   "catchrate.ball.dusk.dark_area": "Σκοτεινή περιοχή (L%d)",

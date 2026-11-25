@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "Az első körben",
   "catchrate.ball.quick.ineffective": "Csak az 1. körben hatásos",
   "catchrate.ball.quick.consumed": "A Quick Ball bónusz már felhasználásra került ezen a célponton",
+  "catchrate.ball.quick.tim_spent": "Ez a Pokémon már kapott Quick Ballt (TIM Core)",
   "catchrate.ball.timer.turn_info": "Kör %d",
   "catchrate.ball.timer.scales": "Körökkel növekszik",
   "catchrate.ball.dusk.dark_area": "Sötét terület (L%d)",

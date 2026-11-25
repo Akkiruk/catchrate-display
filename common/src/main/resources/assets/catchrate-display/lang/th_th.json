@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "ในเทิร์นแรก",
   "catchrate.ball.quick.ineffective": "มีผลเฉพาะเทิร์น 1",
   "catchrate.ball.quick.consumed": "ใช้โบนัส Quick Ball กับเป้าหมายนี้ไปแล้ว",
+  "catchrate.ball.quick.tim_spent": "โปเกมอนตัวนี้โดน Quick Ball ไปแล้ว (TIM Core)",
   "catchrate.ball.timer.turn_info": "เทิร์น %d",
   "catchrate.ball.timer.scales": "เพิ่มตามเทิร์น",
   "catchrate.ball.dusk.dark_area": "พื้นที่มืด (L%d)",

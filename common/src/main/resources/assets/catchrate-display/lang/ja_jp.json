@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "初ターン",
   "catchrate.ball.quick.ineffective": "ターン1のみ有効",
   "catchrate.ball.quick.consumed": "この対象にはすでにクイックボールのボーナスを使用済み",
+  "catchrate.ball.quick.tim_spent": "このポケモンにはすでにクイックボールを使用済み (TIM Core)",
   "catchrate.ball.timer.turn_info": "ターン %d",
   "catchrate.ball.timer.scales": "ターン数で増加",
   "catchrate.ball.dusk.dark_area": "暗い場所 (L%d)",

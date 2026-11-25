@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "第一回合",
   "catchrate.ball.quick.ineffective": "仅第1回合有效",
   "catchrate.ball.quick.consumed": "此目标的快速球加成已使用",
+  "catchrate.ball.quick.tim_spent": "这只宝可梦已经被快速球击中过 (TIM Core)",
   "catchrate.ball.timer.turn_info": "回合 %d",
   "catchrate.ball.timer.scales": "随回合数增加",
   "catchrate.ball.dusk.dark_area": "黑暗区域 (L%d)",

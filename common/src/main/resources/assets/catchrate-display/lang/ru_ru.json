@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "В первый ход",
   "catchrate.ball.quick.ineffective": "Эффективен только в 1 ходу",
   "catchrate.ball.quick.consumed": "Бонус Quick Ball уже использован на этой цели",
+  "catchrate.ball.quick.tim_spent": "В этого покемона уже бросали Quick Ball (TIM Core)",
   "catchrate.ball.timer.turn_info": "Ход %d",
   "catchrate.ball.timer.scales": "Растёт с ходами",
   "catchrate.ball.dusk.dark_area": "Тёмная зона (L%d)",

@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "V prvním kole",
   "catchrate.ball.quick.ineffective": "Účinné pouze v 1. kole",
   "catchrate.ball.quick.consumed": "Bonus Quick Ballu byl na tomto cíli již využit",
+  "catchrate.ball.quick.tim_spent": "Tento Pokémon už Quick Ball dostal (TIM Core)",
   "catchrate.ball.timer.turn_info": "Kolo %d",
   "catchrate.ball.timer.scales": "Roste s koly",
   "catchrate.ball.dusk.dark_area": "Tmavá oblast (L%d)",

@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "I första turen",
   "catchrate.ball.quick.ineffective": "Endast effektiv i tur 1",
   "catchrate.ball.quick.consumed": "Quick Ball-bonusen är redan förbrukad på det här målet",
+  "catchrate.ball.quick.tim_spent": "Den här Pokémon har redan fått en Quick Ball (TIM Core)",
   "catchrate.ball.timer.turn_info": "Tur %d",
   "catchrate.ball.timer.scales": "Skalas med turer",
   "catchrate.ball.dusk.dark_area": "Mörkt område (L%d)",

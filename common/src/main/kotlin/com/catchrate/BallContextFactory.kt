@@ -4,6 +4,7 @@ import com.catchrate.BallMultiplierCalculator.BallContext
 import com.catchrate.BallMultiplierCalculator.PartyMember
 import com.catchrate.CatchRateConstants.MOON_BALL_GATE_END
 import com.catchrate.CatchRateConstants.MOON_BALL_GATE_START
+import com.catchrate.compat.TimCoreCompat
 import com.cobblemon.mod.common.api.tags.CobblemonBiomeTags
 import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.client.battle.ClientBattle
@@ -46,10 +47,6 @@ object BallContextFactory {
         }
     }
 
-    /**
-     * Create a BallContext from a ClientBattlePokemon (client-side battle).
-     * Used by BallComparisonCalculator for in-battle calculations.
-     */
     fun fromBattlePokemon(
         pokemon: ClientBattlePokemon,
         turnCount: Int,
@@ -87,6 +84,7 @@ object BallContextFactory {
             inBattle = true,
             turnCount = turnCount,
             quickBallBonusConsumed = CatchRateCaptureTracker.hasConsumedQuickBallBonus(battle?.battleId, pokemon.uuid),
+            quickBallTimSpent = TimCoreCompat.isQuickBallSpent(pokemon.uuid, targetEntity),
             activeBattler = getActiveBattlerFromClientBattle(battle),
             hasCaughtSpecies = checkHasCaughtSpecies(species.resourceIdentifier),
             pokemonAspects = aspects

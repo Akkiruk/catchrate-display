@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "İlk turda",
   "catchrate.ball.quick.ineffective": "Sadece tur 1'de etkili",
   "catchrate.ball.quick.consumed": "Quick Ball bonusu bu hedefte zaten kullanıldı",
+  "catchrate.ball.quick.tim_spent": "Bu Pokémon'a zaten Quick Ball atıldı (TIM Core)",
   "catchrate.ball.timer.turn_info": "Tur %d",
   "catchrate.ball.timer.scales": "Turlarla artar",
   "catchrate.ball.dusk.dark_area": "Karanlık alan (L%d)",

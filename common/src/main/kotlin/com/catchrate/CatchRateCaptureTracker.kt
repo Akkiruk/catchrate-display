@@ -1,5 +1,6 @@
 package com.catchrate
 
+import com.catchrate.compat.TimCoreCompat
 import com.cobblemon.mod.common.client.CobblemonClient
 import com.cobblemon.mod.common.net.messages.client.battle.BattleCaptureEndPacket
 import com.cobblemon.mod.common.net.messages.client.battle.BattleCaptureStartPacket
@@ -60,7 +61,10 @@ object CatchRateCaptureTracker {
             CatchRateDebugLog.logIncident("Failed capture calculation for $targetPnx: ${e.javaClass.simpleName}: ${e.message}")
             null
         } finally {
-            consumedQuickBallKey?.let { consumedQuickBallTargets.add(it) }
+            consumedQuickBallKey?.let {
+                consumedQuickBallTargets.add(it)
+                TimCoreCompat.markHit(pokemon.uuid)
+            }
         } ?: return
 
         val key = key(battleId, targetPnx)

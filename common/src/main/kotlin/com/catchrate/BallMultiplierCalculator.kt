@@ -22,6 +22,7 @@ object BallTranslations {
     fun quickEffective() = Component.translatable("catchrate.ball.quick.effective").string
     fun quickIneffective() = Component.translatable("catchrate.ball.quick.ineffective").string
     fun quickConsumed() = Component.translatable("catchrate.ball.quick.consumed").string
+    fun quickTimSpent() = Component.translatable("catchrate.ball.quick.tim_spent").string
     
     fun timerTurnInfo(turn: Int) = Component.translatable("catchrate.ball.timer.turn_info", turn).string
     fun timerScales() = Component.translatable("catchrate.ball.timer.scales").string
@@ -104,6 +105,7 @@ object BallMultiplierCalculator {
         val inBattle: Boolean,
         val turnCount: Int,
         val quickBallBonusConsumed: Boolean = false,
+        val quickBallTimSpent: Boolean = false,
         val activeBattler: PartyMember?,
         val hasCaughtSpecies: Boolean? = null,
         val pokemonAspects: Set<String> = emptySet()
@@ -268,6 +270,7 @@ object BallMultiplierCalculator {
         if (!ctx.inBattle) return BallResult(1F, false, BallTranslations.quickNotInBattle())
         if (ctx.turnCount != 1) return BallResult(1F, false, BallTranslations.quickIneffective())
         if (ctx.quickBallBonusConsumed) return BallResult(1F, false, BallTranslations.quickConsumed())
+        if (ctx.quickBallTimSpent) return BallResult(1F, false, BallTranslations.quickTimSpent())
         return BallResult(5F, true, BallTranslations.quickEffective())
     }
     

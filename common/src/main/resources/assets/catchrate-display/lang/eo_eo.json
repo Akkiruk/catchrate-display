@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "En unua turno",
   "catchrate.ball.quick.ineffective": "Nur efika en turno 1",
   "catchrate.ball.quick.consumed": "Quick Ball-bonuso jam elspezita por ĉi tiu celo",
+  "catchrate.ball.quick.tim_spent": "Ĉi tiu Pokémon jam ricevis Quick Ball (TIM Core)",
   "catchrate.ball.timer.turn_info": "Turno %d",
   "catchrate.ball.timer.scales": "Skalas kun turnoj",
   "catchrate.ball.dusk.dark_area": "Malhela areo (L%d)",

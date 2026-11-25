@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "Al primo turno",
   "catchrate.ball.quick.ineffective": "Efficace solo al turno 1",
   "catchrate.ball.quick.consumed": "Il bonus Quick Ball è già stato usato su questo bersaglio",
+  "catchrate.ball.quick.tim_spent": "Questo Pokémon ha già preso una Quick Ball (TIM Core)",
   "catchrate.ball.timer.turn_info": "Turno %d",
   "catchrate.ball.timer.scales": "Aumenta con i turni",
   "catchrate.ball.dusk.dark_area": "Zona buia (L%d)",

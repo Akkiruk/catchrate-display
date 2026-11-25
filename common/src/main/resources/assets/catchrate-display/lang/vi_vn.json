@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "Lượt đầu tiên",
   "catchrate.ball.quick.ineffective": "Chỉ hiệu quả lượt 1",
   "catchrate.ball.quick.consumed": "Đã dùng thưởng Quick Ball trên mục tiêu này",
+  "catchrate.ball.quick.tim_spent": "Pokémon này đã trúng Quick Ball rồi (TIM Core)",
   "catchrate.ball.timer.turn_info": "Lượt %d",
   "catchrate.ball.timer.scales": "Tăng theo lượt",
   "catchrate.ball.dusk.dark_area": "Vùng tối (L%d)",

@@ -6,6 +6,7 @@ import com.catchrate.CatchRateMod
 import com.catchrate.DebugCommands
 import com.catchrate.SpeciesCatchRateCache
 import com.catchrate.client.CatchRateHudRenderer
+import com.catchrate.compat.TimCoreCompat
 import net.minecraft.client.Minecraft
 import net.neoforged.api.distmarker.Dist
 import net.neoforged.bus.api.SubscribeEvent
@@ -59,6 +60,7 @@ object CatchRateDisplayNeoForgeClientEvents {
     fun onClientTick(event: ClientTickEvent.Post) {
         val minecraft = Minecraft.getInstance()
         CatchRateBattleMonitor.onClientTick()
+        TimCoreCompat.onClientTick()
         SpeciesCatchRateCache.onClientTick()
         if (minecraft.player != null) {
             CatchRateKeybinds.tick(minecraft)

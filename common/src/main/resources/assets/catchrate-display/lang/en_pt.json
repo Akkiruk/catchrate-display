@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "On first turn",
   "catchrate.ball.quick.ineffective": "Only effective on turn 1",
   "catchrate.ball.quick.consumed": "Quick Ball bonus already spent on this target",
+  "catchrate.ball.quick.tim_spent": "This Pokémon already took a Quick Ball (TIM Core)",
   "catchrate.ball.timer.turn_info": "Turn %d",
   "catchrate.ball.timer.scales": "Scales wit' turns",
   "catchrate.ball.dusk.dark_area": "Dark area (L%d)",

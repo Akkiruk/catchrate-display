@@ -10,6 +10,7 @@ import com.catchrate.CatchRateDebugLog
 import com.catchrate.CatchRateFormula
 import com.catchrate.CatchRateKeybinds
 import com.catchrate.CatchRateMod
+import com.catchrate.compat.TimCoreCompat
 import com.catchrate.CatchRatePredictionReliability
 import com.catchrate.CatchRateResult
 import com.catchrate.ExternalCatchRateModifiers
@@ -271,6 +272,7 @@ class CatchRateHudRenderer {
                 append(getBallId(heldItem)).append('|')
                 append(CatchRateBattleMonitor.getTurnCount(battle.battleId)).append('|')
                 append(CatchRateCaptureTracker.hasConsumedQuickBallBonus(battle.battleId, pokemon.uuid)).append('|')
+                append(TimCoreCompat.revision).append('|')
                 append(ally?.uuid).append('/')
                 append(ally?.species?.resourceIdentifier).append('/')
                 append(ally?.gender?.name).append('/')

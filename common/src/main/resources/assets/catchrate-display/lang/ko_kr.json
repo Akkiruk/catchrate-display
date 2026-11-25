@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "첫 턴",
   "catchrate.ball.quick.ineffective": "1턴에만 효과적",
   "catchrate.ball.quick.consumed": "이 대상에게는 이미 퀵볼 보너스를 사용함",
+  "catchrate.ball.quick.tim_spent": "이 포켓몬에게는 이미 퀵볼을 사용함 (TIM Core)",
   "catchrate.ball.timer.turn_info": "턴 %d",
   "catchrate.ball.timer.scales": "턴수에 따라 증가",
   "catchrate.ball.dusk.dark_area": "어두운 지역 (L%d)",

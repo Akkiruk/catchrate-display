@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "In erster Runde",
   "catchrate.ball.quick.ineffective": "Nur Runde 1 wirksam",
   "catchrate.ball.quick.consumed": "Quick Ball-Bonus für dieses Ziel bereits verbraucht",
+  "catchrate.ball.quick.tim_spent": "Dieses Pokémon hat schon einen Quick Ball abbekommen (TIM Core)",
   "catchrate.ball.timer.turn_info": "Runde %d",
   "catchrate.ball.timer.scales": "Skaliert mit Runden",
   "catchrate.ball.dusk.dark_area": "Dunkler Bereich (L%d)",

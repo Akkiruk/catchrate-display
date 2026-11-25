@@ -37,6 +37,7 @@
   "catchrate.ball.quick.effective": "In eerste beurt",
   "catchrate.ball.quick.ineffective": "Alleen effectief in beurt 1",
   "catchrate.ball.quick.consumed": "Quick Ball-bonus al gebruikt op dit doelwit",
+  "catchrate.ball.quick.tim_spent": "Deze Pokémon heeft al een Quick Ball gehad (TIM Core)",
   "catchrate.ball.timer.turn_info": "Beurt %d",
   "catchrate.ball.timer.scales": "Schaalt met beurten",
   "catchrate.ball.dusk.dark_area": "Donker gebied (L%d)",
